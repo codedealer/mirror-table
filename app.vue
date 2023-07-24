@@ -1,8 +1,19 @@
+<script setup lang="ts">
+const userStore = useUserStore();
+
+onMounted(() => {
+  initAuth((user) => {
+    if (user) {
+      userStore.signInUser(user);
+    } else {
+      userStore.signOutUser();
+    }
+  });
+});
+</script>
+
 <template>
-  <div>
-    <NuxtWelcome />
-  </div>
-  <div>
-    <img src="https://disk.yandex.ru/i/iv_btjq4cKppDg">
-  </div>
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>
