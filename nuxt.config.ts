@@ -18,7 +18,11 @@ export default {
       colors: {
         presets: {
           dark: {
-            primary: '#ff4081',
+            primary: '#FA45AB',
+            secondary: '#2DE8FA',
+            tertiary: '#FAE65F',
+            'primary-dark': '#AD1F70',
+            'secondary-dark': '#28A2AD',
           }
         },
         currentPresetName: 'dark',
