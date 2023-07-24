@@ -64,6 +64,7 @@ export const useUserStore = defineStore('user', () => {
     idToken,
     isLoggedIn,
     userProfile,
+    setUser,
     signInUser,
     signOutUser,
   };

@@ -1,5 +1,12 @@
 <script setup lang="ts">
+import { signIn } from '@/composables/useFirebaseAuth';
 
+const userStore = useUserStore();
+watchEffect(() => {
+  if (userStore.isLoggedIn) {
+    navigateTo('/dashboard');
+  }
+});
 </script>
 
 <template>
@@ -8,6 +15,8 @@
       Index
     </h1>
     <p>This is the index page for anonymous users.</p>
-    <va-button> Sign In with Google </va-button>
+    <va-button @click="signIn">
+      Sign In with Google
+    </va-button>
   </div>
 </template>

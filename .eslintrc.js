@@ -15,5 +15,6 @@ module.exports = {
     "vue/no-multiple-template-root": "warn",
     "@typescript-eslint/space-before-function-paren": ["error", "always"],
     "n/prefer-global/process": "off",
+    "antfu/top-level-function": "off",
   }
 }
