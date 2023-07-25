@@ -19,11 +19,20 @@ definePageMeta({
       <template #left>
         <va-navbar-item>
           <NuxtLink to="/">
-            Mirror Table
+            <img src="/logo.svg" alt="Mirror Table" width="40" height="40">
           </NuxtLink>
         </va-navbar-item>
       </template>
       <template #right>
+        <va-navbar-item style="align-items: center">
+          <a
+            href="https://github.com/codedealer/mirror-table"
+            rel="nofollow"
+            target="_blank"
+          >
+            <img src="/github.svg" width="24" height="24" alt="Github repository">
+          </a>
+        </va-navbar-item>
         <va-navbar-item>
           <va-button
             icon="logout"

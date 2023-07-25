@@ -6,6 +6,7 @@
     <div class="tables-list">
       <TheTablesListElement />
       <TheTablesListElement />
+      <TheTablesListElement />
     </div>
   </div>
 </template>
