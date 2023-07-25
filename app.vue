@@ -17,3 +17,7 @@ onMounted(() => {
     <NuxtPage />
   </NuxtLayout>
 </template>
+
+<style lang="scss">
+@import "@/assets/styles.scss";
+</style>
