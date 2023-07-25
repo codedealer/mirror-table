@@ -7,9 +7,9 @@
     <va-image
       src="https://via.placeholder.com/300x150"
       class=""
-      max-width="300"
+      :max-width="300"
       fit="cover"
-      ratio="2"
+      :ratio="2"
     />
     <va-card-title>Game Title</va-card-title>
     <va-card-content>
