@@ -8,7 +8,7 @@ watchEffect(() => {
   }
 });
 
-definePageMeta({
+useServerSeoMeta({
   title: 'Dashboard',
 });
 </script>
@@ -24,7 +24,7 @@ definePageMeta({
         </va-navbar-item>
       </template>
       <template #right>
-        <va-navbar-item style="align-items: center">
+        <va-navbar-item style="align-items: center; display: flex">
           <a
             href="https://github.com/codedealer/mirror-table"
             rel="nofollow"
