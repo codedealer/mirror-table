@@ -12,6 +12,25 @@ export default {
       fbAuthDomain: process.env.FB_AUTH_DOMAIN,
     }
   },
+  app: {
+    head: {
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width,initial-scale=1' },
+      ],
+      link: [
+        { rel: 'icon', type: 'image/svg', href: '/logo.svg' },
+      ]
+    },
+    pageTransition: {
+      name: 'slide-fade',
+      mode: 'out-in',
+    },
+    layoutTransition: {
+      name: 'slide-fade',
+      mode: 'out-in',
+    }
+  },
   vuestic: {
     css: ['reset', 'typography'],
     config: {
