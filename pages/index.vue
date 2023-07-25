@@ -100,6 +100,7 @@ watchEffect(() => {
 .welcome-card {
   @extend .index-card;
   padding-bottom: 100px;
+  --va-card-box-shadow: 0 .25rem .5rem rgba(241, 4, 95, .5);
   .va-card__title {
     font-size: 2rem;
     font-weight: 400;
