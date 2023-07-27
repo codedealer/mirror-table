@@ -20,6 +20,14 @@ export default {
       ],
       link: [
         { rel: 'icon', type: 'image/svg', href: '/logo.svg' },
+      ],
+      script: [
+        {
+          src: 'https://apis.google.com/js/api.js',
+          async: true,
+          defer: true,
+          onload: 'window.gapi_loaded = true;',
+        },
       ]
     },
     pageTransition: {

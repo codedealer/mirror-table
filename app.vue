@@ -2,12 +2,14 @@
 const userStore = useUserStore();
 
 onMounted(() => {
-  initAuth((user) => {
+  initAuth(async (user) => {
     if (user) {
-      userStore.signInUser(user);
+      console.log('User signed in: ', user);
+      await userStore.signInUser(user);
     } else {
       userStore.signOutUser();
     }
+    userStore.authInitialized = true;
   });
 });
 </script>

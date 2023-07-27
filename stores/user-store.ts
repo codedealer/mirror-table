@@ -10,6 +10,7 @@ export const useUserStore = defineStore('user', () => {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
   });
+  const authInitialized: Ref<boolean | null> = ref(false);
 
   const isLoggedIn = computed(() => !!idToken.value);
   const userProfile = computed(() => {
@@ -62,6 +63,7 @@ export const useUserStore = defineStore('user', () => {
 
   return {
     idToken,
+    authInitialized,
     isLoggedIn,
     userProfile,
     setUser,

@@ -1,5 +1,7 @@
 <template>
-  <div>
+  <div class="page-wrapper">
+    <TheNavigation />
+
     <slot />
   </div>
 </template>

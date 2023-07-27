@@ -7,6 +7,10 @@ useServerSeoMeta({
   ogImage: '/logo.svg',
 });
 
+definePageMeta({
+  layout: false,
+});
+
 const userStore = useUserStore();
 watchEffect(() => {
   if (userStore.isLoggedIn) {
