@@ -1,5 +1,4 @@
 import type { FirebaseAuthError } from 'firebase-admin/lib/utils/error';
-import { auth } from '@/utils/firebase-admin';
 
 export default defineNuxtPlugin(async () => {
   const userStore = useUserStore();
@@ -8,6 +7,7 @@ export default defineNuxtPlugin(async () => {
   }
 
   try {
+    const auth = useFirebaseAdmin();
     const result = await auth.verifyIdToken(userStore.idToken);
     userStore.setUser(result);
   } catch (e) {

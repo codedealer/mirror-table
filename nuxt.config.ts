@@ -7,6 +7,7 @@ export default {
     '@vuestic/nuxt',
   ],
   runtimeConfig: {
+    fbServiceAccount: process.env.FB_SERVICE_ACCOUNT,
     public: {
       fbApiKey: process.env.FB_API_KEY,
       fbAuthDomain: process.env.FB_AUTH_DOMAIN,
