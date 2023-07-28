@@ -12,6 +12,7 @@ definePageMeta({
 });
 
 const userStore = useUserStore();
+
 watchEffect(() => {
   if (userStore.isLoggedIn) {
     navigateTo('/dashboard');
@@ -46,7 +47,7 @@ watchEffect(() => {
         <VaButton
           preset="secondary"
           border-color="primary"
-          icon="add_to_drive"
+          icon="login"
           size="large"
           @click="signIn"
         >

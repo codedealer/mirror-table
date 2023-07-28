@@ -1,7 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { DecodedIdToken } from 'firebase-admin/auth';
 import type { User as FirebaseUser } from 'firebase/auth';
-import type { Profile, User } from '@/models/types';
+import type { AuthorizationInfo, Profile, User } from '@/models/types';
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<User | null>(null);
@@ -9,6 +8,11 @@ export const useUserStore = defineStore('user', () => {
   const idToken = useCookie('idToken', {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+  });
+  const authorizationInfo = useCookie('authorizationInfo', {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    default: (): AuthorizationInfo => ({ accessToken: '', expiry: 0 }),
   });
   const authInitialized: Ref<boolean | null> = ref(false);
 
@@ -28,7 +32,7 @@ export const useUserStore = defineStore('user', () => {
     };
   });
 
-  const setUser = (data: DecodedIdToken | FirebaseUser) => {
+  const setUser = (data: FirebaseUser) => {
     user.value = {
       uid: data.uid,
       email: data.email,
@@ -63,6 +67,7 @@ export const useUserStore = defineStore('user', () => {
 
   return {
     idToken,
+    authorizationInfo,
     authInitialized,
     isLoggedIn,
     userProfile,

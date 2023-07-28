@@ -12,12 +12,14 @@ export default {
   modules: [
     '@pinia/nuxt',
     '@vuestic/nuxt',
+    'nuxt-vue3-google-signin',
   ],
   runtimeConfig: {
     fbServiceAccount: process.env.FB_SERVICE_ACCOUNT,
     public: {
       fbApiKey: process.env.FB_API_KEY,
       fbAuthDomain: process.env.FB_AUTH_DOMAIN,
+      clientId: process.env.CLIENT_ID,
     }
   },
   app: {
@@ -63,6 +65,9 @@ export default {
         currentPresetName: 'dark',
       }
     }
+  },
+  googleSignIn: {
+    clientId: process.env.CLIENT_ID,
   },
   imports: {
     dirs: ['stores', 'models']

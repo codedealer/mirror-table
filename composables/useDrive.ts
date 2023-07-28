@@ -1,69 +1,64 @@
 /// <reference path="../node_modules/@types/gapi/index.d.ts" />
+import { useGoogleIdentityService } from '~/composables/useGoogleIdentityService';
+
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 
+/* TODO: this should only initialize the drive client
+ * and the auth client. On action we should check if we're authorized
+ * and if the token hasn't expired.
+ * The authorization should be done with the same account that has authenticated
+ * with Firebase and with { prompt: 'none' }.
+ */
 export const useDrive = () => {
   const userStore = useUserStore();
   const { init } = useToast();
-  const initializeGapi = () => {
-    const loadDrive = async () => {
-      try {
-        await gapi.client.load(DISCOVERY_DOC);
-        console.log(`setting auth token ${userStore.idToken}`);
-        gapi.client.setToken({
-          access_token: userStore.idToken as string,
-        });
-      } catch (e) {
-        console.error(e);
-        init({
-          message: 'Failed to load Google Drive API',
-          color: 'danger',
-        });
-        return;
-      }
+  const { scriptLoaded } = useGsiScript();
 
-      const fileMetadata = {
-        name: 'test.txt',
-        parents: ['appDataFolder'],
-      };
-      const media = {
-        mimeType: 'text/plain',
-        body: 'Hello World',
-      };
-      try {
-        // @ts-expect-error
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-        const res = await gapi.client.drive.files.create({
-          resource: fileMetadata,
-          media,
-          fields: 'id',
-        });
-        console.log(res);
-      } catch (e) {
-        console.log(e);
-      }
-    };
-    gapi.load('client', {
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      callback: loadDrive,
-      onerror: () => {
-        init({
-          message: 'Failed to load Google Drive API',
-          color: 'danger',
-        });
-      },
-    });
+  const loadDrive = async () => {
+    try {
+      await gapi.client.load(DISCOVERY_DOC);
+
+      const { implicitGrantModel } = useGoogleIdentityService();
+
+      const { authorizationInfo } = toRefs(userStore);
+      const authClient = implicitGrantModel(
+        authorizationInfo,
+        'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata',
+      );
+
+      const result = await authClient.requestToken();
+      gapi.client.setToken({
+        access_token: result.accessToken,
+      });
+    } catch (e) {
+      console.error(e);
+      init({
+        message: 'Failed to load Google Drive API',
+        color: 'danger',
+      });
+    }
   };
+
   onMounted(() => {
     watchEffect(() => {
-      if (!userStore.authInitialized ||
-        !('gapi_loaded' in window) ||
-        !window.gapi_loaded) {
+      if (!('gapi_loaded' in window) ||
+        !window.gapi_loaded ||
+        !scriptLoaded.value) {
         return;
       }
 
-      // only proceed if user is confirmed to be logged in
+      // only proceed if gsi script is loaded
       // and gapi script is loaded
-      void initializeGapi();
+      gapi.load('client', {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        callback: loadDrive,
+        onerror: () => {
+          init({
+            message: 'Failed to load Google Drive API',
+            color: 'danger',
+          });
+        },
+      });
     });
   });
 };
