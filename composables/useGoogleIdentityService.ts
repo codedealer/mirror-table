@@ -32,7 +32,6 @@ export const useGoogleIdentityService = () => {
         expiry: expiryFromSeconds(tokenResponse.expires_in),
       };
 
-      console.log('callback got token: ', ai);
       storage.value = ai;
 
       resolveHook && resolveHook(ai);
@@ -45,6 +44,9 @@ export const useGoogleIdentityService = () => {
     });
 
     const requestToken = (): Promise<AuthorizationInfo> => {
+      resolveHook = null;
+      rejectHook = null;
+
       // check if the token has not yet expired
       if (storage.value && storage.value.expiry > Date.now()) {
         return Promise.resolve(storage.value);
