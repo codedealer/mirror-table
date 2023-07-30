@@ -1,5 +1,14 @@
 <script setup lang="ts">
 const driveButtonDisabled = ref(true);
+
+const config = useRuntimeConfig();
+const userStore = useUserStore();
+const { authorizationInfo } = toRefs(userStore);
+const { client } = useGoogleIdentityService('implicitGrantFlow', {
+  clientId: config.public.clientId,
+  storage: authorizationInfo,
+});
+
 useDrive();
 </script>
 

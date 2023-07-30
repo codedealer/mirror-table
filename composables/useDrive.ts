@@ -1,5 +1,4 @@
 /// <reference path="../node_modules/@types/gapi/index.d.ts" />
-import { useGoogleIdentityService } from '~/composables/useGoogleIdentityService';
 
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 
@@ -10,26 +9,11 @@ const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/res
  * with Firebase and with { prompt: 'none' }.
  */
 export const useDrive = () => {
-  const userStore = useUserStore();
   const { init } = useToast();
-  const { scriptLoaded } = useGsiScript();
 
   const loadDrive = async () => {
     try {
       await gapi.client.load(DISCOVERY_DOC);
-
-      const { implicitGrantModel } = useGoogleIdentityService();
-
-      const { authorizationInfo } = toRefs(userStore);
-      const authClient = implicitGrantModel(
-        authorizationInfo,
-        'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata',
-      );
-
-      const result = await authClient.requestToken();
-      gapi.client.setToken({
-        access_token: result.accessToken,
-      });
     } catch (e) {
       console.error(e);
       init({
@@ -42,8 +26,7 @@ export const useDrive = () => {
   onMounted(() => {
     watchEffect(() => {
       if (!('gapi_loaded' in window) ||
-        !window.gapi_loaded ||
-        !scriptLoaded.value) {
+        !window.gapi_loaded) {
         return;
       }
 

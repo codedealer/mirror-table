@@ -1,72 +1,28 @@
-/// <reference path="../node_modules/vue3-google-signin/dist/@types/globals.d.ts" />
-import type { TokenResponse } from 'vue3-google-signin';
-import type { Ref } from 'vue';
-import type { AuthorizationInfo, UniversalAuthClient } from '~/models/types';
-import { expiryFromSeconds } from '~/utils';
+import type { UniversalAuthClient, UniversalAuthClientParams } from '~/models/types';
+import { useImplicitGrantFlowAuth } from '~/composables/useImplicitGrantFlowAuth';
 
-export const useGoogleIdentityService = () => {
-  const g = window.google;
-  if (!g) {
-    throw new Error('Trying to use Google Identity Service when it is not loaded');
-  }
+export type AuthFlowModel = 'implicitGrantFlow' | 'authorizationCodeFlow';
+let chosenModel: AuthFlowModel = 'implicitGrantFlow';
+const client = shallowRef<UniversalAuthClient | null>(null);
 
-  const config = useRuntimeConfig();
-  const oauth2 = g.accounts.oauth2;
+export const useGoogleIdentityService = (model: AuthFlowModel, params: UniversalAuthClientParams) => {
+  const { scriptLoaded } = useGsiScript();
+  watchEffect(() => {
+    if (!scriptLoaded.value) {
+      return;
+    }
 
-  const implicitGrantModel = (
-    storage: Ref<AuthorizationInfo>,
-    scope: string = '',
-  ): UniversalAuthClient => {
-    let resolveHook: ((value: AuthorizationInfo | PromiseLike<AuthorizationInfo>) => void) | null = null;
-    let rejectHook: ((reason: any) => void) | null = null;
+    if (client.value && model === chosenModel) {
+      return { client };
+    }
 
-    const callback = (tokenResponse: TokenResponse) => {
-      if (tokenResponse.error && tokenResponse.error_description) {
-        console.error(tokenResponse.error_description);
-        rejectHook && rejectHook(tokenResponse.error_description);
-        return;
-      }
+    chosenModel = model;
+    if (model === 'implicitGrantFlow') {
+      client.value = useImplicitGrantFlowAuth(params);
+    } else if (model === 'authorizationCodeFlow') {
+      throw new Error('Authorization Code Flow is not yet implemented');
+    }
+  });
 
-      const ai: AuthorizationInfo = {
-        accessToken: tokenResponse.access_token,
-        expiry: expiryFromSeconds(tokenResponse.expires_in),
-      };
-
-      storage.value = ai;
-
-      resolveHook && resolveHook(ai);
-    };
-
-    const authClient = oauth2.initTokenClient({
-      client_id: config.public.clientId,
-      scope,
-      callback,
-    });
-
-    const requestToken = (): Promise<AuthorizationInfo> => {
-      resolveHook = null;
-      rejectHook = null;
-
-      // check if the token has not yet expired
-      if (storage.value && storage.value.expiry > Date.now()) {
-        return Promise.resolve(storage.value);
-      }
-
-      return new Promise((resolve, reject) => {
-        resolveHook = resolve;
-        rejectHook = reject;
-
-        authClient.requestAccessToken();
-      });
-    };
-
-    return {
-      storage,
-      requestToken,
-    };
-  };
-
-  return {
-    implicitGrantModel,
-  };
+  return { client };
 };

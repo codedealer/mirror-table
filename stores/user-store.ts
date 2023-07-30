@@ -16,7 +16,11 @@ export const useUserStore = defineStore('user', () => {
   });
   const authInitialized: Ref<boolean | null> = ref(false);
 
+  // true if there is a user token stored in the system
   const isLoggedIn = computed(() => !!idToken.value);
+  // true if firebase has confirmed the token's validity
+  const isAuthenticated = computed(() => isLoggedIn.value && authInitialized.value);
+
   const userProfile = computed(() => {
     if (!isLoggedIn.value) {
       return null;
@@ -70,6 +74,7 @@ export const useUserStore = defineStore('user', () => {
     authorizationInfo,
     authInitialized,
     isLoggedIn,
+    isAuthenticated,
     userProfile,
     setUser,
     signInUser,

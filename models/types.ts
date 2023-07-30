@@ -1,4 +1,5 @@
 import type { Ref } from 'vue';
+import type { OverridableTokenClientConfig } from 'vue3-google-signin';
 
 export interface User {
   uid: string
@@ -16,6 +17,11 @@ export interface AuthorizationInfo {
 }
 
 export interface UniversalAuthClient {
+  requestToken: (config?: OverridableTokenClientConfig) => Promise<AuthorizationInfo>
+}
+
+export interface UniversalAuthClientParams {
+  clientId: string
+  scope?: string
   storage: Ref<AuthorizationInfo>
-  requestToken: () => Promise<AuthorizationInfo>
 }
