@@ -24,3 +24,8 @@ header {
     margin-inline: auto;
   }
 }
+
+/* fix for buttons in popover */
+.va-button--loading.va-popover {
+  display: inline-flex;
+}

@@ -1,4 +1,5 @@
 /// <reference path="../node_modules/@types/gapi/index.d.ts" />
+/// <reference path="../node_modules/@types/gapi.client.drive-v3/index.d.ts" />
 
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 
@@ -11,19 +12,32 @@ const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/res
 export const useDrive = () => {
   const { init } = useToast();
 
+  const isLoading = ref(false);
+  const isReady = ref(false);
+  const client = shallowRef<typeof gapi.client.drive | null>(null);
+
   const loadDrive = async () => {
     try {
       await gapi.client.load(DISCOVERY_DOC);
     } catch (e) {
+      isLoading.value = false;
+
       console.error(e);
       init({
         message: 'Failed to load Google Drive API',
         color: 'danger',
       });
+      return;
     }
+
+    client.value = gapi.client.drive;
+    isLoading.value = false;
+    isReady.value = true;
   };
 
   onMounted(() => {
+    isLoading.value = true;
+
     watchEffect(() => {
       if (!('gapi_loaded' in window) ||
         !window.gapi_loaded) {
@@ -36,6 +50,7 @@ export const useDrive = () => {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         callback: loadDrive,
         onerror: () => {
+          isLoading.value = false;
           init({
             message: 'Failed to load Google API Client',
             color: 'danger',
@@ -44,4 +59,10 @@ export const useDrive = () => {
       });
     });
   });
+
+  return {
+    isLoading: readonly(isLoading),
+    isReady: readonly(isReady),
+    client,
+  };
 };

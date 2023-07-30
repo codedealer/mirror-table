@@ -8,7 +8,6 @@ export const useImplicitGrantFlowAuth = ({
   storage,
 }: UniversalAuthClientParams): UniversalAuthClient => {
   const g = window.google;
-  console.log('scope:', scope.length);
   if (!g) {
     throw new Error('Trying to use Google Identity Service when it is not loaded');
   }

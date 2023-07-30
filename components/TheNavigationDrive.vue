@@ -1,6 +1,4 @@
 <script setup lang="ts">
-const driveButtonDisabled = ref(true);
-
 const config = useRuntimeConfig();
 const userStore = useUserStore();
 const { authorizationInfo } = toRefs(userStore);
@@ -9,7 +7,7 @@ const { client } = useGoogleIdentityService('implicitGrantFlow', {
   storage: authorizationInfo,
 });
 
-useDrive();
+const driveStore = useDriveStore();
 </script>
 
 <template>
@@ -21,7 +19,8 @@ useDrive();
       preset="plain"
       color="primary-dark"
       size="large"
-      :disabled="driveButtonDisabled"
+      :loading="driveStore.isLoading"
+      :disabled="!driveStore.isReady"
     />
   </va-popover>
 </template>
