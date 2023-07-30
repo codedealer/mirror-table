@@ -14,7 +14,7 @@ export const useDrive = () => {
 
   const isLoading = ref(false);
   const isReady = ref(false);
-  const client = shallowRef<typeof gapi.client.drive | null>(null);
+  const client = shallowRef<typeof gapi.client | null>(null);
 
   const loadDrive = async () => {
     try {
@@ -30,7 +30,7 @@ export const useDrive = () => {
       return;
     }
 
-    client.value = gapi.client.drive;
+    client.value = gapi.client;
     isLoading.value = false;
     isReady.value = true;
   };
