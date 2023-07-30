@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const config = useRuntimeConfig();
 const userStore = useUserStore();
-const { authorizationInfo } = toRefs(userStore);
+const { authorizationInfo, userProfile } = toRefs(userStore);
 const { client } = useGoogleIdentityService('implicitGrantFlow', {
   clientId: config.public.clientId,
   storage: authorizationInfo,
@@ -10,9 +10,13 @@ const { client } = useGoogleIdentityService('implicitGrantFlow', {
 const driveStore = useDriveStore();
 
 const getDriveData = async () => {
+  if (userProfile.value === null || !userProfile.value.email) {
+    return;
+  }
+
   const authInfo = await client.value?.requestToken({
     prompt: '',
-    hint: 'work.mello@gmail.com',
+    hint: userProfile.value.email,
   });
   console.log('got token: ', authInfo?.accessToken);
   if (!driveStore.client || !authInfo) {
