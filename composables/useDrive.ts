@@ -37,7 +37,7 @@ export const useDrive = () => {
         callback: loadDrive,
         onerror: () => {
           init({
-            message: 'Failed to load Google Drive API',
+            message: 'Failed to load Google API Client',
             color: 'danger',
           });
         },
