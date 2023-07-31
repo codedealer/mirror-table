@@ -25,12 +25,21 @@ const getDriveData = async () => {
   driveStore.client.setToken({
     access_token: authInfo.accessToken,
   });
-  driveStore.client.drive.files.list({
-    pageSize: 10,
-    fields: 'files(id, name)',
-  }).then((res) => {
-    console.log('got drive files: ', res.result);
-  });
+
+  // show the picker
+  const picker = new window.google.picker.PickerBuilder()
+    .addView(google.picker.ViewId.DOCS)
+    .setOAuthToken(authInfo.accessToken)
+    .setDeveloperKey(config.public.fbApiKey)
+    .setCallback((data) => {
+      if (data.action === google.picker.Action.PICKED) {
+        const doc = data.docs[0];
+        console.log('The user selected: ', doc);
+        // driveStore.setFile(doc);
+      }
+    })
+    .build();
+  picker.setVisible(true);
 };
 </script>
 

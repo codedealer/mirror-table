@@ -1,14 +1,15 @@
 import type { UniversalAuthClient, UniversalAuthClientParams } from '~/models/types';
 import { useImplicitGrantFlowAuth } from '~/composables/useImplicitGrantFlowAuth';
+import { useAsyncScriptTag } from '~/composables/useAsyncScriptTag';
 
 export type AuthFlowModel = 'implicitGrantFlow' | 'authorizationCodeFlow';
 let chosenModel: AuthFlowModel = 'implicitGrantFlow';
 const client = shallowRef<UniversalAuthClient | null>(null);
 
 export const useGoogleIdentityService = (model: AuthFlowModel, params: UniversalAuthClientParams) => {
-  const { scriptLoaded } = useGsiScript();
+  const { ready } = useAsyncScriptTag('https://accounts.google.com/gsi/client');
   watchEffect(() => {
-    if (!scriptLoaded.value) {
+    if (!ready.value) {
       return;
     }
 

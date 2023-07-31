@@ -1,6 +1,7 @@
-import type { OverridableTokenClientConfig, TokenResponse } from 'vue3-google-signin';
 import type { AuthorizationInfo, UniversalAuthClient, UniversalAuthClientParams } from '~/models/types';
 import { expiryFromSeconds } from '~/utils';
+import TokenResponse = google.accounts.oauth2.TokenResponse;
+import OverridableTokenClientConfig = google.accounts.oauth2.OverridableTokenClientConfig;
 
 export const useImplicitGrantFlowAuth = ({
   clientId,

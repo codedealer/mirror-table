@@ -12,7 +12,6 @@ export default {
   modules: [
     '@pinia/nuxt',
     '@vuestic/nuxt',
-    'nuxt-vue3-google-signin',
   ],
   runtimeConfig: {
     fbServiceAccount: process.env.FB_SERVICE_ACCOUNT,
@@ -31,14 +30,6 @@ export default {
       link: [
         { rel: 'icon', type: 'image/svg', href: '/logo.svg' },
       ],
-      script: [
-        {
-          src: 'https://apis.google.com/js/api.js',
-          async: true,
-          defer: true,
-          onload: 'window.gapi_loaded = true;',
-        },
-      ]
     },
     pageTransition: {
       name: 'slide-fade',
@@ -65,9 +56,6 @@ export default {
         currentPresetName: 'dark',
       }
     }
-  },
-  googleSignIn: {
-    clientId: process.env.CLIENT_ID,
   },
   imports: {
     dirs: ['stores', 'models']

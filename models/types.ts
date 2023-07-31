@@ -1,5 +1,5 @@
 import type { Ref } from 'vue';
-import type { OverridableTokenClientConfig } from 'vue3-google-signin';
+import OverridableTokenClientConfig = google.accounts.oauth2.OverridableTokenClientConfig;
 
 export interface User {
   uid: string
