@@ -60,4 +60,8 @@ export default {
   imports: {
     dirs: ['stores', 'models']
   },
+  routeRules: {
+    '/': { prerender: true },
+    '/d': { ssr: false },
+  },
 }

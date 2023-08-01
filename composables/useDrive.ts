@@ -2,6 +2,7 @@
 /// <reference path="../node_modules/@types/gapi.client.drive-v3/index.d.ts" />
 
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+const API_SRC = 'https://apis.google.com/js/api.js';
 
 export const useDrive = () => {
   const { init } = useToast();
@@ -34,7 +35,7 @@ export const useDrive = () => {
     driveApiLoaded.value = true;
   };
 
-  const { ready } = useAsyncScriptTag('https://apis.google.com/js/api.js');
+  const { ready } = useAsyncScriptTag(API_SRC);
 
   driveApiLoading.value = true;
   pickerApiLoading.value = true;

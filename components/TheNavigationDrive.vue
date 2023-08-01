@@ -29,13 +29,21 @@ const getDriveData = async () => {
   // show the picker
   const picker = new window.google.picker.PickerBuilder()
     .addView(google.picker.ViewId.DOCS)
+    .addView(new google.picker.DocsUploadView())
     .setOAuthToken(authInfo.accessToken)
     .setDeveloperKey(config.public.fbApiKey)
-    .setCallback((data) => {
+    .setAppId(config.public.clientId)
+    .setCallback(async (data) => {
       if (data.action === google.picker.Action.PICKED) {
         const doc = data.docs[0];
         console.log('The user selected: ', doc);
-        // driveStore.setFile(doc);
+        // get the file info
+        const file = await driveStore.client!.drive.files.get({
+          fileId: doc.id,
+          fields: '*',
+          alt: 'media',
+        });
+        console.log('file info: ', file);
       }
     })
     .build();
@@ -45,7 +53,7 @@ const getDriveData = async () => {
 
 <template>
   <va-popover
-    message="Google Drive Link"
+    message="Open Google Drive Pop up"
   >
     <va-button
       icon="cloud"
