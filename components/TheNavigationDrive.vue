@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useObjectUrl } from '@vueuse/core';
+
 const config = useRuntimeConfig();
 const userStore = useUserStore();
 const { authorizationInfo, userProfile } = toRefs(userStore);
@@ -44,6 +46,15 @@ const getDriveData = async () => {
           alt: 'media',
         });
         console.log('file info: ', file);
+        const binaryData = file.body;
+        const arr = new Uint8Array(binaryData.length);
+        for (let i = 0; i < binaryData.length; i++) {
+          arr[i] = binaryData.charCodeAt(i);
+        }
+        const blobUrl = useObjectUrl(new Blob([arr], {
+          type: file.headers ? file.headers['Content-Type'] : 'application/octet-stream',
+        }));
+        userStore.img = blobUrl.value;
       }
     })
     .build();

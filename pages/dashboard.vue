@@ -17,7 +17,7 @@ useServerSeoMeta({
       Tables List
     </h1>
     <div class="dashboard-content">
-      <TheTablesList />
+      <va-image v-if="userStore.img" :src="userStore.img" />
 
       <AccountCard />
     </div>

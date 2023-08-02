@@ -69,7 +69,9 @@ export const useUserStore = defineStore('user', () => {
     profile.value = null;
   };
 
+  const img: Ref<string | undefined> = ref(undefined);
   return {
+    img,
     idToken,
     authorizationInfo,
     authInitialized,
