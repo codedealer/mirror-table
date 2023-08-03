@@ -61,7 +61,7 @@ export default {
     dirs: ['stores', 'models']
   },
   routeRules: {
-    '/': { prerender: true },
+    /*'/': { prerender: true },*/
     '/d': { ssr: false },
   },
 }
