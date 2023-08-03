@@ -27,15 +27,18 @@ export const useUserStore = defineStore('user', () => {
   // indicates that the user was logged in at some point (primarily for ssr)
   const isLoggedIn = computed(() => !!idToken.value);
 
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  watchEffect(async () => {
-    if (user.value) {
-      idToken.value = await user.value.getIdToken();
-    } else {
-      idToken.value = null;
-      authorizationInfo.value = { accessToken: '', expiry: 0 };
-    }
-  });
+  // watch only on the client side
+  if ($auth) {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    watchEffect(async () => {
+      if (user.value) {
+        idToken.value = await user.value.getIdToken();
+      } else {
+        idToken.value = null;
+        authorizationInfo.value = { accessToken: '', expiry: 0 };
+      }
+    });
+  }
 
   return {
     user,
