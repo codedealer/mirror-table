@@ -22,7 +22,7 @@
         </a>
       </va-navbar-item>
       <va-navbar-item>
-        <div class="va-divider--vertical" />
+        <va-divider class="va-divider--vertical" />
       </va-navbar-item>
       <va-navbar-item>
         <TheNavigationDrive />
