@@ -1,8 +1,6 @@
-import type { NextOrObserver, User } from '@firebase/auth';
 import {
   GoogleAuthProvider,
   signOut as fireBaseSignOut,
-  onAuthStateChanged,
   signInWithPopup,
 } from '@firebase/auth';
 
@@ -25,14 +23,4 @@ export async function signOut () {
   const { $auth } = useNuxtApp();
 
   return await fireBaseSignOut($auth);
-}
-
-export function initAuth (callback: NextOrObserver<User>): void {
-  const { $auth } = useNuxtApp();
-
-  if (!$auth) {
-    return;
-  }
-
-  onAuthStateChanged($auth, callback);
 }

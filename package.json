@@ -32,6 +32,7 @@
     "@pinia/nuxt": "^0.4.11",
     "@vuestic/nuxt": "^1.0.14",
     "@vueuse/core": "^10.3.0",
+    "@vueuse/firebase": "^10.3.0",
     "firebase": "^10.0.0",
     "pinia": "^2.1.4",
     "vuestic-ui": "^1.7.3"

@@ -2179,6 +2179,14 @@
     "@vueuse/shared" "10.3.0"
     vue-demi ">=0.14.5"
 
+"@vueuse/firebase@^10.3.0":
+  version "10.3.0"
+  resolved "https://registry.yarnpkg.com/@vueuse/firebase/-/firebase-10.3.0.tgz#b892f874057b70c6537da51147a06fc546dc0ac1"
+  integrity sha512-ZNf/k5H3BM/HpLmW6OCInHaEtuuPQ9Ftm7dT6Dk1tB1lJd66MWe7R6FXIiGc1sO5WhqOEZYKf21szXbTYiLHNw==
+  dependencies:
+    "@vueuse/shared" "10.3.0"
+    vue-demi ">=0.14.5"
+
 "@vueuse/metadata@10.3.0":
   version "10.3.0"
   resolved "https://registry.yarnpkg.com/@vueuse/metadata/-/metadata-10.3.0.tgz#14fe6cc909573785f73a56e4d9351edf3830b796"

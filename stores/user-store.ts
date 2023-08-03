@@ -1,10 +1,18 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { User as FirebaseUser } from 'firebase/auth';
-import type { AuthorizationInfo, Profile, User } from '@/models/types';
+import type { User } from 'firebase/auth';
+import { useAuth } from '@vueuse/firebase/useAuth';
+import type { AuthorizationInfo } from '@/models/types';
 
 export const useUserStore = defineStore('user', () => {
-  const user = ref<User | null>(null);
-  const profile = ref<Profile | null>(null);
+  const { $auth } = useNuxtApp();
+
+  let user = ref<User | null>(null);
+  let isAuthenticated = computed(() => false);
+  if ($auth) {
+    const authObject = useAuth($auth);
+    user = authObject.user;
+    isAuthenticated = authObject.isAuthenticated;
+  }
   const idToken = useCookie('idToken', {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
@@ -14,73 +22,27 @@ export const useUserStore = defineStore('user', () => {
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
     default: (): AuthorizationInfo => ({ accessToken: '', expiry: 0 }),
   });
-  const authInitialized: Ref<boolean | null> = ref(false);
 
   // true if there is a user token stored in the system
+  // indicates that the user was logged in at some point (primarily for ssr)
   const isLoggedIn = computed(() => !!idToken.value);
-  // true if firebase has confirmed the token's validity
-  const isAuthenticated = computed(() => isLoggedIn.value && authInitialized.value);
 
-  const userProfile = computed(() => {
-    if (!isLoggedIn.value) {
-      return null;
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  watchEffect(async () => {
+    if (user.value) {
+      idToken.value = await user.value.getIdToken();
+    } else {
+      idToken.value = null;
+      authorizationInfo.value = { accessToken: '', expiry: 0 };
     }
-
-    if (!profile.value) {
-      return user.value;
-    }
-
-    return {
-      ...user.value,
-      ...profile.value,
-    };
   });
 
-  const setUser = (data: FirebaseUser) => {
-    user.value = {
-      uid: data.uid,
-      email: data.email,
-    };
-  };
-
-  const setProfile = (data: FirebaseUser) => {
-    profile.value = {
-      displayName: data.displayName,
-      photoURL: data.photoURL,
-    };
-  };
-
-  const signInUser = async (data: FirebaseUser) => {
-    setUser(data);
-    setProfile(data);
-
-    try {
-      idToken.value = await data.getIdToken();
-    } catch (e) {
-      console.error(e);
-      idToken.value = null;
-      user.value = null;
-    }
-  };
-
-  const signOutUser = () => {
-    idToken.value = null;
-    user.value = null;
-    profile.value = null;
-  };
-
-  const img: Ref<string | undefined> = ref(undefined);
   return {
-    img,
+    user,
     idToken,
     authorizationInfo,
-    authInitialized,
     isLoggedIn,
     isAuthenticated,
-    userProfile,
-    setUser,
-    signInUser,
-    signOutUser,
   };
 });
 

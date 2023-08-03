@@ -3,7 +3,7 @@ import { useObjectUrl } from '@vueuse/core';
 
 const config = useRuntimeConfig();
 const userStore = useUserStore();
-const { authorizationInfo, userProfile } = toRefs(userStore);
+const { authorizationInfo, isAuthenticated, user } = toRefs(userStore);
 const { client } = useGoogleIdentityService('implicitGrantFlow', {
   clientId: config.public.clientId,
   storage: authorizationInfo,
@@ -12,13 +12,13 @@ const { client } = useGoogleIdentityService('implicitGrantFlow', {
 const driveStore = useDriveStore();
 
 const getDriveData = async () => {
-  if (userProfile.value === null || !userProfile.value.email) {
+  if (!isAuthenticated.value || !user.value || !user.value.email) {
     return;
   }
 
   const authInfo = await client.value?.requestToken({
     prompt: '',
-    hint: userProfile.value.email,
+    hint: user.value.email,
   });
   console.log('got token: ', authInfo?.accessToken);
   if (!driveStore.client || !authInfo) {
@@ -54,7 +54,6 @@ const getDriveData = async () => {
         const blobUrl = useObjectUrl(new Blob([arr], {
           type: file.headers ? file.headers['Content-Type'] : 'application/octet-stream',
         }));
-        userStore.img = blobUrl.value;
       }
     })
     .build();
