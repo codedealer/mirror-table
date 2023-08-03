@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <va-card>
+  <div class="ghost-container">
     <va-image
       src="https://via.placeholder.com/300x150"
       class=""
@@ -21,11 +21,16 @@
         preset="primary"
         color="secondary-dark"
       />
-      <va-button>Launch</va-button>
+      <va-button
+        preset="secondary"
+        border-color="primary"
+      >
+        Launch
+      </va-button>
     </va-card-actions>
-  </va-card>
+  </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 
 </style>

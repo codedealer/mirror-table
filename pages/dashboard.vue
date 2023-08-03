@@ -17,7 +17,7 @@ useServerSeoMeta({
       Tables List
     </h1>
     <div class="dashboard-content">
-      <TheTablesList />
+      <TablesList />
 
       <AccountCard />
     </div>
