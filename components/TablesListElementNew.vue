@@ -10,13 +10,6 @@ const submit = () => {
 };
 
 const config = useRuntimeConfig();
-const userStore = useUserStore();
-//const driveStore = useDriveStore();
-const { authorizationInfo, isAuthenticated, user } = toRefs(userStore);
-/*const { client } = useGoogleIdentityService('implicitGrantFlow', {
-  clientId: config.public.clientId,
-  storage: authorizationInfo,
-});*/
 
 const openPicker = async () => {
   if (!isAuthenticated.value || !user.value || !user.value.email) {
