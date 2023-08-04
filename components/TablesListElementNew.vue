@@ -11,7 +11,7 @@ const submit = () => {
 
 const config = useRuntimeConfig();
 const userStore = useUserStore();
-const driveStore = useDriveStore();
+//const driveStore = useDriveStore();
 const { authorizationInfo, isAuthenticated, user } = toRefs(userStore);
 /*const { client } = useGoogleIdentityService('implicitGrantFlow', {
   clientId: config.public.clientId,
