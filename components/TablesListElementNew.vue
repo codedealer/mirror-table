@@ -73,6 +73,7 @@ const openPicker = async () => {
       </va-button>
     </va-card-actions>
 
+    <ClientOnly>
     <va-modal
       v-model="showModal"
       fullscreen
@@ -114,6 +115,7 @@ const openPicker = async () => {
         </div>
       </va-form>
     </va-modal>
+    </ClientOnly>
   </div>
 </template>
 
