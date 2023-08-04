@@ -54,7 +54,7 @@ const openPicker = async () => {
           fields: '*',
         });
         console.log('file info: ', file);
-        imageSrc.value = `https://drive.google.com/thumbnail?sz=w640&id=${doc.id}&authuser=2`;
+        imageSrc.value = `https://drive.google.com/thumbnail?sz=w640&id=${doc.id}`;
       }
     })
     .build();
