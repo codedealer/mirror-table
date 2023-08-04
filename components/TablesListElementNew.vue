@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { useForm } from 'vuestic-ui';
 
 const showModal = ref(false);
 const imageSrc = ref('');
-
+const { formData } = useForm('new-table-form');
 
 const submit = () => {
   console.log(formData.value);
@@ -10,6 +11,13 @@ const submit = () => {
 };
 
 const config = useRuntimeConfig();
+const userStore = useUserStore();
+const driveStore = useDriveStore();
+const { authorizationInfo, isAuthenticated, user } = toRefs(userStore);
+const { client } = useGoogleIdentityService('implicitGrantFlow', {
+  clientId: config.public.clientId,
+  storage: authorizationInfo,
+});
 
 const openPicker = async () => {
   if (!isAuthenticated.value || !user.value || !user.value.email) {
@@ -74,47 +82,47 @@ const openPicker = async () => {
     </va-card-actions>
 
     <ClientOnly>
-    <va-modal
-      v-model="showModal"
-      fullscreen
-      ok-text="Create"
-      cancel-text="Cancel"
-      @ok="submit"
-    >
-      <h2 class="va-h2">
-        New Table
-      </h2>
-      <va-form
-        ref="new-table-form"
-        tag="form"
-        class="vertical-form table-form"
-        @submit.prevent="submit"
+      <va-modal
+        v-model="showModal"
+        fullscreen
+        ok-text="Create"
+        cancel-text="Cancel"
+        @ok="submit"
       >
-        <va-input
-          name="tableName"
-          label="Table Name"
-          required
-        />
+        <h2 class="va-h2">
+          New Table
+        </h2>
+        <va-form
+          ref="new-table-form"
+          tag="form"
+          class="vertical-form table-form"
+          @submit.prevent="submit"
+        >
+          <va-input
+            name="tableName"
+            label="Table Name"
+            required
+          />
 
-        <div class="vertical-form__image">
-          <img
-            v-if="imageSrc"
-            :src="imageSrc"
-            alt="Table Image"
-          >
-          <p>
-            You can upload a custom image for your table. This image will be used in the table's card view. Keep the aspect ration to 2:1 and width to no less than 300px.
-          </p>
-          <va-button
-            preset="primary"
-            color="secondary-dark"
-            @click="openPicker"
-          >
-            Upload Image
-          </va-button>
-        </div>
-      </va-form>
-    </va-modal>
+          <div class="vertical-form__image">
+            <img
+              v-if="imageSrc"
+              :src="imageSrc"
+              alt="Table Image"
+            >
+            <p>
+              You can upload a custom image for your table. This image will be used in the table's card view. Keep the aspect ration to 2:1 and width to no less than 300px.
+            </p>
+            <va-button
+              preset="primary"
+              color="secondary-dark"
+              @click="openPicker"
+            >
+              Upload Image
+            </va-button>
+          </div>
+        </va-form>
+      </va-modal>
     </ClientOnly>
   </div>
 </template>
