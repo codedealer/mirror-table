@@ -1,7 +1,7 @@
 export default defineNuxtRouteMiddleware((to, from) => {
   const userStore = useUserStore();
 
-  const publicRoutes = ['/'];
+  const publicRoutes = ['/', '/d'];
   if (!userStore.isLoggedIn) {
     if (!publicRoutes.includes(to.path)) {
       return navigateTo('/');
