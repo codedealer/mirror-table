@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { useForm } from 'vuestic-ui';
 
 const showModal = ref(false);
 const imageSrc = ref('');
-const { formData } = useForm('new-table-form');
+
 
 const submit = () => {
   console.log(formData.value);
