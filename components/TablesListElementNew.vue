@@ -14,12 +14,12 @@ const config = useRuntimeConfig();
 const userStore = useUserStore();
 const driveStore = useDriveStore();
 const googleStore = useGoogleAuthStore();
-const { isAuthenticated } = toRefs(userStore);
+const { isAuthenticated, authorizationInfo } = toRefs(userStore);
 
 const openPicker = async () => {
-  let authInfo;
+  let drive: typeof gapi.client.drive;
   try {
-    authInfo = await googleStore.client!.requestToken();
+    drive = await driveStore.client!.drive;
   } catch (e) {
     const { init } = useToast();
     init({
@@ -29,17 +29,11 @@ const openPicker = async () => {
     return;
   }
 
-  console.log('got token: ', authInfo?.accessToken);
-
-  driveStore.client!.setToken({
-    access_token: authInfo.accessToken,
-  });
-
   // show the picker
   const picker = new window.google.picker.PickerBuilder()
     .addView(google.picker.ViewId.DOCS_IMAGES)
     .addView(new google.picker.DocsUploadView())
-    .setOAuthToken(authInfo.accessToken)
+    .setOAuthToken(authorizationInfo.value.accessToken)
     .setDeveloperKey(config.public.fbApiKey)
     .setAppId(config.public.clientId)
     .setCallback(async (data) => {
@@ -48,7 +42,7 @@ const openPicker = async () => {
         const doc = data.docs[0];
         console.log('The user selected: ', doc);
         // get the file info
-        const file = await driveStore.client!.drive.files.get({
+        const file = await drive.files.get({
           fileId: doc.id,
           fields: '*',
         });
