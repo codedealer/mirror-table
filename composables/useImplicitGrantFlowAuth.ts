@@ -36,7 +36,7 @@ export const useImplicitGrantFlowAuth = ({
       if (prompt !== 'consent') {
         prompt = 'consent';
       }
-      rejectHook && rejectHook(new Error('Not all scopes were granted'));
+      rejectHook && rejectHook(new Error('Re-authorize granting all scopes'));
       return;
     } else {
       prompt = '';
