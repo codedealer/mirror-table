@@ -8,7 +8,6 @@ const tokenTTLToleranceSec = 60 * 1000;
 export const useImplicitGrantFlowAuth = ({
   clientId,
   scope = '',
-  storage,
 }: UniversalAuthClientParams): UniversalAuthClient => {
   if (typeof window === 'undefined') {
     throw new TypeError('Call to Google Identity Service on the server side');
@@ -24,7 +23,7 @@ export const useImplicitGrantFlowAuth = ({
 
   const requiredScopes = scope.split(' ');
   const firstScope = requiredScopes.length > 0 ? requiredScopes.pop() as string : '';
-  let needPromptScope = false;
+  let prompt = '';
 
   const callback = (tokenResponse: TokenResponse) => {
     if (tokenResponse.error && tokenResponse.error_description) {
@@ -34,11 +33,13 @@ export const useImplicitGrantFlowAuth = ({
     }
 
     if (!oauth2.hasGrantedAllScopes(tokenResponse, firstScope, ...requiredScopes)) {
-      needPromptScope = true;
+      if (prompt !== 'consent') {
+        prompt = 'consent';
+      }
       rejectHook && rejectHook(new Error('Not all scopes were granted'));
       return;
     } else {
-      needPromptScope = false;
+      prompt = '';
     }
 
     const ai: AuthorizationInfo = {
@@ -46,7 +47,8 @@ export const useImplicitGrantFlowAuth = ({
       expiry: expiryFromSeconds(tokenResponse.expires_in),
     };
 
-    storage.value = ai;
+    const googleAuthStore = useGoogleAuthStore();
+    googleAuthStore.authorizationInfo = ai;
 
     resolveHook && resolveHook(ai);
   };
@@ -66,16 +68,20 @@ export const useImplicitGrantFlowAuth = ({
       return Promise.reject(new Error('User is not authenticated'));
     }
 
+    const googleAuthStore = useGoogleAuthStore();
     // check if the token has not yet expired
-    if (!needPromptScope &&
-        storage.value &&
-        storage.value.expiry > (Date.now() + tokenTTLToleranceSec)) {
-      return Promise.resolve(storage.value);
+    if (!prompt &&
+        googleAuthStore.authorizationInfo &&
+        googleAuthStore.authorizationInfo.expiry > (
+          Date.now() + tokenTTLToleranceSec
+        )
+    ) {
+      return Promise.resolve(googleAuthStore.authorizationInfo);
     }
 
     const options: OverridableTokenClientConfig = {
       hint: userStore.user.email,
-      prompt: needPromptScope ? 'consent' : '',
+      prompt,
     };
 
     return new Promise((resolve, reject) => {
