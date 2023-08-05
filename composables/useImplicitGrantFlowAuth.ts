@@ -3,6 +3,8 @@ import { expiryFromSeconds } from '~/utils';
 import TokenResponse = google.accounts.oauth2.TokenResponse;
 import OverridableTokenClientConfig = google.accounts.oauth2.OverridableTokenClientConfig;
 
+const tokenTTLToleranceSec = 60 * 1000;
+
 export const useImplicitGrantFlowAuth = ({
   clientId,
   scope = '',
@@ -20,11 +22,23 @@ export const useImplicitGrantFlowAuth = ({
   let resolveHook: ((value: AuthorizationInfo | PromiseLike<AuthorizationInfo>) => void) | null = null;
   let rejectHook: ((reason: any) => void) | null = null;
 
+  const requiredScopes = scope.split(' ');
+  const firstScope = requiredScopes.length > 0 ? requiredScopes.pop() as string : '';
+  let needPromptScope = false;
+
   const callback = (tokenResponse: TokenResponse) => {
     if (tokenResponse.error && tokenResponse.error_description) {
       console.error(tokenResponse.error_description);
       rejectHook && rejectHook(tokenResponse.error_description);
       return;
+    }
+
+    if (!oauth2.hasGrantedAllScopes(tokenResponse, firstScope, ...requiredScopes)) {
+      needPromptScope = true;
+      rejectHook && rejectHook(new Error('Not all scopes were granted'));
+      return;
+    } else {
+      needPromptScope = false;
     }
 
     const ai: AuthorizationInfo = {
@@ -43,20 +57,32 @@ export const useImplicitGrantFlowAuth = ({
     callback,
   });
 
-  const requestToken = (config?: OverridableTokenClientConfig): Promise<AuthorizationInfo> => {
+  const requestToken = (): Promise<AuthorizationInfo> => {
     resolveHook = null;
     rejectHook = null;
 
+    const userStore = useUserStore();
+    if (!userStore.isAuthenticated || !userStore.user?.email) {
+      return Promise.reject(new Error('User is not authenticated'));
+    }
+
     // check if the token has not yet expired
-    if (storage.value && storage.value.expiry > Date.now()) {
+    if (!needPromptScope &&
+        storage.value &&
+        storage.value.expiry > (Date.now() + tokenTTLToleranceSec)) {
       return Promise.resolve(storage.value);
     }
+
+    const options: OverridableTokenClientConfig = {
+      hint: userStore.user.email,
+      prompt: needPromptScope ? 'consent' : '',
+    };
 
     return new Promise((resolve, reject) => {
       resolveHook = resolve;
       rejectHook = reject;
 
-      authClient.requestAccessToken(config);
+      authClient.requestAccessToken(options);
     });
   };
 

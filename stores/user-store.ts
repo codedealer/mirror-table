@@ -1,7 +1,7 @@
-import { acceptHMRUpdate, defineStore } from 'pinia';
+import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 import type { User } from 'firebase/auth';
 import { useAuth } from '@vueuse/firebase/useAuth';
-import type { AuthorizationInfo } from '@/models/types';
+import { useGoogleAuthStore } from '~/stores/google-auth-store';
 
 export const useUserStore = defineStore('user', () => {
   const { $auth } = useNuxtApp();
@@ -17,11 +17,9 @@ export const useUserStore = defineStore('user', () => {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
   });
-  const authorizationInfo = useCookie('authorizationInfo', {
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-    default: (): AuthorizationInfo => ({ accessToken: '', expiry: 0 }),
-  });
+
+  const googleAuthStore = useGoogleAuthStore();
+  const { authorizationInfo } = toRefs(googleAuthStore);
 
   // true if there is a user token stored in the system
   // indicates that the user was logged in at some point (primarily for ssr)
@@ -42,8 +40,7 @@ export const useUserStore = defineStore('user', () => {
 
   return {
     user,
-    idToken,
-    authorizationInfo,
+    authorizationInfo: skipHydrate(authorizationInfo),
     isLoggedIn,
     isAuthenticated,
   };

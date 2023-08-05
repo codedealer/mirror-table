@@ -1,20 +1,27 @@
-import { acceptHMRUpdate, defineStore } from 'pinia';
+import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 import type { AuthorizationInfo } from '~/models/types';
 
-export const useUserAuthStore = defineStore('user-auth', () => {
+export const useGoogleAuthStore = defineStore('google-auth', () => {
   const authorizationInfo = useCookie('authorizationInfo', {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
     default: (): AuthorizationInfo => ({ accessToken: '', expiry: 0 }),
   });
 
+  const config = useRuntimeConfig();
+  const { client } = useGoogleIdentityService('implicitGrantFlow', {
+    clientId: config.public.clientId,
+    storage: authorizationInfo,
+  });
+
   return {
     authorizationInfo,
+    client: skipHydrate(client),
   };
 });
 
 if (import.meta.hot) {
   import.meta.hot.accept(
-    acceptHMRUpdate(useUserAuthStore, import.meta.hot),
+    acceptHMRUpdate(useGoogleAuthStore, import.meta.hot),
   );
 }

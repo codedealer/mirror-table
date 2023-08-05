@@ -1,5 +1,4 @@
 import type { Ref } from 'vue';
-import OverridableTokenClientConfig = google.accounts.oauth2.OverridableTokenClientConfig;
 
 export interface AuthorizationInfo {
   accessToken: string
@@ -7,7 +6,7 @@ export interface AuthorizationInfo {
 }
 
 export interface UniversalAuthClient {
-  requestToken: (config?: OverridableTokenClientConfig) => Promise<AuthorizationInfo>
+  requestToken: () => Promise<AuthorizationInfo>
 }
 
 export interface UniversalAuthClientParams {

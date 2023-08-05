@@ -1,32 +1,14 @@
 <script setup lang="ts">
 import { useObjectUrl } from '@vueuse/core';
 
-const config = useRuntimeConfig();
 const userStore = useUserStore();
-const { authorizationInfo, isAuthenticated, user } = toRefs(userStore);
-const { client } = useGoogleIdentityService('implicitGrantFlow', {
-  clientId: config.public.clientId,
-  storage: authorizationInfo,
-});
 
 const driveStore = useDriveStore();
 
-const getDriveData = async () => {
-  if (!isAuthenticated.value || !user.value || !user.value.email) {
-    return;
-  }
-
-  const authInfo = await client.value?.requestToken({
-    prompt: '',
-    hint: user.value.email,
-  });
-  console.log('got token: ', authInfo?.accessToken);
+const getDriveData = () => {
   if (!driveStore.client || !authInfo) {
     return;
   }
-  driveStore.client.setToken({
-    access_token: authInfo.accessToken,
-  });
 
   // show the picker
   const picker = new window.google.picker.PickerBuilder()

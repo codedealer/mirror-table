@@ -13,26 +13,25 @@ const submit = () => {
 const config = useRuntimeConfig();
 const userStore = useUserStore();
 const driveStore = useDriveStore();
-const { authorizationInfo, isAuthenticated, user } = toRefs(userStore);
-const { client } = useGoogleIdentityService('implicitGrantFlow', {
-  clientId: config.public.clientId,
-  storage: authorizationInfo,
-});
+const googleStore = useGoogleAuthStore();
+const { isAuthenticated } = toRefs(userStore);
 
 const openPicker = async () => {
-  if (!isAuthenticated.value || !user.value || !user.value.email) {
+  let authInfo;
+  try {
+    authInfo = await googleStore.client!.requestToken();
+  } catch (e) {
+    const { init } = useToast();
+    init({
+      message: typeof e === 'string' ? e : (e as Error).message,
+      color: 'danger',
+    });
     return;
   }
 
-  const authInfo = await client.value?.requestToken({
-    prompt: '',
-    hint: user.value.email,
-  });
   console.log('got token: ', authInfo?.accessToken);
-  if (!driveStore.client || !authInfo) {
-    return;
-  }
-  driveStore.client.setToken({
+
+  driveStore.client!.setToken({
     access_token: authInfo.accessToken,
   });
 
@@ -54,7 +53,7 @@ const openPicker = async () => {
           fields: '*',
         });
         console.log('file info: ', file);
-        imageSrc.value = `https://drive.google.com/thumbnail?sz=w640&id=${doc.id}`;
+        imageSrc.value = `https://drive.google.com/thumbnail?sz=w300&id=${doc.id}`;
       }
     })
     .build();
@@ -116,6 +115,7 @@ const openPicker = async () => {
             <va-button
               preset="primary"
               color="secondary-dark"
+              :disabled="!isAuthenticated || !googleStore.client"
               @click="openPicker"
             >
               Upload Image
