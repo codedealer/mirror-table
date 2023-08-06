@@ -12,5 +12,9 @@ export interface UniversalAuthClientParams {
   scope?: string
 }
 
-export const hasKey = <T extends object>(obj: T, k: keyof any): k is keyof T =>
-  k in obj;
+export interface buildPickerOptions {
+  template?: 'all' | 'images' | 'media'
+  allowMultiSelect?: boolean
+  allowUpload?: boolean
+  uploadOnly?: boolean
+}

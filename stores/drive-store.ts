@@ -1,12 +1,14 @@
 import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
-import { hasKey } from '~/models/types';
+import type { AuthorizationInfo } from '~/models/types';
 
 export const useDriveStore = defineStore('drive', () => {
-  const { isLoading, isReady, client } = useDrive();
+  const { isLoading, isReady: libLoaded, client } = useDrive();
 
   const googleStore = useGoogleAuthStore();
 
-  const augmentWithTokenAndGet = async (client: typeof gapi.client): Promise<typeof gapi.client.drive> => {
+  const isReady = computed(() => libLoaded.value && googleStore.client);
+
+  const augmentWithTokenAndGet = async (client: typeof gapi.client) => {
     if (!googleStore.client) {
       throw new Error('Google Auth Client not initialized when accessing Google Drive API');
     }
@@ -17,29 +19,46 @@ export const useDriveStore = defineStore('drive', () => {
       access_token: authInfo.accessToken,
     });
 
-    return Reflect.get(client, 'drive');
+    return client;
   };
 
-  const proxiedClient = computed(() => {
-    if ((!googleStore.client || !client.value)) {
-      return null;
+  const getClient = async (noTokenAugment = false) => {
+    if (!client.value) {
+      throw new Error('Google Drive API not initialized');
     }
 
-    return new Proxy(client.value, {
-      get (target, prop, receiver) {
-        if (prop === 'drive') {
-          return augmentWithTokenAndGet(target);
-        }
+    if (noTokenAugment) {
+      return client.value;
+    }
 
-        return hasKey(target, prop) ? Reflect.get(target, prop, receiver) : undefined;
-      },
-    });
-  });
+    return await augmentWithTokenAndGet(client.value);
+  };
+
+  const getPickerBuilder = async (noTokenAugment = false) => {
+    if (!isReady) {
+      throw new Error('Google Picker API not ready');
+    }
+
+    let authInfo: AuthorizationInfo = googleStore.authorizationInfo;
+    if (!noTokenAugment) {
+      authInfo = await googleStore.client!.requestToken();
+    }
+
+    const builder = new window.google.picker.PickerBuilder();
+    const config = useRuntimeConfig();
+    builder.setDeveloperKey(config.public.fbApiKey)
+      .setAppId(config.public.clientId)
+      .setOAuthToken(authInfo.accessToken)
+    ;
+
+    return builder;
+  };
 
   return {
     isLoading: skipHydrate(isLoading),
-    isReady: skipHydrate(isReady),
-    client: proxiedClient,
+    isReady,
+    getClient,
+    getPickerBuilder,
   };
 });
 

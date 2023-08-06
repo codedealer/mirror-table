@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { useObjectUrl } from '@vueuse/core';
-
 const userStore = useUserStore();
-
 const driveStore = useDriveStore();
 
-const getDriveData = () => {
-  if (!driveStore.client || !authInfo) {
-    return;
-  }
+const showUploadForm = () => {
+  const { buildPicker } = usePicker();
+  buildPicker({
+    uploadOnly: true,
+  });
 
   // show the picker
-  const picker = new window.google.picker.PickerBuilder()
+  /* const picker = new window.google.picker.PickerBuilder()
     .addView(google.picker.ViewId.DOCS)
     .addView(new google.picker.DocsUploadView())
     .setOAuthToken(authInfo.accessToken)
@@ -39,13 +37,13 @@ const getDriveData = () => {
       }
     })
     .build();
-  picker.setVisible(true);
+  picker.setVisible(true); */
 };
 </script>
 
 <template>
   <va-popover
-    message="Open Google Drive Pop up"
+    message="Upload to Google Drive"
   >
     <va-button
       icon="cloud"
@@ -53,8 +51,8 @@ const getDriveData = () => {
       color="primary-dark"
       size="large"
       :loading="driveStore.isLoading"
-      :disabled="!driveStore.isReady"
-      @click="getDriveData"
+      :disabled="!driveStore.isReady || !userStore.isAuthenticated"
+      @click="showUploadForm"
     />
   </va-popover>
 </template>

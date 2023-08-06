@@ -16,30 +16,40 @@ const driveStore = useDriveStore();
 const googleStore = useGoogleAuthStore();
 const { isAuthenticated, authorizationInfo } = toRefs(userStore);
 
-const openPicker = async () => {
-  let drive: typeof gapi.client.drive;
-  try {
-    drive = await driveStore.client!.drive;
-  } catch (e) {
-    const { init } = useToast();
-    init({
-      message: typeof e === 'string' ? e : (e as Error).message,
-      color: 'danger',
-    });
-    return;
-  }
-
+const openPicker = () => {
   // show the picker
-  const picker = new window.google.picker.PickerBuilder()
+  /* const picker = new window.google.picker.PickerBuilder()
     .addView(google.picker.ViewId.DOCS_IMAGES)
     .addView(new google.picker.DocsUploadView())
+    .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
     .setOAuthToken(authorizationInfo.value.accessToken)
     .setDeveloperKey(config.public.fbApiKey)
     .setAppId(config.public.clientId)
     .setCallback(async (data) => {
       console.log('picker callback: ', data);
       if (data.action === google.picker.Action.PICKED) {
-        const doc = data.docs[0];
+        let drive: typeof gapi.client.drive;
+        try {
+          drive = await driveStore.client!.drive;
+        } catch (e) {
+          const { init } = useToast();
+          init({
+            message: typeof e === 'string' ? e : (e as Error).message,
+            color: 'danger',
+          });
+          return;
+        }
+        // create a batch request to get the file info of all picked files
+        const batch = driveStore.client!.newBatch();
+        data.docs.forEach((doc: any) => {
+          batch.add(drive.files.get({
+            fileId: doc.id,
+            fields: '*',
+          }));
+        });
+        const batchResponse = await batch;
+        console.log('batch response: ', batchResponse);
+         const doc = data.docs[0];
         console.log('The user selected: ', doc);
         // get the file info
         const file = await drive.files.get({
@@ -51,7 +61,7 @@ const openPicker = async () => {
       }
     })
     .build();
-  picker.setVisible(true);
+  picker.setVisible(true); */
 };
 </script>
 
