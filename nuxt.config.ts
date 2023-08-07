@@ -20,6 +20,8 @@ export default {
       fbAuthDomain: process.env.FB_AUTH_DOMAIN,
       clientId: process.env.CLIENT_ID,
       projectId: process.env.FB_PROJECT_ID,
+      parentFolder: 'Mirror Table',
+      rootFolder: 'root',
     }
   },
   app: {

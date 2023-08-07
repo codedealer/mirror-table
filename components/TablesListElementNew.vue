@@ -18,6 +18,7 @@ const openPicker = async () => {
   const { buildPicker } = usePicker();
   try {
     await buildPicker({
+      parentId: userStore.profile!.settings.driveFolderId,
       template: 'images',
       allowUpload: true,
     });

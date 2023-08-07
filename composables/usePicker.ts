@@ -1,5 +1,4 @@
 import type { BuildPickerOptions } from '~/models/types';
-import ResponseObject = google.picker.ResponseObject;
 
 const buildPickerOptionsDefaults = {
   template: 'all' as const,
@@ -17,17 +16,21 @@ const buildPicker = async (opts: BuildPickerOptions) => {
     throw new Error('Calling Picker API when the API is not ready or user is not authenticated');
   }
 
+  const { checkParentFolder } = usePickerParentFolder();
+
+  checkParentFolder(options.parentId);
+
   const builder = await driveStore.getPickerBuilder();
 
   if (!options.uploadOnly) {
-    usePickerViewTemplate(builder, options.template);
+    usePickerViewTemplate(builder, options);
   }
 
   if (options.allowUpload || options.uploadOnly) {
     builder.addView(new window.google.picker.DocsUploadView());
   }
 
-  builder.setCallback((result: ResponseObject) => {
+  builder.setCallback((result: google.picker.ResponseObject) => {
     console.log(result);
   });
 

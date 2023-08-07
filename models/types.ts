@@ -15,6 +15,7 @@ export interface UniversalAuthClientParams {
 export type PickerViewTemplate = 'all' | 'images' | 'media';
 
 export interface BuildPickerOptions {
+  parentId: string
   template?: PickerViewTemplate
   allowMultiSelect?: boolean
   allowUpload?: boolean
@@ -26,3 +27,11 @@ export interface Profile {
     driveFolderId: string
   }
 }
+
+export interface InvalidDriveParentFolder extends Error {
+  code: 'invalid_drive_parent_folder'
+}
+
+export const isInvalidDriveParentFolder = (err: unknown): err is InvalidDriveParentFolder => {
+  return !!err && typeof err === 'object' && 'code' in err && err.code === 'invalid_drive_parent_folder';
+};

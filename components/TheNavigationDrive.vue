@@ -7,6 +7,7 @@ const showUploadForm = async () => {
   try {
     await buildPicker({
       uploadOnly: true,
+      parentId: userStore.profile!.settings.driveFolderId,
     });
   } catch (e) {
     showToastError(e);

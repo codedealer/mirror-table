@@ -3,5 +3,9 @@
     <TheNavigation />
 
     <slot />
+
+    <ClientOnly>
+      <TheDriveParentModal />
+    </ClientOnly>
   </div>
 </template>

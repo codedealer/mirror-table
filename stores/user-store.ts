@@ -22,7 +22,7 @@ export const useUserStore = defineStore('user', () => {
   // indicates that the user was logged in at some point (primarily for ssr)
   const isLoggedIn = computed(() => !!idToken.value);
   // true if Firebase has confirmed that the user is logged in
-  const isAuthenticated = computed(() => !!user.value);
+  const isAuthenticated = computed(() => !!profile.value);
 
   const getOrCreateProfile = async (user: User) => {
     const profileRef = doc($db, 'users', user.uid);
