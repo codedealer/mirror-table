@@ -10,13 +10,20 @@ const submit = () => {
   showModal.value = false;
 };
 
-const config = useRuntimeConfig();
 const userStore = useUserStore();
-const driveStore = useDriveStore();
 const googleStore = useGoogleAuthStore();
-const { isAuthenticated, authorizationInfo } = toRefs(userStore);
+const { isAuthenticated } = toRefs(userStore);
 
-const openPicker = () => {
+const openPicker = async () => {
+  const { buildPicker } = usePicker();
+  try {
+    await buildPicker({
+      template: 'images',
+      allowUpload: true,
+    });
+  } catch (e) {
+    showToastError(e);
+  }
   // show the picker
   /* const picker = new window.google.picker.PickerBuilder()
     .addView(google.picker.ViewId.DOCS_IMAGES)

@@ -2,11 +2,15 @@
 const userStore = useUserStore();
 const driveStore = useDriveStore();
 
-const showUploadForm = () => {
+const showUploadForm = async () => {
   const { buildPicker } = usePicker();
-  buildPicker({
-    uploadOnly: true,
-  });
+  try {
+    await buildPicker({
+      uploadOnly: true,
+    });
+  } catch (e) {
+    showToastError(e);
+  }
 
   // show the picker
   /* const picker = new window.google.picker.PickerBuilder()

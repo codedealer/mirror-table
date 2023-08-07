@@ -12,8 +12,10 @@ export interface UniversalAuthClientParams {
   scope?: string
 }
 
-export interface buildPickerOptions {
-  template?: 'all' | 'images' | 'media'
+export type PickerViewTemplate = 'all' | 'images' | 'media';
+
+export interface BuildPickerOptions {
+  template?: PickerViewTemplate
   allowMultiSelect?: boolean
   allowUpload?: boolean
   uploadOnly?: boolean
