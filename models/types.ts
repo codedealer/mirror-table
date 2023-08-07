@@ -20,3 +20,9 @@ export interface BuildPickerOptions {
   allowUpload?: boolean
   uploadOnly?: boolean
 }
+
+export interface Profile {
+  settings: {
+    driveFolderId: string
+  }
+}

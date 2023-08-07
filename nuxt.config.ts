@@ -19,6 +19,7 @@ export default {
       fbApiKey: process.env.FB_API_KEY,
       fbAuthDomain: process.env.FB_AUTH_DOMAIN,
       clientId: process.env.CLIENT_ID,
+      projectId: process.env.FB_PROJECT_ID,
     }
   },
   app: {
