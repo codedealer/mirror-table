@@ -1,7 +1,15 @@
 <script setup lang="ts">
 const config = useRuntimeConfig();
-const driveStore = useDriveStore();
-const { parentFolderModalModel } = toRefs(driveStore);
+const driveModalStore = useDriveFolderModalStore();
+const { parentFolderModalModel } = toRefs(driveModalStore);
+
+const onOk = () => {
+  driveModalStore.resolve(config.public.parentFolder);
+};
+
+const onCancel = () => {
+  driveModalStore.reject(config.public.rootFolder);
+};
 </script>
 
 <template>
@@ -10,6 +18,8 @@ const { parentFolderModalModel } = toRefs(driveStore);
     ok-text="Create workspace folder"
     cancel-text="Continue to work in root folder"
     z-index="900"
+    @cancel="onCancel"
+    @ok="onOk"
   >
     <h2 class="va-h2">
       Create workspace folder?

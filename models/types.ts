@@ -28,10 +28,10 @@ export interface Profile {
   }
 }
 
-export interface InvalidDriveParentFolder extends Error {
+export interface InvalidDriveParentFolderError extends Error {
   code: 'invalid_drive_parent_folder'
 }
 
-export const isInvalidDriveParentFolder = (err: unknown): err is InvalidDriveParentFolder => {
+export const isInvalidDriveParentFolderError = (err: unknown): err is InvalidDriveParentFolderError => {
   return !!err && typeof err === 'object' && 'code' in err && err.code === 'invalid_drive_parent_folder';
 };

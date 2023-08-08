@@ -4,8 +4,6 @@ import type { AuthorizationInfo } from '~/models/types';
 export const useDriveStore = defineStore('drive', () => {
   const { isLoading, isReady: libLoaded, client } = useDrive();
 
-  const parentFolderModalModel = ref(false);
-
   const googleStore = useGoogleAuthStore();
 
   const isReady = computed(() => libLoaded.value && googleStore.client);
@@ -56,12 +54,14 @@ export const useDriveStore = defineStore('drive', () => {
     return builder;
   };
 
+  const driveFolderModalStore = useDriveFolderModalStore();
+
   return {
-    parentFolderModalModel,
     isLoading: skipHydrate(isLoading),
     isReady,
     getClient,
     getPickerBuilder,
+    promptToCreateParentFolder: driveFolderModalStore.promptToCreateParentFolder,
   };
 });
 

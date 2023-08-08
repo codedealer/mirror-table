@@ -16,9 +16,36 @@ const buildPicker = async (opts: BuildPickerOptions) => {
     throw new Error('Calling Picker API when the API is not ready or user is not authenticated');
   }
 
-  const { checkParentFolder } = usePickerParentFolder();
+  const { checkParentFolder, createParentFolder } = usePickerParentFolder();
 
-  checkParentFolder(options.parentId);
+  try {
+    checkParentFolder(options.parentId);
+  } catch (e) {
+    if (!isInvalidDriveParentFolderError(e)) {
+      throw e;
+    }
+
+    // show prompt to create a folder
+    let newFolderName = options.parentId;
+    let needToCreateFolder = true;
+    try {
+      newFolderName = await driveStore.promptToCreateParentFolder() as string;
+    } catch (e) {
+      if (typeof e === 'string') {
+        // chose the existing folder
+        needToCreateFolder = false;
+      } else {
+        throw e;
+      }
+    }
+
+    // create folder
+    if (needToCreateFolder) {
+      await createParentFolder(newFolderName);
+    }
+    // TODO: update profile
+    throw e;
+  }
 
   const builder = await driveStore.getPickerBuilder();
 
