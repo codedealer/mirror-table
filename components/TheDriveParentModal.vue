@@ -17,7 +17,8 @@ const onCancel = () => {
     v-model="parentFolderModalModel"
     ok-text="Create workspace folder"
     cancel-text="Continue to work in root folder"
-    z-index="900"
+    z-index="1500"
+    class="top-tier-modal"
     @cancel="onCancel"
     @ok="onOk"
   >

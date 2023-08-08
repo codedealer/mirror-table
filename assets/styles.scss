@@ -65,3 +65,8 @@ header {
 .va-button--loading.va-popover {
   display: inline-flex;
 }
+
+/* fix for modals covering each other */
+.va-modal.top-tier-modal {
+  z-index: 1100;
+}
