@@ -56,12 +56,20 @@ export const useUserStore = defineStore('user', () => {
     }
   });
 
+  const updateProfile = async (newProfile: Profile) => {
+    if (user.value) {
+      const profileRef = doc($db, 'users', user.value.uid);
+      await setDoc(profileRef, newProfile);
+    }
+  };
+
   return {
     user,
     profile,
     authorizationInfo: skipHydrate(authorizationInfo),
     isLoggedIn,
     isAuthenticated,
+    updateProfile,
   };
 });
 

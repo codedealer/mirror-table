@@ -7,7 +7,7 @@ const buildPickerOptionsDefaults = {
   uploadOnly: false,
 };
 
-const buildPicker = async (opts: BuildPickerOptions) => {
+const buildPicker = async (opts: BuildPickerOptions): Promise<google.picker.Picker> => {
   const options = { ...buildPickerOptionsDefaults, ...opts };
   const userStore = useUserStore();
   const driveStore = useDriveStore();
@@ -19,7 +19,6 @@ const buildPicker = async (opts: BuildPickerOptions) => {
   const { checkParentFolder, createParentFolder } = usePickerParentFolder();
 
   try {
-    options.parentId = '1KPYxCp6OKW4Q0FUjJwZ3_zeQgiM9lHzz';
     await checkParentFolder(options.parentId);
   } catch (e) {
     if (!isInvalidDriveParentFolderError(e)) {
@@ -27,26 +26,27 @@ const buildPicker = async (opts: BuildPickerOptions) => {
     }
 
     // show prompt to create a folder
-    let newFolderName = options.parentId;
-    let needToCreateFolder = true;
+    let newFolderId = options.parentId;
     try {
-      newFolderName = await driveStore.promptToCreateParentFolder() as string;
+      const newFolderName = await driveStore.promptToCreateParentFolder() as string;
+
+      // create folder
+      newFolderId = await createParentFolder(newFolderName);
     } catch (e) {
       if (typeof e === 'string') {
         // chose the root folder
-        newFolderName = e;
-        needToCreateFolder = false;
+        newFolderId = e;
       } else {
         throw e;
       }
     }
 
-    // create folder
-    if (needToCreateFolder) {
-      await createParentFolder(newFolderName);
-    }
-    // TODO: update profile
-    throw e;
+    const newProfile = structuredClone(toRaw(userStore.profile));
+    newProfile!.settings.driveFolderId = newFolderId;
+    await userStore.updateProfile(newProfile!);
+
+    options.parentId = newFolderId;
+    return buildPicker(options);
   }
 
   const builder = await driveStore.getPickerBuilder();

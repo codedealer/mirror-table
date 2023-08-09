@@ -56,7 +56,6 @@ const checkParentFolder = async (parentId: string) => {
       throw new Error('There is a problem with the workspace folder. Check your Google Drive.');
     }
 
-    // throw new Error('Debugging');
     checkedParentFolder = true;
     return;
   }
@@ -93,6 +92,8 @@ const createParentFolder = async (name: string) => {
       allowFileDiscovery: false,
     },
   });
+
+  return folderId;
 };
 
 export const usePickerParentFolder = () => {
