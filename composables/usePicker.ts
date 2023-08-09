@@ -19,7 +19,8 @@ const buildPicker = async (opts: BuildPickerOptions) => {
   const { checkParentFolder, createParentFolder } = usePickerParentFolder();
 
   try {
-    checkParentFolder(options.parentId);
+    options.parentId = '1KPYxCp6OKW4Q0FUjJwZ3_zeQgiM9lHzz';
+    await checkParentFolder(options.parentId);
   } catch (e) {
     if (!isInvalidDriveParentFolderError(e)) {
       throw e;
@@ -32,7 +33,8 @@ const buildPicker = async (opts: BuildPickerOptions) => {
       newFolderName = await driveStore.promptToCreateParentFolder() as string;
     } catch (e) {
       if (typeof e === 'string') {
-        // chose the existing folder
+        // chose the root folder
+        newFolderName = e;
         needToCreateFolder = false;
       } else {
         throw e;
@@ -54,7 +56,9 @@ const buildPicker = async (opts: BuildPickerOptions) => {
   }
 
   if (options.allowUpload || options.uploadOnly) {
-    builder.addView(new window.google.picker.DocsUploadView());
+    builder.addView(
+      new window.google.picker.DocsUploadView().setParent(options.parentId),
+    );
   }
 
   builder.setCallback((result: google.picker.ResponseObject) => {

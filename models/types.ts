@@ -32,6 +32,30 @@ export interface InvalidDriveParentFolderError extends Error {
   code: 'invalid_drive_parent_folder'
 }
 
-export const isInvalidDriveParentFolderError = (err: unknown): err is InvalidDriveParentFolderError => {
-  return !!err && typeof err === 'object' && 'code' in err && err.code === 'invalid_drive_parent_folder';
+export const isObject = (obj: unknown): obj is Record<string, unknown> => {
+  return !!obj && typeof obj === 'object';
 };
+
+export const isInvalidDriveParentFolderError = (err: unknown): err is InvalidDriveParentFolderError => {
+  return isObject(err) && 'code' in err && err.code === 'invalid_drive_parent_folder';
+};
+
+export interface GapiErrorResponseResult {
+  error: {
+    code: number
+    message: string
+    errors: {
+      domain: string
+      reason: string
+      message: string
+    }
+  }
+}
+
+export const isGapiErrorResponseResult = (obj: unknown): obj is GapiErrorResponseResult => {
+  return isObject(obj) && 'error' in obj && isObject(obj.error);
+};
+
+export const DriveMimeTypes = {
+  FOLDER: 'application/vnd.google-apps.folder',
+} as const;
