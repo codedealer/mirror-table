@@ -1,6 +1,7 @@
 import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 import type { User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from '@firebase/firestore';
+import { doc, setDoc } from '@firebase/firestore';
+import { onSnapshot } from 'firebase/firestore';
 import { useGoogleAuthStore } from '~/stores/google-auth-store';
 import type { Profile } from '~/models/types';
 import { ProfileFactory } from '~/models/Profile';
@@ -24,16 +25,19 @@ export const useUserStore = defineStore('user', () => {
   // true if Firebase has confirmed that the user is logged in
   const isAuthenticated = computed(() => !!profile.value);
 
-  const getOrCreateProfile = async (user: User) => {
+  let unsubFromProfileUpdates = () => {};
+  // subscribe to profile updates
+  const subscribeToProfileUpdates = (user: User) => {
     const profileRef = doc($db, 'users', user.uid);
-    const profileDoc = await getDoc(profileRef);
-    if (profileDoc.exists()) {
-      return profileDoc.data() as Profile;
-    } else {
-      const newProfile = ProfileFactory();
-      await setDoc(profileRef, newProfile);
-      return newProfile;
-    }
+    unsubFromProfileUpdates();
+    unsubFromProfileUpdates = onSnapshot(profileRef, (doc) => {
+      if (doc.exists()) {
+        profile.value = doc.data() as Profile;
+      } else {
+        const newProfile = ProfileFactory();
+        void setDoc(profileRef, newProfile);
+      }
+    });
   };
 
   // watch only on the client side
@@ -41,14 +45,11 @@ export const useUserStore = defineStore('user', () => {
   $auth && $auth.onAuthStateChanged(async (authUser) => {
     user.value = authUser;
     if (user.value) {
-      try {
-        profile.value = await getOrCreateProfile(user.value);
-      } catch (e) {
-        console.error(e);
-      }
+      subscribeToProfileUpdates(user.value);
 
       idToken.value = await user.value.getIdToken();
     } else {
+      unsubFromProfileUpdates();
       profile.value = null;
       idToken.value = null;
       authorizationInfo.value = { accessToken: '', expiry: 0 };
