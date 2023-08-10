@@ -1,13 +1,11 @@
 import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 import type { User } from 'firebase/auth';
-import { doc, setDoc } from '@firebase/firestore';
-import { onSnapshot } from 'firebase/firestore';
 import { useGoogleAuthStore } from '~/stores/google-auth-store';
 import type { Profile } from '~/models/types';
 import { ProfileFactory } from '~/models/Profile';
 
 export const useUserStore = defineStore('user', () => {
-  const { $auth, $db } = useNuxtApp();
+  const { $auth, $db, $ops } = useNuxtApp();
 
   const user = ref<User | null>(null);
   const profile = ref<Profile | null>(null);
@@ -28,14 +26,14 @@ export const useUserStore = defineStore('user', () => {
   let unsubFromProfileUpdates = () => {};
   // subscribe to profile updates
   const subscribeToProfileUpdates = (user: User) => {
-    const profileRef = doc($db, 'users', user.uid);
+    const profileRef = $ops.doc($db, 'users', user.uid);
     unsubFromProfileUpdates();
-    unsubFromProfileUpdates = onSnapshot(profileRef, (doc) => {
+    unsubFromProfileUpdates = $ops.onSnapshot(profileRef, (doc) => {
       if (doc.exists()) {
         profile.value = doc.data() as Profile;
       } else {
         const newProfile = ProfileFactory();
-        void setDoc(profileRef, newProfile);
+        void $ops.setDoc(profileRef, newProfile);
       }
     });
   };
@@ -58,8 +56,8 @@ export const useUserStore = defineStore('user', () => {
 
   const updateProfile = async (newProfile: Profile) => {
     if (user.value) {
-      const profileRef = doc($db, 'users', user.value.uid);
-      await setDoc(profileRef, newProfile);
+      const profileRef = $ops.doc($db, 'users', user.value.uid);
+      await $ops.setDoc(profileRef, newProfile);
     }
   };
 
