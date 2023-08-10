@@ -7,7 +7,7 @@ export default {
     "@panva/hkdf": resolve(__dirname, "./node_modules/@panva/hkdf/dist/web/index.js"),
   },
   nitro: {
-    preset: '',
+    preset: 'vercel-edge',
   },
   modules: [
     '@pinia/nuxt',
