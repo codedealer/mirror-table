@@ -31,7 +31,6 @@ export const useUserStore = defineStore('user', () => {
     unsubFromProfileUpdates = $ops.onSnapshot(profileRef, (doc) => {
       if (doc.exists()) {
         profile.value = doc.data() as Profile;
-        console.log('profile updated', profile.value);
       } else {
         const newProfile = ProfileFactory();
         void $ops.setDoc(profileRef, newProfile);
