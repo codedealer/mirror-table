@@ -7589,10 +7589,10 @@ vuestic-ui@^1.4.10:
     colortranslator "^1.9.2"
     lodash "^4.17.21"
 
-vuestic-ui@^1.7.3:
-  version "1.7.3"
-  resolved "https://registry.yarnpkg.com/vuestic-ui/-/vuestic-ui-1.7.3.tgz#6d6880d7790681fc8304cfa9caa160a9a1fc8b69"
-  integrity sha512-on3L9Z0wADQuTmIJk1BZeuOuuttgSmI5tqWWaBdneFh7wK7AJaTyN2aCnkIU7g1iazyG4DyLw022Bor9gL7/+A==
+vuestic-ui@^1.7.4:
+  version "1.7.4"
+  resolved "https://registry.yarnpkg.com/vuestic-ui/-/vuestic-ui-1.7.4.tgz#931a239278ab75337d27df96715d85cc13311b6d"
+  integrity sha512-3cpTMp/lm+Zhq6dT4zOphl5rW5cw8Bg0droGIidOsaw/mlIQXgP/adA+X40poT4V5KkHOplEbM3XpFReoc31zg==
   dependencies:
     "@floating-ui/vue" "^1.0.1"
     "@types/lodash" "^4.14.161"
