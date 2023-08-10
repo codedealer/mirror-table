@@ -7,3 +7,9 @@
   opacity: 0;
   transform: translateY(50px);
 }
+.notifications-container {
+  .slide-fade-enter-from,
+  .slide-fade-leave-to {
+    transform: translateX(50px);
+  }
+}

@@ -59,3 +59,13 @@ export const isGapiErrorResponseResult = (obj: unknown): obj is GapiErrorRespons
 export const DriveMimeTypes = {
   FOLDER: 'application/vnd.google-apps.folder',
 } as const;
+
+export interface Notification {
+  id: string
+  icon?: string
+  title?: string
+  message: string
+  type?: 'success' | 'info' | 'warning' | 'error'
+  duration?: number
+  color?: string
+}

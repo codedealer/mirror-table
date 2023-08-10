@@ -6,6 +6,7 @@
 
     <ClientOnly>
       <TheDriveParentModal />
+      <TheNotifications />
     </ClientOnly>
   </div>
 </template>

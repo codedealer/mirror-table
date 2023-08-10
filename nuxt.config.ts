@@ -54,6 +54,7 @@ export default {
             tertiary: '#FAE65F',
             'primary-dark': '#AD1F70',
             'secondary-dark': '#28A2AD',
+            danger: '#6f160e',
           }
         },
         currentPresetName: 'dark',

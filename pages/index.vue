@@ -56,6 +56,10 @@ watchEffect(() => {
       </VaCardActions>
     </VaCard>
 
+    <ClientOnly>
+      <TheNotifications />
+    </ClientOnly>
+
     <footer class="va-text-center">
       <small>
         <a
