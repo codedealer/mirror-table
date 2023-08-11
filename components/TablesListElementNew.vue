@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useForm } from 'vuestic-ui';
+import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
 const showModal = ref(false);
 const imageSrc = ref('');
@@ -23,7 +24,8 @@ const openPicker = async () => {
       allowUpload: true,
     });
   } catch (e) {
-    showToastError(e);
+    const notificationStore = useNotificationStore();
+    notificationStore.error(extractErrorMessage(e));
   }
   // show the picker
   /* const picker = new window.google.picker.PickerBuilder()

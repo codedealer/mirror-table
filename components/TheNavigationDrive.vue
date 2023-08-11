@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { extractErrorMessage } from '~/utils/extractErrorMessage';
+
 const userStore = useUserStore();
 const driveStore = useDriveStore();
 
@@ -10,7 +12,8 @@ const showUploadForm = async () => {
       parentId: userStore.profile!.settings.driveFolderId,
     });
   } catch (e) {
-    showToastError(e);
+    const notificationStore = useNotificationStore();
+    notificationStore.error(extractErrorMessage(e));
   }
 
   // show the picker
