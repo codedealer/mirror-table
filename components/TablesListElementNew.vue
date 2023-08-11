@@ -4,11 +4,11 @@ import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
 const showModal = ref(false);
 const imageSrc = ref('');
-const { formData } = useForm('new-table-form');
 
-const submit = () => {
-  console.log(formData.value);
-  showModal.value = false;
+const { formData, validate } = useForm('new-table-form');
+
+const submit = (hide?: () => void) => {
+  validate() && console.log(formData.value.title);
 };
 
 const userStore = useUserStore();
@@ -94,13 +94,13 @@ const openPicker = async () => {
       </va-button>
     </va-card-actions>
 
-    <ClientOnly>
+<!--    <ClientOnly>-->
       <va-modal
         v-model="showModal"
         fullscreen
         ok-text="Create"
         cancel-text="Cancel"
-        @ok="submit"
+        :before-close="submit"
       >
         <h2 class="va-h2">
           New Table
@@ -110,11 +110,12 @@ const openPicker = async () => {
           tag="form"
           class="vertical-form table-form"
           @submit.prevent="submit"
+          stateful
         >
           <va-input
-            name="tableName"
-            label="Table Name"
-            required
+            name="title"
+            label="Title"
+            :rules="[(val) => val && val.length > 0 && val.length < 120 || 'Title should be between 1 and 120 characters long']"
           />
 
           <div class="vertical-form__image">
@@ -137,7 +138,7 @@ const openPicker = async () => {
           </div>
         </va-form>
       </va-modal>
-    </ClientOnly>
+<!--    </ClientOnly>-->
   </div>
 </template>
 
