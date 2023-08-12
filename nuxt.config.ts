@@ -58,8 +58,21 @@ export default {
           }
         },
         currentPresetName: 'dark',
-      }
-    }
+      },
+      components: {
+        presets: {
+          VaButton: {
+            outlined: {
+              backgroundOpacity: 0,
+              borderColor: 'primary',
+              hoverMaskColor: 'primary',
+              pressedMaskColor: 'primary',
+              pressedOpacity: 0.3,
+            },
+          },
+        },
+      },
+    },
   },
   imports: {
     dirs: ['stores', 'models']
