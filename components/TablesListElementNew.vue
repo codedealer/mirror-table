@@ -33,7 +33,6 @@ const openPicker = async () => {
         console.log('picker callback: ', result);
         if (result.action === google.picker.Action.PICKED) {
           const file = result.docs[0];
-          title.value = file.name;
           fileId.value = file.id;
         }
       },
@@ -135,6 +134,7 @@ const openPicker = async () => {
               :file-id="fileId"
               width="300"
               height="150"
+              @error="console.log"
             />
             <p>
               You can upload a custom image for your table. This image will be used in the table's card view. Keep the aspect ration to 2:1 and width to no less than 300px.

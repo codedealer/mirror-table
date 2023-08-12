@@ -7,15 +7,19 @@ interface DriveThumbnailProps {
   title?: string
   width: string
   height: string
-  onClick?: () => void
+}
+
+interface DriveThumbnailEmits {
+  (event: 'error', e: Event): void
 }
 
 const props = withDefaults(defineProps<DriveThumbnailProps>(), {
   fileId: '',
   src: '',
   title: '',
-  onClick: () => {},
 });
+
+const emits = defineEmits<DriveThumbnailEmits>();
 
 const imageSrc = computed(() => {
   if (props.src) {
@@ -50,6 +54,7 @@ onMounted(() => {
       :src="imageSrc"
       :ratio="width / height"
       fit="contain"
+      @error="e => emits('error', e)"
     >
       <template #loader>
         <va-progress-circle indeterminate />
@@ -57,7 +62,7 @@ onMounted(() => {
 
       <template #error>
         <va-icon
-          name="close"
+          name="broken_image"
           color="danger"
           :size="32"
         />
@@ -66,20 +71,44 @@ onMounted(() => {
     <div
       v-else
       class="drive-thumbnail__placeholder"
-    />
+    >
+      <div class="drive-thumbnail__backdrop" />
+      <small>No image</small>
+    </div>
   </div>
 </template>
 
 <style lang="scss">
 .drive-thumbnail {
-  /*display: grid;
-  place-items: center;*/
   width: calc(var(--width) * 1px);
   height: calc(var(--height) * 1px);
+  .va-image__error {
+    background-color: var(--va-background-element);
+    border-radius: var(--va-block-border-radius);
+  }
 }
 .drive-thumbnail__placeholder {
-  background-color: hotpink;
+  background-color: var(--va-background-element);
+  border-radius: var(--va-block-border-radius);
   height: 100%;
-  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: 0.5rem;
+  grid-template-rows: 1fr auto;
+  .drive-thumbnail__backdrop {
+    background-image: url('/logo.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: .5;
+    filter: saturate(.2);
+    width: 100%;
+    height: 100%;
+  }
+  small {
+    opacity: .6;
+    font-size: 0.8rem;
+    text-transform: lowercase;
+  }
 }
 </style>
