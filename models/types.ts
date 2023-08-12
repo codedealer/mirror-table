@@ -20,6 +20,7 @@ export interface BuildPickerOptions {
   allowMultiSelect?: boolean
   allowUpload?: boolean
   uploadOnly?: boolean
+  callback?: (result: google.picker.ResponseObject) => void
 }
 
 export interface Profile {

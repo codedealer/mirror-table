@@ -5,6 +5,7 @@ const buildPickerOptionsDefaults = {
   allowMultiSelect: false,
   allowUpload: true,
   uploadOnly: false,
+  callback: () => {},
 };
 
 const buildPicker = async (opts: BuildPickerOptions): Promise<google.picker.Picker> => {
@@ -61,9 +62,7 @@ const buildPicker = async (opts: BuildPickerOptions): Promise<google.picker.Pick
     );
   }
 
-  builder.setCallback((result: google.picker.ResponseObject) => {
-    console.log(result);
-  });
+  builder.setCallback(options.callback);
 
   const picker = builder.build();
   picker.setVisible(true);

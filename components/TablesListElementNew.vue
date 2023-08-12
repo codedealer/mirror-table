@@ -1,14 +1,21 @@
 <script setup lang="ts">
-import { useForm } from 'vuestic-ui';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
 const showModal = ref(false);
-const imageSrc = ref('');
+const title = ref('');
+const fileId = ref('');
 
-const { formData, validate } = useForm('new-table-form');
+function submit () {
+  console.log('submit');
+}
 
-const submit = (hide?: () => void) => {
-  validate() && console.log(formData.value.title);
+const reset = () => {
+  title.value = '';
+  fileId.value = '';
+};
+
+const cancel = () => {
+  showModal.value = false;
 };
 
 const userStore = useUserStore();
@@ -22,6 +29,14 @@ const openPicker = async () => {
       parentId: userStore.profile!.settings.driveFolderId,
       template: 'images',
       allowUpload: true,
+      callback: (result) => {
+        console.log('picker callback: ', result);
+        if (result.action === google.picker.Action.PICKED) {
+          const file = result.docs[0];
+          title.value = file.name;
+          fileId.value = file.id;
+        }
+      },
     });
   } catch (e) {
     const notificationStore = useNotificationStore();
@@ -86,44 +101,41 @@ const openPicker = async () => {
     </va-card-content>
     <va-card-actions align="right">
       <va-button
-        preset="secondary"
-        border-color="primary"
+        preset="outlined"
         @click="showModal = true"
       >
         Create Table
       </va-button>
     </va-card-actions>
 
-<!--    <ClientOnly>-->
+    <ClientOnly>
       <va-modal
         v-model="showModal"
         fullscreen
-        ok-text="Create"
-        cancel-text="Cancel"
-        :before-close="submit"
+        hide-default-actions
+        @before-close="reset"
       >
         <h2 class="va-h2">
           New Table
         </h2>
         <va-form
-          ref="new-table-form"
           tag="form"
           class="vertical-form table-form"
           @submit.prevent="submit"
-          stateful
         >
           <va-input
+            v-model="title"
             name="title"
             label="Title"
             :rules="[(val) => val && val.length > 0 && val.length < 120 || 'Title should be between 1 and 120 characters long']"
           />
 
           <div class="vertical-form__image">
-            <img
-              v-if="imageSrc"
-              :src="imageSrc"
-              alt="Table Image"
-            >
+            <DriveThumbnail
+              :file-id="fileId"
+              width="300"
+              height="150"
+            />
             <p>
               You can upload a custom image for your table. This image will be used in the table's card view. Keep the aspect ration to 2:1 and width to no less than 300px.
             </p>
@@ -137,8 +149,23 @@ const openPicker = async () => {
             </va-button>
           </div>
         </va-form>
+
+        <template #footer>
+          <va-button
+            preset="plain"
+            color="secondary-dark"
+            @click="cancel"
+          >
+            Cancel
+          </va-button>
+          <va-button
+            preset="outlined"
+          >
+            Create
+          </va-button>
+        </template>
       </va-modal>
-<!--    </ClientOnly>-->
+    </ClientOnly>
   </div>
 </template>
 
