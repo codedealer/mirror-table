@@ -1,12 +1,12 @@
 /// <reference path="../node_modules/@types/gapi/index.d.ts" />
 /// <reference path="../node_modules/@types/gapi.client.drive-v3/index.d.ts" />
 
+import { extractErrorMessage } from '~/utils/extractErrorMessage';
+
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 const API_SRC = 'https://apis.google.com/js/api.js';
 
 export const useDrive = () => {
-  const { init } = useToast();
-
   const driveApiLoaded = ref(false);
   const pickerApiLoaded = ref(false);
   const driveApiLoading = ref(false);
@@ -23,10 +23,8 @@ export const useDrive = () => {
       driveApiLoading.value = false;
 
       console.error(e);
-      init({
-        message: 'Failed to load Google Drive API',
-        color: 'danger',
-      });
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
       return;
     }
 
@@ -51,10 +49,9 @@ export const useDrive = () => {
       callback: loadDrive,
       onerror: () => {
         driveApiLoading.value = false;
-        init({
-          message: 'Failed to load Google API Client',
-          color: 'danger',
-        });
+
+        const notificationStore = useNotificationStore();
+        notificationStore.error('Failed to load Google API Client');
       },
     });
 
@@ -66,10 +63,9 @@ export const useDrive = () => {
       },
       onerror: () => {
         pickerApiLoading.value = false;
-        init({
-          message: 'Failed to load Google Picker API',
-          color: 'danger',
-        });
+
+        const notificationStore = useNotificationStore();
+        notificationStore.error('Failed to load Google Picker API');
       },
     });
   });
