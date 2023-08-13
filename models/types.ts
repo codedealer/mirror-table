@@ -70,3 +70,16 @@ export interface Notification {
   duration?: number
   color?: string
 }
+
+type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' | 'originalFilename' | 'mimeType' | 'shared' | 'isAppAuthorized' | 'imageMediaMetadata' | 'createdTime' | 'modifiedTime' | 'size' | 'fileExtension' | 'properties' | 'appProperties' | 'md5Checksum' | 'version' | 'videoMediaMetadata' | 'thumbnailLink' | 'permissionIds' | 'quotaBytesUsed' | 'capabilities'>;
+
+export type DriveFile = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | 'name' | 'originalFilename' | 'shared' | 'isAppAuthorized'>> & OptionalDriveFile;
+
+export interface TableData {
+  title: string
+  description?: string
+  createdAt: any
+  lastAccess: any
+  owner: string
+  permissions: string[]
+}
