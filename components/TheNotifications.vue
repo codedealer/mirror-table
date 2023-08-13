@@ -31,5 +31,6 @@ onMounted(() => {
   position: fixed;
   right: 0;
   top: 0;
+  z-index: 9999;
 }
 </style>
