@@ -27,6 +27,7 @@ export const useDriveFile = (id: MaybeRef<string | null>): Ref<DriveFile | null>
 
       file.value = response.result as DriveFile;
     } catch (e) {
+      file.value = null;
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
     }
