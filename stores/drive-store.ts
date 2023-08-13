@@ -6,7 +6,7 @@ export const useDriveStore = defineStore('drive', () => {
 
   const googleStore = useGoogleAuthStore();
 
-  const isReady = computed(() => libLoaded.value && googleStore.client);
+  const isReady = computed(() => libLoaded.value && !!googleStore.client);
 
   const augmentWithTokenAndGet = async (client: typeof gapi.client) => {
     if (!googleStore.client) {
