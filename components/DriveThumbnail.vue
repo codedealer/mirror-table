@@ -10,10 +10,12 @@ interface DriveThumbnailProps {
   title?: string
   width: string
   height: string
+  removable?: boolean
 }
 
 interface DriveThumbnailEmits {
   (event: 'error', e: Event): void
+  (event: 'remove'): void
 }
 
 const props = withDefaults(defineProps<DriveThumbnailProps>(), {
@@ -22,6 +24,7 @@ const props = withDefaults(defineProps<DriveThumbnailProps>(), {
   fileIsLoading: false,
   src: '',
   title: '',
+  removable: false,
 });
 
 const emits = defineEmits<DriveThumbnailEmits>();
@@ -64,27 +67,41 @@ onMounted(() => {
     class="drive-thumbnail"
     :style="{ width, height }"
   >
-    <va-image
+    <div
       v-if="imageSrc.length > 0 && !fileIsLoading"
-      :src="imageSrc"
-      :ratio="width / height"
-      fit="contain"
-      @error="e => emits('error', e)"
+      class="drive-thumbnail__image-container"
     >
-      <template #loader>
-        <div class="drive-thumbnail__placeholder">
-          <va-progress-circle indeterminate />
-        </div>
-      </template>
+      <va-image
+        :src="imageSrc"
+        :ratio="width / height"
+        fit="contain"
+        @error="e => emits('error', e)"
+      >
+        <template #loader>
+          <div class="drive-thumbnail__placeholder">
+            <va-progress-circle indeterminate />
+          </div>
+        </template>
 
-      <template #error>
-        <va-icon
-          name="broken_image"
-          color="danger"
-          :size="32"
+        <template #error>
+          <va-icon
+            name="broken_image"
+            color="danger"
+            :size="32"
+          />
+        </template>
+      </va-image>
+      <div class="drive-thumbnail__controls">
+        <va-button
+          v-if="removable"
+          icon="cancel"
+          preset="plain"
+          color="#fff"
+          size="large"
+          @click="emits('remove')"
         />
-      </template>
-    </va-image>
+      </div>
+    </div>
     <div
       v-else
       class="drive-thumbnail__placeholder"
@@ -116,6 +133,17 @@ onMounted(() => {
     background-color: var(--va-background-element);
     border-radius: var(--va-block-border-radius);
   }
+}
+.drive-thumbnail__image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.drive-thumbnail__controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.5rem;
 }
 .drive-thumbnail__placeholder {
   background-color: var(--va-background-element);
