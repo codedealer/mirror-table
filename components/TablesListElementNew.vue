@@ -4,18 +4,40 @@ import { extractErrorMessage } from '~/utils/extractErrorMessage';
 const showModal = ref(false);
 const title = ref('');
 const fileId = ref('');
+const { file, error, isLoading } = useDriveFile(fileId);
+const isBusy = ref(false);
 
-function submit () {
-  console.log('submit');
-}
+const cancel = () => {
+  showModal.value = false;
+};
 
 const reset = () => {
   title.value = '';
   fileId.value = '';
 };
 
-const cancel = () => {
-  showModal.value = false;
+const submit = async () => {
+  console.log('submit');
+
+  const notificationStore = useNotificationStore();
+
+  try {
+    isBusy.value = true;
+
+    const tableStore = useTableStore();
+    await tableStore.create({
+      title: title.value,
+      thumbnail: fileId.value,
+    });
+
+    notificationStore.success('Table created successfully');
+    reset();
+    cancel();
+  } catch (e) {
+    notificationStore.error(extractErrorMessage(e));
+  } finally {
+    isBusy.value = false;
+  }
 };
 
 const userStore = useUserStore();
@@ -32,8 +54,8 @@ const openPicker = async () => {
       callback: (result) => {
         console.log('picker callback: ', result);
         if (result.action === google.picker.Action.PICKED) {
-          const file = result.docs[0];
-          fileId.value = file.id;
+          const pickedFile = result.docs[0];
+          fileId.value = pickedFile.id;
         }
       },
     });
@@ -126,18 +148,25 @@ const openPicker = async () => {
             v-model="title"
             name="title"
             label="Title"
-            :rules="[(val) => val && val.length > 0 && val.length < 120 || 'Title should be between 1 and 120 characters long']"
+            :min-length="1"
+            :max-length="80"
+            counter
+            required
           />
 
           <div class="vertical-form__image">
             <DriveThumbnail
-              :file-id="fileId"
+              :file="file"
+              :error="error"
+              :file-is-loading="isLoading"
               width="300"
               height="150"
+              removable
               @error="console.log"
+              @remove="fileId = ''"
             />
             <p>
-              You can upload a custom image for your table. This image will be used in the table's card view. Keep the aspect ration to 2:1 and width to no less than 300px.
+              You can upload a custom image for your table. This image will be used in the table's card view. Keep the aspect ratio to 2:1 and width to no less than 300px for optimal experience.
             </p>
             <va-button
               preset="primary"
@@ -148,22 +177,23 @@ const openPicker = async () => {
               Upload Image
             </va-button>
           </div>
+          <div class="vertical-form__actions">
+            <va-button
+              preset="plain"
+              color="secondary-dark"
+              @click="cancel"
+            >
+              Cancel
+            </va-button>
+            <va-button
+              preset="outlined"
+              type="submit"
+              :loading="isBusy"
+            >
+              Create
+            </va-button>
+          </div>
         </va-form>
-
-        <template #footer>
-          <va-button
-            preset="plain"
-            color="secondary-dark"
-            @click="cancel"
-          >
-            Cancel
-          </va-button>
-          <va-button
-            preset="outlined"
-          >
-            Create
-          </va-button>
-        </template>
       </va-modal>
     </ClientOnly>
   </div>

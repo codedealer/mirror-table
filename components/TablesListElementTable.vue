@@ -4,13 +4,15 @@
 
 <template>
   <div class="ghost-container">
-    <va-image
-      src="https://via.placeholder.com/300x150"
-      class=""
-      :max-width="300"
-      fit="cover"
-      :ratio="2"
-    />
+    <ClientOnly>
+      <va-image
+        src="https://via.placeholder.com/300x150"
+        class=""
+        :max-width="300"
+        fit="cover"
+        :ratio="2"
+      />
+    </ClientOnly>
     <va-card-title>Game Title</va-card-title>
     <va-card-content>
       Lorem ipsum dolor sit amet, consectetur adipiscing elit.

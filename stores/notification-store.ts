@@ -17,6 +17,10 @@ export const useNotificationStore = defineStore('notification', () => {
     add({ message, icon: 'error_outline', color: 'danger-dark' });
   };
 
+  const success = (message: string) => {
+    add({ message, icon: 'check_circle_outline' });
+  };
+
   const remove = (id: string) => {
     notifications.value = notifications.value.filter(n => n.id !== id);
   };
@@ -25,6 +29,7 @@ export const useNotificationStore = defineStore('notification', () => {
     notifications,
     add,
     error,
+    success,
     remove,
   };
 });

@@ -5,3 +5,10 @@ export const expiryFromSeconds = (seconds: number | string): number => {
   }
   return Date.now() + lifetime * 1000;
 };
+
+export const idToSlug = (id: string): string => {
+  // take the first 5 and the last 5 characters of the id
+  const start = id.substring(0, 5);
+  const end = id.substring(id.length - 5);
+  return `${start}${end}`;
+};

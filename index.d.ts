@@ -1,5 +1,12 @@
 import { Auth } from "@firebase/auth";
-import { Firestore, doc, setDoc, onSnapshot } from "@firebase/firestore";
+import {
+  Firestore,
+  doc,
+  setDoc,
+  onSnapshot,
+  collection,
+  serverTimestamp,
+} from "@firebase/firestore";
 
 declare module '#app' {
   interface NuxtApp {
@@ -9,6 +16,8 @@ declare module '#app' {
       doc: typeof doc;
       setDoc: typeof setDoc;
       onSnapshot: typeof onSnapshot;
+      collection: typeof collection;
+      serverTimestamp: typeof serverTimestamp;
     };
   }
 }
@@ -21,6 +30,8 @@ declare module 'vue' {
       doc: typeof doc;
       setDoc: typeof setDoc;
       onSnapshot: typeof onSnapshot;
+      collection: typeof collection;
+      serverTimestamp: typeof serverTimestamp;
     };
   }
 }
@@ -33,6 +44,8 @@ declare module '@vue/runtime-core' {
       doc: typeof doc;
       setDoc: typeof setDoc;
       onSnapshot: typeof onSnapshot;
+      collection: typeof collection;
+      serverTimestamp: typeof serverTimestamp;
     };
   }
 }
