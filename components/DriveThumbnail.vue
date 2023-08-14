@@ -98,6 +98,7 @@ onMounted(() => {
           preset="plain"
           color="#fff"
           size="large"
+          title="Remove image"
           @click="emits('remove')"
         />
       </div>
@@ -138,12 +139,21 @@ onMounted(() => {
   position: relative;
   width: 100%;
   height: 100%;
+  &:hover {
+    .drive-thumbnail__controls {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
 }
 .drive-thumbnail__controls {
   position: absolute;
   top: 0;
   right: 0;
   padding: 0.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-in-out;
 }
 .drive-thumbnail__placeholder {
   background-color: var(--va-background-element);
