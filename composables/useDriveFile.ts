@@ -16,6 +16,9 @@ export const useDriveFile = (id: MaybeRef<string | null>) => {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   watchEffect(async () => {
     if (!isReady.value || !idRef.value) {
+      error.value = null;
+      file.value = null;
+      isLoading.value = false;
       return;
     }
 
