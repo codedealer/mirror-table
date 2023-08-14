@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { useCssVar } from '@vueuse/core';
+import type { DriveFile } from '~/models/types';
 
 interface DriveThumbnailProps {
-  fileId?: string
+  file?: DriveFile | null
+  error?: any
+  fileIsLoading?: boolean
   src?: string
   title?: string
   width: string
@@ -14,7 +17,9 @@ interface DriveThumbnailEmits {
 }
 
 const props = withDefaults(defineProps<DriveThumbnailProps>(), {
-  fileId: '',
+  file: null,
+  error: null,
+  fileIsLoading: false,
   src: '',
   title: '',
 });
@@ -25,8 +30,18 @@ const imageSrc = computed(() => {
   if (props.src) {
     return props.src;
   }
-  if (props.fileId) {
-    return `https://drive.google.com/thumbnail?id=${props.fileId}&sz=w${props.width}-h${props.height}`;
+  if (props.error) {
+    return '';
+  }
+  if (props.file) {
+    return `https://drive.google.com/thumbnail?id=${props.file.id}&sz=w${props.width}-h${props.height}`;
+  }
+  return '';
+});
+
+const fileErrorMessage = computed(() => {
+  if (props.error) {
+    return extractErrorMessage(props.error);
   }
   return '';
 });
@@ -50,14 +65,16 @@ onMounted(() => {
     :style="{ width, height }"
   >
     <va-image
-      v-if="imageSrc.length > 0"
+      v-if="imageSrc.length > 0 && !fileIsLoading"
       :src="imageSrc"
       :ratio="width / height"
       fit="contain"
       @error="e => emits('error', e)"
     >
       <template #loader>
-        <va-progress-circle indeterminate />
+        <div class="drive-thumbnail__placeholder">
+          <va-progress-circle indeterminate />
+        </div>
       </template>
 
       <template #error>
@@ -72,8 +89,21 @@ onMounted(() => {
       v-else
       class="drive-thumbnail__placeholder"
     >
-      <div class="drive-thumbnail__backdrop" />
-      <small>No image</small>
+      <div v-if="fileIsLoading" class="ghost-container">
+        <va-progress-circle indeterminate />
+      </div>
+      <div v-else-if="!error" class="ghost-container">
+        <div class="drive-thumbnail__backdrop" />
+        <small>No image</small>
+      </div>
+      <div v-else class="ghost-container">
+        <va-icon
+          name="broken_image"
+          color="danger"
+          :size="32"
+        />
+        <small>{{ fileErrorMessage }}</small>
+      </div>
     </div>
   </div>
 </template>
