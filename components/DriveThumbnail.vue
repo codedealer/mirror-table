@@ -120,6 +120,7 @@ onMounted(() => {
 .drive-thumbnail__placeholder {
   background-color: var(--va-background-element);
   border-radius: var(--va-block-border-radius);
+  width: 100%;
   height: 100%;
   display: grid;
   place-items: center;
