@@ -1,27 +1,29 @@
 <script setup lang="ts">
+import type { Table } from '~/models/types';
 
+const props = defineProps<{ table: Table }>();
+
+const { file, error, isLoading } = useDriveFile(props.table.thumbnail);
 </script>
 
 <template>
   <div class="ghost-container">
-    <ClientOnly>
-      <va-image
-        src="https://via.placeholder.com/300x150"
-        class=""
-        :max-width="300"
-        fit="cover"
-        :ratio="2"
-      />
-    </ClientOnly>
-    <va-card-title>Game Title</va-card-title>
+    <DriveThumbnail
+      :file="file"
+      :error="error"
+      :file-is-loading="isLoading"
+      width="300"
+      height="150"
+    />
+    <va-card-title>{{ table.title }}</va-card-title>
     <va-card-content>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+      <p>Last launch: {{ table.lastAccess.toDate().toLocaleDateString() }}</p>
     </va-card-content>
     <va-card-actions align="right">
       <va-button
-        icon="edit"
+        icon="delete"
         preset="primary"
-        color="secondary-dark"
+        color="danger"
       />
       <va-button
         preset="secondary"
