@@ -5,8 +5,11 @@ import {
   doc,
   getFirestore,
   onSnapshot,
+  orderBy,
+  query,
   serverTimestamp,
   setDoc,
+  where,
 } from '@firebase/firestore';
 
 export default defineNuxtPlugin((nuxtApp) => {
@@ -29,6 +32,9 @@ export default defineNuxtPlugin((nuxtApp) => {
     onSnapshot,
     serverTimestamp,
     collection,
+    query,
+    where,
+    orderBy,
   };
 
   nuxtApp.vueApp.provide('auth', auth);

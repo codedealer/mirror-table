@@ -6,6 +6,9 @@ import {
   onSnapshot,
   collection,
   serverTimestamp,
+  query,
+  where,
+  orderBy,
 } from "@firebase/firestore";
 
 declare module '#app' {
@@ -18,6 +21,9 @@ declare module '#app' {
       onSnapshot: typeof onSnapshot;
       collection: typeof collection;
       serverTimestamp: typeof serverTimestamp;
+      query: typeof query;
+      where: typeof where;
+      orderBy: typeof orderBy;
     };
   }
 }
@@ -32,6 +38,9 @@ declare module 'vue' {
       onSnapshot: typeof onSnapshot;
       collection: typeof collection;
       serverTimestamp: typeof serverTimestamp;
+      query: typeof query;
+      where: typeof where;
+      orderBy: typeof orderBy;
     };
   }
 }
@@ -46,6 +55,9 @@ declare module '@vue/runtime-core' {
       onSnapshot: typeof onSnapshot;
       collection: typeof collection;
       serverTimestamp: typeof serverTimestamp;
+      query: typeof query;
+      where: typeof where;
+      orderBy: typeof orderBy;
     };
   }
 }

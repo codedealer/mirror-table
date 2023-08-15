@@ -1,3 +1,5 @@
+import type { Timestamp } from '@firebase/firestore-types';
+
 export interface AuthorizationInfo {
   accessToken: string
   expiry: number
@@ -78,8 +80,8 @@ export type DriveFile = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | 'nam
 export interface Table {
   id: string
   title: string
-  createdAt: any
-  lastAccess: any
+  createdAt: Timestamp
+  lastAccess: Timestamp
   owner: string
   permissions: string[]
   thumbnail: string
