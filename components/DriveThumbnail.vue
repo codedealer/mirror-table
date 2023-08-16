@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useCssVar } from '@vueuse/core';
 import type { DriveFile } from '~/models/types';
+import { aspectRatio } from '~/utils';
 
 interface DriveThumbnailProps {
   file?: DriveFile | null
@@ -37,6 +38,34 @@ const fileError = computed(() => {
   return props.error ?? canDownloadError.value ?? isImageError.value;
 });
 
+const objectFit = computed(() => {
+  if (props.fit === 'auto') {
+    if (!props.file || !props.file.imageMediaMetadata) {
+      return 'contain';
+    }
+
+    const imageAspectRatio = aspectRatio(
+      props.file.imageMediaMetadata.width,
+      props.file.imageMediaMetadata.height,
+    );
+    const containerAspectRatio = aspectRatio(
+      props.width,
+      props.height,
+    );
+
+    if (
+      (imageAspectRatio > 1 && containerAspectRatio > 1) ||
+      (imageAspectRatio < 1 && containerAspectRatio < 1)
+    ) {
+      return 'cover';
+    }
+
+    return 'contain';
+  }
+
+  return props.fit;
+});
+
 const imageSrc = computed(() => {
   if (props.src) {
     return props.src;
@@ -44,8 +73,27 @@ const imageSrc = computed(() => {
   if (fileError.value) {
     return '';
   }
-  if (props.file) {
-    return `https://drive.google.com/thumbnail?id=${props.file.id}&sz=w${props.width}-h${props.height}`;
+  if (props.file && props.file.imageMediaMetadata) {
+    /*
+     compute proper image size depending on the objectFit:
+     - if objectFit is 'cover', we want to take the largest dimension
+     - if objectFit is 'contain', we want to specify both dimensions and let google drive api do the rest
+    */
+    let sizeArg = `w${props.width}-h${props.height}`;
+    if (objectFit.value === 'cover') {
+      const imageAspectRatio = aspectRatio(
+        props.file.imageMediaMetadata.width,
+        props.file.imageMediaMetadata.height,
+      );
+
+      if (imageAspectRatio > 1) {
+        sizeArg = `w${props.width}`;
+      } else {
+        sizeArg = `h${props.height}`;
+      }
+    }
+
+    return `https://drive.google.com/thumbnail?id=${props.file.id}&sz=${sizeArg}`;
   }
   return '';
 });
@@ -84,7 +132,7 @@ onMounted(() => {
       <va-image
         :src="imageSrc"
         :ratio="width / height"
-        fit="contain"
+        :fit="objectFit"
         @error="e => emits('error', e)"
       >
         <template #loader>

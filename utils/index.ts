@@ -12,3 +12,17 @@ export const idToSlug = (id: string): string => {
   const end = id.substring(id.length - 3);
   return `${start}${end}`;
 };
+
+export const aspectRatio = (width?: number | string, height?: number | string): number => {
+  if (
+    !width ||
+    !height ||
+    Number.isNaN(Number(width)) ||
+    Number.isNaN(Number(height)) ||
+    Number(height) === 0
+  ) {
+    return 1;
+  }
+
+  return Number(width) / Number(height);
+};
