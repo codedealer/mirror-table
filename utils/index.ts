@@ -7,8 +7,8 @@ export const expiryFromSeconds = (seconds: number | string): number => {
 };
 
 export const idToSlug = (id: string): string => {
-  // take the first 5 and the last 5 characters of the id
-  const start = id.substring(0, 5);
-  const end = id.substring(id.length - 5);
+  // take the first 3 and the last 3 characters of the id
+  const start = id.substring(0, 3);
+  const end = id.substring(id.length - 3);
   return `${start}${end}`;
 };

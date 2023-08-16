@@ -2,22 +2,23 @@
 import type { Table } from '~/models/types';
 
 const props = defineProps<{ table: Table }>();
-
-const { file, error, isLoading } = useDriveFile(props.table.thumbnail);
 </script>
 
 <template>
   <div class="ghost-container">
     <DriveThumbnail
-      :file="file"
-      :error="error"
-      :file-is-loading="isLoading"
+      :file="table.thumbnail"
       width="300"
       height="150"
     />
     <va-card-title>{{ table.title }}</va-card-title>
     <va-card-content>
-      <p>Last launch: {{ table.lastAccess.toDate().toLocaleDateString() }}</p>
+      <p v-if="table.lastAccess">
+        Last launch: {{ table.lastAccess.toDate().toLocaleDateString() }}
+      </p>
+      <p v-else>
+        <VaSkeleton variant="text" :lines="1" text-width="150px" />
+      </p>
     </va-card-content>
     <va-card-actions align="right">
       <va-button

@@ -17,8 +17,6 @@ const reset = () => {
 };
 
 const submit = async () => {
-  console.log('submit');
-
   const notificationStore = useNotificationStore();
 
   try {
@@ -27,7 +25,7 @@ const submit = async () => {
     const tableStore = useTableStore();
     await tableStore.create({
       title: title.value,
-      thumbnail: fileId.value,
+      thumbnail: file.value,
     });
 
     notificationStore.success('Table created successfully');

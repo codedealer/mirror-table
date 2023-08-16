@@ -84,6 +84,6 @@ export interface Table {
   lastAccess: Timestamp
   owner: string
   permissions: string[]
-  thumbnail: string
+  thumbnail: DriveFile | null
   slug: string
 }
