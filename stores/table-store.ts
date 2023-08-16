@@ -1,33 +1,60 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { Table } from '~/models/types';
+import type { WithFieldValue } from '@firebase/firestore';
+import type { DriveFile, Table, TableCard } from '~/models/types';
 import { idToSlug } from '~/utils';
 
 export const useTableStore = defineStore('table', () => {
   const { $db, $ops } = useNuxtApp();
 
   const create = async (
-    table: Required<Pick<Table, 'title' | 'thumbnail'>> & Partial<Table>,
+    title: string,
+    thumbnail: DriveFile | null,
   ) => {
     const userStore = useUserStore();
-    if (!userStore.isAuthenticated) {
+    if (!userStore.isAuthenticated || !userStore.user || !userStore.user.email) {
       throw new Error('User is not authenticated');
     }
 
-    const { doc, setDoc, serverTimestamp, collection } = $ops;
-    const docRef = doc(collection($db, 'tables'))
+    const { doc, serverTimestamp, collection, writeBatch } = $ops;
+
+    const batch = writeBatch($db);
+
+    const tableRef = doc(collection($db, 'tables'))
       .withConverter(firestoreDataConverter<Table>());
 
-    const data = {
-      ...table,
-      id: docRef.id,
+    const tableData: WithFieldValue<Table> = {
+      id: tableRef.id,
+      title,
       createdAt: serverTimestamp(),
-      lastAccess: serverTimestamp(),
-      owner: userStore.user!.uid,
-      permissions: [userStore.user!.uid],
-      slug: idToSlug(docRef.id),
+      owner: userStore.user.uid,
+      viewers: [userStore.user.uid],
+      editors: [userStore.user.uid],
+      slug: idToSlug(tableRef.id),
     };
 
-    await setDoc(docRef, data);
+    batch.set(tableRef, tableData);
+
+    const tableCardRef = doc($db, 'users', userStore.user.uid, 'tables', tableRef.id)
+      .withConverter(firestoreDataConverter<TableCard>());
+
+    const tableCardData: WithFieldValue<TableCard> = {
+      id: tableRef.id,
+      title,
+      createdAt: serverTimestamp(),
+      lastAccess: serverTimestamp(),
+      owner: {
+        displayName: userStore.user.displayName ?? 'unknown name',
+        photoURL: userStore.user.photoURL ?? '',
+        email: userStore.user.email,
+      },
+      role: 'owner',
+      thumbnail,
+      slug: idToSlug(tableRef.id),
+    };
+
+    batch.set(tableCardRef, tableCardData);
+
+    await batch.commit();
   };
 
   return {

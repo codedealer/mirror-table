@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { Table } from '~/models/types';
+import type { TableCard } from '~/models/types';
 
-const props = defineProps<{ table: Table }>();
+const props = defineProps<{ table: TableCard }>();
 </script>
 
 <template>

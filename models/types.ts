@@ -77,13 +77,33 @@ type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' 
 
 export type DriveFile = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | 'name' | 'originalFilename' | 'shared' | 'isAppAuthorized'>> & OptionalDriveFile;
 
-export interface Table {
+/**
+ * Data for a table card that appears on a dashboard. Each user has a copy.
+ */
+export interface TableCard {
   id: string
   title: string
   createdAt: Timestamp
   lastAccess: Timestamp
-  owner: string
-  permissions: string[]
+  owner: {
+    displayName: string
+    photoURL: string
+    email: string
+  }
+  role: string
   thumbnail: DriveFile | null
+  slug: string
+}
+
+/**
+ * Main table entity. Exists in root collection. Each table has a single owner.
+ */
+export interface Table {
+  id: string
+  title: string
+  createdAt: Timestamp
+  owner: string
+  editors: string[]
+  viewers: string[]
   slug: string
 }

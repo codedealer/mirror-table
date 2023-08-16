@@ -9,6 +9,7 @@ import {
   query,
   where,
   orderBy,
+  writeBatch,
 } from "@firebase/firestore";
 
 declare module '#app' {
@@ -24,6 +25,7 @@ declare module '#app' {
       query: typeof query;
       where: typeof where;
       orderBy: typeof orderBy;
+      writeBatch: typeof writeBatch;
     };
   }
 }
@@ -41,6 +43,7 @@ declare module 'vue' {
       query: typeof query;
       where: typeof where;
       orderBy: typeof orderBy;
+      writeBatch: typeof writeBatch;
     };
   }
 }
@@ -58,6 +61,7 @@ declare module '@vue/runtime-core' {
       query: typeof query;
       where: typeof where;
       orderBy: typeof orderBy;
+      writeBatch: typeof writeBatch;
     };
   }
 }

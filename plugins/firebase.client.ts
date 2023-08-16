@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   setDoc,
   where,
+  writeBatch,
 } from '@firebase/firestore';
 
 export default defineNuxtPlugin((nuxtApp) => {
@@ -35,6 +36,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     query,
     where,
     orderBy,
+    writeBatch,
   };
 
   nuxtApp.vueApp.provide('auth', auth);

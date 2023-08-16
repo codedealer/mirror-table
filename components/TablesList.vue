@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import { useFirestore } from '@vueuse/firebase/index';
-import type { Table } from '~/models/types';
+import type { TableCard } from '~/models/types';
 
-let tables = ref<Table[] | undefined>(undefined);
+let tables = ref<TableCard[] | undefined>(undefined);
 
 onMounted(() => {
   const { $db, $ops } = useNuxtApp();
 
   const userStore = useUserStore();
-  const { collection, query, where, orderBy } = $ops;
+  const { collection, query, orderBy } = $ops;
   const q = computed(() => {
-    if (!userStore.isAuthenticated) {
+    if (!userStore.isAuthenticated || !userStore.user) {
       return false;
     }
     return query(
-      collection($db, 'tables').withConverter(firestoreDataConverter<Table>()),
-      where('permissions', 'array-contains', userStore.user!.uid),
+      collection($db, 'users', userStore.user.uid, 'tables')
+        .withConverter(firestoreDataConverter<TableCard>()),
       orderBy('lastAccess', 'desc'),
     );
   });

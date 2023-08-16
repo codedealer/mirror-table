@@ -23,10 +23,7 @@ const submit = async () => {
     isBusy.value = true;
 
     const tableStore = useTableStore();
-    await tableStore.create({
-      title: title.value,
-      thumbnail: file.value,
-    });
+    await tableStore.create(title.value, file.value);
 
     notificationStore.success('Table created successfully');
     reset();
