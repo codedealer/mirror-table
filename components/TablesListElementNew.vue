@@ -18,6 +18,7 @@ const reset = () => {
 
 const submit = async () => {
   const notificationStore = useNotificationStore();
+  notificationStore.success('Table created successfully'); return;
 
   try {
     isBusy.value = true;

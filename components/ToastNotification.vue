@@ -51,8 +51,8 @@ const onMouseLeave = () => {
   lifetime > 0 && resumeHook();
 };
 
+const { getComputedColor } = useColors();
 onMounted(() => {
-  const { getComputedColor } = useColors();
 
   backgroundColor.value = getComputedColor(props.color).value;
 
