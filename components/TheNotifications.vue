@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const notificationStore = useNotificationStore();
+const { getComputedColor } = useColors();
 onMounted(() => {
-
 });
 </script>
 
@@ -15,7 +15,7 @@ onMounted(() => {
         :message="notification.message"
         :icon="notification.icon"
         :duration="notification.duration"
-        :color="notification.color"
+        :color="notification.color ? getComputedColor(notification.color).value : ''"
         @close="notificationStore.remove(notification.id)"
       >
         <template v-for="(_, name) in $slots" #[name]="slotData">

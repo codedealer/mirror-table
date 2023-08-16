@@ -51,10 +51,10 @@ const onMouseLeave = () => {
   lifetime > 0 && resumeHook();
 };
 
-const { getComputedColor } = useColors();
+
 onMounted(() => {
 
-  backgroundColor.value = getComputedColor(props.color).value;
+  // backgroundColor.value = getComputedColor(props.color).value;
 
   const { pause, resume } = useTimeoutPoll(decreaseLifetime, loop, {
     immediate: true,
