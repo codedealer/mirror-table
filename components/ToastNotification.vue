@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<ToastNotificationProps>(), {
   title: '',
   icon: 'info_outline',
   duration: 5000,
-  color: 'background-secondary',
+  color: '#1f262f',
 });
 
 const emits = defineEmits<ToastNotificationEmits>();
@@ -31,8 +31,6 @@ const close = () => {
 };
 
 const { title, message, icon, duration, color } = toRefs(props);
-
-const backgroundColor = ref(color.value);
 
 let lifetime: number = duration.value;
 const loop = 500; // ms
@@ -51,11 +49,7 @@ const onMouseLeave = () => {
   lifetime > 0 && resumeHook();
 };
 
-
 onMounted(() => {
-
-  // backgroundColor.value = getComputedColor(props.color).value;
-
   const { pause, resume } = useTimeoutPoll(decreaseLifetime, loop, {
     immediate: true,
   });
@@ -68,7 +62,7 @@ onMounted(() => {
   <transition appear name="slide-fade">
     <div
       class="toast-notification"
-      :style="`background-color: ${backgroundColor}`"
+      :style="`background-color: ${color}`"
       @mouseover="onMouseHover"
       @mouseleave="onMouseLeave"
     >
