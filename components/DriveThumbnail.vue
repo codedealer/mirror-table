@@ -11,6 +11,7 @@ interface DriveThumbnailProps {
   width: string
   height: string
   removable?: boolean
+  fit?: 'auto' | 'cover' | 'contain'
 }
 
 interface DriveThumbnailEmits {
@@ -25,15 +26,22 @@ const props = withDefaults(defineProps<DriveThumbnailProps>(), {
   src: '',
   title: '',
   removable: false,
+  fit: 'auto',
 });
 
 const emits = defineEmits<DriveThumbnailEmits>();
+
+const { canDownloadError, isImageError } = useDriveFileValidator(props.file);
+
+const fileError = computed(() => {
+  return props.error ?? canDownloadError.value ?? isImageError.value;
+});
 
 const imageSrc = computed(() => {
   if (props.src) {
     return props.src;
   }
-  if (props.error) {
+  if (fileError.value) {
     return '';
   }
   if (props.file) {
@@ -45,6 +53,8 @@ const imageSrc = computed(() => {
 const fileErrorMessage = computed(() => {
   if (props.error) {
     return extractErrorMessage(props.error);
+  } else if (fileError.value) {
+    return extractErrorMessage(fileError.value);
   }
   return '';
 });
@@ -110,11 +120,11 @@ onMounted(() => {
       <div v-if="fileIsLoading" class="ghost-container">
         <va-progress-circle indeterminate />
       </div>
-      <div v-else-if="!error" class="ghost-container">
+      <div v-else-if="!fileError" class="ghost-container">
         <div class="drive-thumbnail__backdrop" />
         <small>No image</small>
       </div>
-      <div v-else class="ghost-container">
+      <div v-else class="ghost-container tc">
         <va-icon
           name="broken_image"
           color="danger"
