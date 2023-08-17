@@ -88,7 +88,7 @@ export const useTableStore = defineStore('table', () => {
   };
 
   const remove = async (tableId: string) => {
-    // TODO: move this to api call to delete entire collections of scenes.
+    // TODO: move this to api call on the server to delete entire collections of scenes.
     const userStore = useUserStore();
     if (!userStore.isAuthenticated || !userStore.user || !userStore.user.email) {
       throw new Error('User is not authenticated');
