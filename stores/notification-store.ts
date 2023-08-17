@@ -14,7 +14,7 @@ export const useNotificationStore = defineStore('notification', () => {
   };
 
   const error = (message: string) => {
-    add({ message, icon: 'error_outline', color: '#6f160e' });
+    add({ message, icon: 'error_outline', color: 'var(--va-danger-dark)' });
   };
 
   const success = (message: string) => {

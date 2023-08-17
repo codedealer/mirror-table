@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<ToastNotificationProps>(), {
   title: '',
   icon: 'info_outline',
   duration: 5000,
-  color: '#1f262f',
+  color: 'var(--va-background-secondary)',
 });
 
 const emits = defineEmits<ToastNotificationEmits>();
