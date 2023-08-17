@@ -44,8 +44,13 @@ header {
   font-size: 24px;
 }
 .va-card {
+  --va-popover-display: inline-flex;
   .va-card__content {
     line-height: 1.3;
+  }
+  .card-name {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
   }
 }
 .tc {

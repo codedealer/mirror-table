@@ -92,6 +92,7 @@ export interface TableCard {
   }
   role: string
   thumbnail: DriveFile | null
+  type: 'private' | 'public'
   slug: string
 }
 
@@ -101,9 +102,25 @@ export interface TableCard {
 export interface Table {
   id: string
   title: string
+  pointer: string
   createdAt: Timestamp
   owner: string
   editors: string[]
   viewers: string[]
   slug: string
+}
+
+export interface Scene {
+  id: string
+  tableId: string
+  title: string
+  thumbnail: DriveFile | string | null
+  createdAt: Timestamp
+  archived: boolean
+  slug: string
+}
+
+export interface TableScenesSortMap {
+  tableId: string
+  map: Record<string, number>
 }
