@@ -47,7 +47,7 @@ const removeTable = async () => {
           icon="delete"
           preset="primary"
           color="danger"
-          @click="removeTable"
+          @click="notificationStore.error('Deletion is currently not supported')"
         />
       </va-popover>
       <va-popover message="Invite viewers">
@@ -60,6 +60,8 @@ const removeTable = async () => {
       </va-popover>
       <va-button
         preset="outlined"
+        tag="NuxtLink"
+        :to="`/g/${table.slug}`"
       >
         Launch
       </va-button>

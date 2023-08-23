@@ -15,13 +15,24 @@ const imageTemplate = (
   );
 };
 
+const allTemplate = (
+  builder: google.picker.PickerBuilder,
+  options: Required<BuildPickerOptions>,
+) => {
+  return builder.addView(new google.picker.DocsView(google.picker.ViewId.DOCS)
+    .setIncludeFolders(true)
+    .setSelectFolderEnabled(true)
+    .setParent(options.parentId),
+  );
+};
+
 const TemplateMap: Record<
   PickerViewTemplate, (
     builder: google.picker.PickerBuilder,
     options: Required<BuildPickerOptions>
   ) => google.picker.PickerBuilder
 > = {
-  all: notImplementedTemplate,
+  all: allTemplate,
   images: imageTemplate,
   media: notImplementedTemplate,
 };

@@ -1,8 +1,7 @@
 import type { MaybeRef } from 'vue';
 import type { DriveFile } from '~/models/types';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
-
-const fieldMask = 'id, trashed, name, originalFilename, mimeType, shared, isAppAuthorized, imageMediaMetadata, createdTime, modifiedTime, fileExtension, properties, appProperties, md5Checksum, version, videoMediaMetadata, thumbnailLink, permissionIds, size, quotaBytesUsed, capabilities' as const;
+import { fieldMask } from '~/models/types';
 
 export const useDriveFile = (id: MaybeRef<string | null>) => {
   const driveStore = useDriveStore();

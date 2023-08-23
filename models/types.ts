@@ -28,19 +28,36 @@ export interface BuildPickerOptions {
 export interface Profile {
   settings: {
     driveFolderId: string
+    searchFolderId: string
   }
 }
 
-export interface InvalidDriveParentFolderError extends Error {
-  code: 'invalid_drive_parent_folder'
+export interface DriveInvalidParentFolderError extends Error {
+  code: 'drive_invalid_parent_folder'
 }
 
 export const isObject = (obj: unknown): obj is Record<string, unknown> => {
   return !!obj && typeof obj === 'object';
 };
 
-export const isInvalidDriveParentFolderError = (err: unknown): err is InvalidDriveParentFolderError => {
-  return isObject(err) && 'code' in err && err.code === 'invalid_drive_parent_folder';
+export const isDriveInvalidParentFolderError = (err: unknown): err is DriveInvalidParentFolderError => {
+  return isObject(err) && 'code' in err && err.code === 'drive_invalid_parent_folder';
+};
+
+export interface DriveInvalidPermissionsError extends Error {
+  code: 'drive_invalid_permissions'
+}
+
+export const isDriveInvalidPermissionsError = (err: unknown): err is DriveInvalidPermissionsError => {
+  return isObject(err) && 'code' in err && err.code === 'drive_invalid_permissions';
+};
+
+export interface DriveInvalidSearchFolderError extends Error {
+  code: 'drive_invalid_search_folder'
+}
+
+export const isDriveInvalidSearchFolderError = (err: unknown): err is DriveInvalidSearchFolderError => {
+  return isObject(err) && 'code' in err && err.code === 'drive_invalid_search_folder';
 };
 
 export interface GapiErrorResponseResult {
@@ -73,9 +90,33 @@ export interface Notification {
   color?: string
 }
 
-type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' | 'originalFilename' | 'mimeType' | 'shared' | 'isAppAuthorized' | 'imageMediaMetadata' | 'createdTime' | 'modifiedTime' | 'size' | 'fileExtension' | 'properties' | 'appProperties' | 'md5Checksum' | 'version' | 'videoMediaMetadata' | 'thumbnailLink' | 'permissionIds' | 'quotaBytesUsed' | 'capabilities'>;
+export const fieldMask = 'id, trashed, name, ownedByMe, originalFilename, mimeType, shared, iconLink, imageMediaMetadata, createdTime, modifiedTime, fileExtension, properties, appProperties, md5Checksum, version, videoMediaMetadata, thumbnailLink, thumbnailVersion, size, quotaBytesUsed, parents, capabilities/canEdit, capabilities/canCopy, capabilities/canDelete, capabilities/canListChildren, capabilities/canAddChildren, capabilities/canShare, capabilities/canDownload' as const;
 
-export type DriveFile = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | 'name' | 'originalFilename' | 'shared' | 'isAppAuthorized'>> & OptionalDriveFile;
+export interface DriveFileCapabilities {
+  canEdit?: boolean
+  canCopy?: boolean
+  canDelete?: boolean
+  canListChildren?: boolean
+  canAddChildren?: boolean
+  canShare?: boolean
+  canDownload?: boolean
+}
+
+type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' | 'ownedByMe' | 'originalFilename' | 'mimeType' | 'shared' | 'iconLink' | 'imageMediaMetadata' | 'createdTime' | 'modifiedTime' | 'size' | 'fileExtension' | 'properties' | 'appProperties' | 'md5Checksum' | 'version' | 'videoMediaMetadata' | 'thumbnailLink' | 'thumbnailVersion' | 'quotaBytesUsed' | 'parents'> & { capabilities?: DriveFileCapabilities };
+
+export type DriveFile = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | 'name' | 'originalFilename' | 'shared' | 'ownedByMe'>> & OptionalDriveFile;
+
+export interface DriveTreeNode {
+  id: string
+  label: string
+  icon?: string
+  isFolder: boolean
+  loading: boolean
+  expanded: boolean
+  disabled: boolean
+  data?: DriveFile
+  children?: DriveTreeNode[]
+}
 
 /**
  * Data for a table card that appears on a dashboard. Each user has a copy.
@@ -110,6 +151,9 @@ export interface Table {
   slug: string
 }
 
+/**
+ * Entity in a subcollection of a table. Each table has many scenes.
+ */
 export interface Scene {
   id: string
   tableId: string
@@ -120,7 +164,25 @@ export interface Scene {
   slug: string
 }
 
+/**
+ * Document that holds the sort map for a scene. Stored under user entity.
+ */
 export interface TableScenesSortMap {
   tableId: string
   map: Record<string, number>
 }
+
+export interface TablePermissions {
+  isOwner: boolean
+  isEditor: boolean
+  isViewer: boolean
+}
+
+export const TableModes = {
+  own: 'own',
+  edit: 'edit',
+  view: 'view',
+  invalid: 'invalid',
+} as const;
+
+export type TableMode = typeof TableModes[keyof typeof TableModes];

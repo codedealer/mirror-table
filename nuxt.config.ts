@@ -22,6 +22,7 @@ export default {
       projectId: process.env.FB_PROJECT_ID,
       parentFolder: 'Mirror Table',
       rootFolder: 'root',
+      searchFolder: '.search',
     }
   },
   app: {
@@ -43,6 +44,7 @@ export default {
       mode: 'out-in',
     }
   },
+  spaLoadingTemplate: resolve(__dirname, './loader.html'),
   vuestic: {
     css: ['reset', 'typography'],
     config: {
@@ -80,5 +82,6 @@ export default {
   routeRules: {
     /*'/': { prerender: true },*/
     '/d': { ssr: false },
+    '/g/**': { ssr: false },
   },
 }

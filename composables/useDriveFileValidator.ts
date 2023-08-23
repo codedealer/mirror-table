@@ -11,7 +11,6 @@ export const useDriveFileValidator = (file: MaybeRef<DriveFile | null>) => {
 
     if (
       fileRef.value.capabilities?.canDownload &&
-      fileRef.value.isAppAuthorized &&
       fileRef.value.shared
     ) {
       return null;

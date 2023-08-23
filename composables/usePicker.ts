@@ -1,4 +1,6 @@
 import type { BuildPickerOptions } from '~/models/types';
+import { folderExists } from '~/utils/driveOps';
+import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
 
 const buildPickerOptionsDefaults = {
   template: 'all' as const,
@@ -13,41 +15,25 @@ const buildPicker = async (opts: BuildPickerOptions): Promise<google.picker.Pick
   const userStore = useUserStore();
   const driveStore = useDriveStore();
 
-  if (!driveStore.isReady || !userStore.isAuthenticated) {
+  if (
+    !driveStore.isReady ||
+    !userStore.isAuthenticated ||
+    !userStore.profile
+  ) {
     throw new Error('Calling Picker API when the API is not ready or user is not authenticated');
   }
 
-  const { checkParentFolder, createParentFolder } = usePickerParentFolder();
+  await driveWorkspaceSentinel();
 
-  try {
-    await checkParentFolder(options.parentId);
-  } catch (e) {
-    if (!isInvalidDriveParentFolderError(e)) {
-      throw e;
+  // check if the parent folder exists
+  if (options.parentId === '') {
+    options.parentId = userStore.profile.settings.driveFolderId;
+  }
+
+  if (options.parentId !== userStore.profile.settings.driveFolderId) {
+    if (!(await folderExists(options.parentId))) {
+      throw new Error('Folder does not exist');
     }
-
-    // show prompt to create a folder
-    let newFolderId = options.parentId;
-    try {
-      const newFolderName = await driveStore.promptToCreateParentFolder() as string;
-
-      // create folder
-      newFolderId = await createParentFolder(newFolderName);
-    } catch (e) {
-      if (typeof e === 'string') {
-        // chose the root folder
-        newFolderId = e;
-      } else {
-        throw e;
-      }
-    }
-
-    const newProfile = structuredClone(toRaw(userStore.profile));
-    newProfile!.settings.driveFolderId = newFolderId;
-    await userStore.updateProfile(newProfile!);
-
-    options.parentId = newFolderId;
-    return buildPicker(options);
   }
 
   const builder = await driveStore.getPickerBuilder();

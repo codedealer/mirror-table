@@ -1,0 +1,22 @@
+.main-grid__left {
+  .va-sidebar {
+    --va-sidebar-item-content-padding: 0.5rem;
+    --va-sidebar-item-active-border-size: 0;
+  }
+  .va-sidebar__item__content {
+    min-height: 48px;
+    justify-content: center;
+    --va-sidebar-item-content-gap: 0;
+  }
+}
+
+.main-grid__right {
+  .va-sidebar {
+    --va-sidebar-item-content-padding: 1rem;
+    --va-sidebar-item-active-border-size: 0;
+    max-width: max(100%, 350px);
+  }
+  .profile-item {
+    background-color: var(--va-background-secondary);
+  }
+}
