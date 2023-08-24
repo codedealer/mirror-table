@@ -111,6 +111,7 @@ export interface DriveTreeNode {
   label: string
   icon?: string
   isFolder: boolean
+  loaded: boolean
   loading: boolean
   expanded: boolean
   disabled: boolean

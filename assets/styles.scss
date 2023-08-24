@@ -2,9 +2,11 @@
 @import './forms.scss';
 @import './grid.scss';
 @import './sidebar.scss';
+@import './tree.scss';
 
 body {
   --va-button-font-weight: 400;
+  overflow-x: hidden;
 }
 .va-h1 {
   margin-bottom: 3rem;

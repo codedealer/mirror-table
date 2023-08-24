@@ -34,6 +34,7 @@
     "@vueuse/core": "^10.3.0",
     "@vueuse/firebase": "^10.3.0",
     "firebase": "^10.0.0",
+    "he-tree-vue": "3",
     "pinia": "^2.1.4",
     "vuestic-ui": "^1.7.4"
   },

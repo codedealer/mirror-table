@@ -3,7 +3,7 @@ import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
 
 const buildNodes = (files: DriveFile[]) => {
   const nodes = files.map(file => DriveTreeNodeFactory(file));
-  nodes[0].children = [nodes[1]];
+  nodes[0].children = [nodes[1], nodes[2]];
 
   return nodes;
 };

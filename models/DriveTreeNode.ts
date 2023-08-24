@@ -5,6 +5,7 @@ export const DriveTreeNodeFactory = (file: DriveFile): DriveTreeNode => ({
   label: file.name,
   icon: undefined,
   isFolder: file.mimeType === DriveMimeTypes.FOLDER,
+  loaded: file.mimeType !== DriveMimeTypes.FOLDER,
   loading: false,
   expanded: false,
   disabled: false,

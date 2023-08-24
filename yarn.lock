@@ -388,6 +388,13 @@
     "@babel/helper-plugin-utils" "^7.22.5"
     "@babel/plugin-syntax-typescript" "^7.22.5"
 
+"@babel/runtime@^7.7.7":
+  version "7.22.10"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.22.10.tgz#ae3e9631fd947cb7e3610d3e9d8fef5f76696682"
+  integrity sha512-21t/fkKLMZI4pqP2wlmsQAWnYW1PDyKyyUV4vCi+B25ydmdaYTKXPwCj0BzSUnZf4seIiYvSA3jcZ3gdsMFkLQ==
+  dependencies:
+    regenerator-runtime "^0.14.0"
+
 "@babel/standalone@^7.21.3":
   version "7.22.9"
   resolved "https://registry.yarnpkg.com/@babel/standalone/-/standalone-7.22.9.tgz#8ac034a30867dc50ff5a7904d771832edcd7a192"
@@ -3221,6 +3228,23 @@ dotenv@^16.3.1:
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.3.1.tgz#369034de7d7e5b120972693352a3bf112172cc3e"
   integrity sha512-IPzF4w4/Rd94bA9imS68tZBaYyBWSCE47V1RGuMrB94iyTOIEwRmVL2x/4An+6mETpLrKJ5hQkB8W4kFAadeIQ==
 
+drag-event-service@^1.1.7:
+  version "1.1.10"
+  resolved "https://registry.yarnpkg.com/drag-event-service/-/drag-event-service-1.1.10.tgz#707254d67a9543efe8fdb2325cfb9f9c40991103"
+  integrity sha512-V7WhmEIRLWnuj0sLRHAy5Ce5Q5ZOX4kh4SYY+z4JbUON+WykPyUS0EhZNhF2NjAbnEieMfXUw35lFlI+b6pNZA==
+  dependencies:
+    "@babel/runtime" "^7.7.7"
+    helper-js "^2.0.0"
+
+draggable-helper@^5.0.6:
+  version "5.0.6"
+  resolved "https://registry.yarnpkg.com/draggable-helper/-/draggable-helper-5.0.6.tgz#29a772043a61539c0408ca723b0358ec1384723b"
+  integrity sha512-XJDmWNZXDO6iB81qA0ZoNrMxRkKwlYMM7yba+jaGT29a4uDYfrgAkm+4xKqV1oEv5AdeKK+MnAWsrt/TaQwbEg==
+  dependencies:
+    "@babel/runtime" "^7.7.7"
+    drag-event-service "^1.1.7"
+    helper-js "^2.0.0"
+
 duplexer@^0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/duplexer/-/duplexer-0.1.2.tgz#3abe43aef3835f8ae077d136ddce0f276b0400e6"
@@ -4408,6 +4432,25 @@ hash-sum@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/hash-sum/-/hash-sum-2.0.0.tgz#81d01bb5de8ea4a214ad5d6ead1b523460b0b45a"
   integrity sha512-WdZTbAByD+pHfl/g9QSsBIIwy8IT+EsPiKDs0KNX+zSHhdDLFKdZu0BQHljvO+0QI/BasbMSUa8wYNCZTvhslg==
+
+he-tree-vue@3:
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/he-tree-vue/-/he-tree-vue-3.1.2.tgz#90724f5818160abe83b6b74fae43f8c1ed1a3bea"
+  integrity sha512-PUKTo0l5ymu/IXAELh7/4nW6WNvJYr8OiB3WYgWHHaHJ7y5j4QRjfVVj7IWXQTWafWxV7FNeQ8d8bQE7Qyu+tg==
+  dependencies:
+    "@babel/runtime" "^7.7.7"
+    draggable-helper "^5.0.6"
+    helper-js "^2.0.1"
+    vue-functions "^2.0.6"
+    vue-runtime-helpers "^1.1.2"
+
+helper-js@^2.0.0, helper-js@^2.0.1:
+  version "2.0.7"
+  resolved "https://registry.yarnpkg.com/helper-js/-/helper-js-2.0.7.tgz#7ed172d79db5a2a8c6d0ee99905b17ef28f2a1ea"
+  integrity sha512-qdagluMOcYL5P9fYLqbGedq9LCWH1W4BM2/yTH+XIy6MIYLE+qAHWU6acZ5CyWJslXMhKCKPl1yDYVJCKGgS6A==
+  dependencies:
+    "@babel/runtime" "^7.7.7"
+    tslib "^2"
 
 hookable@^5.5.3:
   version "5.5.3"
@@ -6437,6 +6480,11 @@ redis-parser@^3.0.0:
   dependencies:
     redis-errors "^1.0.0"
 
+regenerator-runtime@^0.14.0:
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.14.0.tgz#5e19d68eb12d486f797e15a3c6a918f7cec5eb45"
+  integrity sha512-srw17NI0TUWHuGa5CFGGmhfNIeja30WMBfbslPNhf6JrqQlLN5gcrvig1oqPxiVaXb0oW0XRKtH6Nngs5lKCIA==
+
 regexp-tree@^0.1.24, regexp-tree@^0.1.27, regexp-tree@~0.1.1:
   version "0.1.27"
   resolved "https://registry.yarnpkg.com/regexp-tree/-/regexp-tree-0.1.27.tgz#2198f0ef54518ffa743fe74d983b56ffd631b6cd"
@@ -7144,6 +7192,11 @@ tslib@^1.8.1:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
+tslib@^2:
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.2.tgz#703ac29425e7b37cd6fd456e92404d46d1f3e4ae"
+  integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==
+
 tslib@^2.1.0:
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.4.1.tgz#0d0bfbaac2880b91e22df0768e55be9753a5b17e"
@@ -7560,12 +7613,25 @@ vue-eslint-parser@^9.3.0:
     lodash "^4.17.21"
     semver "^7.3.6"
 
+vue-functions@^2.0.6:
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/vue-functions/-/vue-functions-2.0.6.tgz#8dd83d4f60699715f323d7119e10a197b2e63882"
+  integrity sha512-c5P62HgQHJe7tIyWQUJGKeK3ziI+cOc3tf/NnwaSGnli89msfyDN0QUFIT9Su7uMcQmf0oMj2PmSh8M4zISxzg==
+  dependencies:
+    "@babel/runtime" "^7.7.7"
+    helper-js "^2.0.0"
+
 vue-router@^4.2.4:
   version "4.2.4"
   resolved "https://registry.yarnpkg.com/vue-router/-/vue-router-4.2.4.tgz#382467a7e2923e6a85f015d081e1508052c191b9"
   integrity sha512-9PISkmaCO02OzPVOMq2w82ilty6+xJmQrarYZDkjZBfl4RvYAlt4PKnEX21oW4KTtWfa9OuO/b3qk1Od3AEdCQ==
   dependencies:
     "@vue/devtools-api" "^6.5.0"
+
+vue-runtime-helpers@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/vue-runtime-helpers/-/vue-runtime-helpers-1.1.2.tgz#446b7b820888ab0c5264d2c3a32468e72e4100f3"
+  integrity sha512-pZfGp+PW/IXEOyETE09xQHR1CKkR9HfHZdnMD/FVLUNI+HxYTa82evx5WrF6Kz4s82qtqHvMZ8MZpbk2zT2E1Q==
 
 vue@^3.3.4:
   version "3.3.4"
