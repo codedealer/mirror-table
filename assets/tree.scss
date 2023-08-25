@@ -6,6 +6,15 @@
 
   .tree-children:not(.tree-root) {
     background: var(--va-tree-node-children-background);
+    .tree-children {
+      background-position-x: 35px;
+      .tree-children {
+        background-position-x: 56px;
+        .tree-children {
+          background-position-x: 77px;
+        }
+      }
+    }
   }
 
   .tree-node{
@@ -36,10 +45,11 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    &:hover {
-      .drive-node__actions {
-        display: flex;
-      }
+    cursor: pointer;
+    width: 100%;
+
+    .va-button__content {
+      display: contents;
     }
   }
   .drive-node__icon {
@@ -48,22 +58,33 @@
     place-content: center;
     height: var(--node-icon-size);
     width: var(--node-icon-size);
+    position: relative;
+    .drive-node__icon--undetermined::before {
+      content: '?';
+      position: absolute;
+      inset: 0;
+      margin: 2px auto auto;
+      color: var(--va-background-secondary);
+      font-family: var(--va-font-family);
+      font-size: 14px;
+      font-weight: 700;
+    }
   }
   .drive-node__name {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex-grow: 1;
+    text-align: left;
   }
   .drive-node__actions {
     flex: 0 0 auto;
     align-items: center;
     gap: 3px;
-    display: none;
-    &:focus-within {
-      display: flex;
-    }
+    display: flex;
   }
 }
+
 .drive-node__context-menu {
   --va-list-item-section-icon-margin: 0;
   .va-list-item {

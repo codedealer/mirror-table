@@ -2,19 +2,47 @@
 import type { Tree } from 'he-tree-vue';
 import type { DriveTreeNode } from '~/models/types';
 
+interface DriveDirectoryTreeFolderEmits {
+  (event: 'create-child-folder', node: DriveTreeNode): void
+}
+
 const props = defineProps<{
   node: DriveTreeNode
   index: number
   path: string[]
   tree: Tree
 }>();
+
+defineEmits<DriveDirectoryTreeFolderEmits>();
+
+const toggleFold = async () => {
+  if (props.node.loaded) {
+    props.tree.toggleFold(props.node, props.path);
+    return;
+  }
+
+  const driveTreeStore = useDriveTreeStore();
+  const result = await driveTreeStore.loadChildren(props.node);
+
+  result && props.tree.toggleFold(props.node, props.path);
+};
 </script>
 
 <template>
-  <div class="drive-node drive-node__folder">
+  <va-button
+    class="drive-node drive-node__folder"
+    color="text-primary"
+    hover-behavior="opacity"
+    :hover-opacity="1"
+    :loading="node.loading"
+    :disabled="node.disabled"
+    preset="plain"
+    @click="toggleFold"
+  >
     <div class="drive-node__icon">
       <va-icon
         :name="node.$folded ? 'folder' : 'folder_open'"
+        :class="node.loaded ? '' : 'drive-node__icon--undetermined'"
         color="primary"
         size="medium"
       />
@@ -27,14 +55,15 @@ const props = defineProps<{
         icon="more_vert"
         opened-icon="more_vert"
         preset="plain"
-        color="primary"
+        color="primary-dark"
         size="medium"
         stick-to-edges
+        @click.stop
       >
         <va-list class="drive-node__context-menu">
           <va-list-item
             href="#"
-            @click.prevent
+            @click="$emit('createChildFolder', node)"
           >
             <va-list-item-section icon>
               <va-icon
@@ -52,7 +81,7 @@ const props = defineProps<{
         </va-list>
       </va-button-dropdown>
     </div>
-  </div>
+  </va-button>
 </template>
 
 <style scoped lang="scss">

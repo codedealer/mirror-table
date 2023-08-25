@@ -1,4 +1,4 @@
-import type { DriveInvalidPermissionsError } from '~/models/types';
+import type { DriveFile, DriveInvalidPermissionsError } from '~/models/types';
 
 export const folderExists = async (id: string) => {
   if (!id) {
@@ -43,6 +43,10 @@ export const createFolder = async (name: string, parentId?: string) => {
   const driveStore = useDriveStore();
   const client = await driveStore.getClient();
 
+  if (!name) {
+    throw new Error('Folder name is empty');
+  }
+
   // create folder
   const response = await client.drive.files.create({
     fields: 'id',
@@ -75,4 +79,27 @@ export const shareFolder = async (id: string) => {
       allowFileDiscovery: false,
     },
   });
+};
+
+export const listFiles = async (folderId: string) => {
+  const driveStore = useDriveStore();
+  const client = await driveStore.getClient();
+
+  if (!folderId) {
+    throw new Error('Folder ID is empty');
+  }
+
+  const response = await client.drive.files.list({
+    q: `'${folderId}' in parents and trashed = false and (mimeType = '${DriveMimeTypes.FOLDER}' or appProperties has { key = 'type' and value = 'asset' })`,
+    fields: `files(${fieldMask})`,
+    orderBy: 'folder, name',
+  });
+
+  return response.result.files ? response.result.files as DriveFile[] : [];
+};
+
+export const buildNodes = (files: DriveFile[]) => {
+  const nodes = files.map(file => DriveTreeNodeFactory(file));
+
+  return nodes;
 };

@@ -107,13 +107,13 @@ type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' 
 export type DriveFile = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | 'name' | 'originalFilename' | 'shared' | 'ownedByMe'>> & OptionalDriveFile;
 
 export interface DriveTreeNode {
+  $folded: boolean
   id: string
   label: string
   icon?: string
   isFolder: boolean
   loaded: boolean
   loading: boolean
-  expanded: boolean
   disabled: boolean
   data?: DriveFile
   children?: DriveTreeNode[]
