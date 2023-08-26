@@ -6,40 +6,7 @@ import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
 export const useDriveTreeStore = defineStore('drive-tree', () => {
   const _nodes = ref<DriveTreeNode[]>([]);
-
-  const nodes = computed(() => _nodes.value);
-
-  const loading = ref(false);
-  const initialized = ref(false);
-  const error = shallowRef<unknown>(null);
-
-  const driveStore = useDriveStore();
-  const userStore = useUserStore();
-
-  const { isReady } = toRefs(driveStore);
-  const { profile } = toRefs(userStore);
-
-  watch([profile, isReady], async ([profile, isReady]) => {
-    if (initialized.value || !isReady || !profile || loading.value) {
-      return;
-    }
-
-    loading.value = true;
-    error.value = null;
-
-    try {
-      await driveWorkspaceSentinel();
-
-      const folderToSearch = profile.settings.driveFolderId;
-
-      _nodes.value = buildNodes(await listFiles(folderToSearch));
-    } catch (e) {
-      error.value = e;
-    } finally {
-      loading.value = false;
-      initialized.value = true;
-    }
-  }, { immediate: true });
+  const rootNode = ref<DriveTreeNode>();
 
   /**
    * Get a node by its path:
@@ -62,6 +29,81 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
     return node;
   };
+
+  const nodes = computed(() => {
+    return _nodes.value;
+  });
+
+  // can be eschewed in favor of rootNode properties
+  const loading = ref(false);
+  const initialized = ref(false);
+
+  const driveStore = useDriveStore();
+  const userStore = useUserStore();
+
+  const { isReady } = toRefs(driveStore);
+  const { profile } = toRefs(userStore);
+
+  const isRootFolder = computed(() => {
+    if (!rootNode.value || !profile.value) {
+      // passthrough until initialized
+      return true;
+    }
+
+    return rootNode.value.id === profile.value.settings.driveFolderId;
+  });
+
+  const setRootFolder = async (newRootNode?: DriveTreeNode) => {
+    let success = false;
+
+    if (!profile.value) {
+      throw new Error('Setting Drive root when profile is not loaded');
+    }
+
+    try {
+      loading.value = true;
+
+      await driveWorkspaceSentinel();
+
+      if (newRootNode === undefined) {
+        rootNode.value = {
+          id: profile.value.settings.driveFolderId,
+          label: 'root',
+          isFolder: true,
+          loaded: true,
+          loading: false,
+          disabled: false,
+          $folded: false,
+        };
+      } else {
+        rootNode.value = structuredClone(toRaw(newRootNode));
+      }
+
+      _nodes.value = buildNodes(await listFiles(rootNode.value.id));
+
+      success = true;
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+    } finally {
+      loading.value = false;
+    }
+
+    return success;
+  };
+
+  watch([profile, isReady], async ([profile, isReady]) => {
+    if (initialized.value || !isReady || !profile || loading.value) {
+      return;
+    }
+
+    loading.value = true;
+
+    await setRootFolder();
+
+    loading.value = false;
+    initialized.value = true;
+  }, { immediate: true });
 
   const loadChildren = async (node: DriveTreeNode) => {
     let success = false;
@@ -87,6 +129,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
   const createChild = async (name: string, parent: DriveTreeNode) => {
     let success = false;
+
     try {
       parent.loading = true;
 
@@ -105,9 +148,11 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
   return {
     nodes,
+    rootNode,
     initialized,
     loading,
-    error,
+    isRootFolder,
+    setRootFolder,
     loadChildren,
     createChild,
     getNodeByPath,

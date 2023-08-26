@@ -3,7 +3,7 @@ import type { Tree } from 'he-tree-vue';
 import type { DriveTreeNode } from '~/models/types';
 
 interface DriveDirectoryTreeFolderEmits {
-  (event: 'create-child-folder', node: DriveTreeNode): void
+  (event: 'createChildFolder', node: DriveTreeNode): void
 }
 
 const props = defineProps<{
@@ -26,6 +26,26 @@ const toggleFold = async () => {
 
   result && props.tree.toggleFold(props.node, props.path);
 };
+
+const setRootFolder = () => {
+  const driveTreeStore = useDriveTreeStore();
+  driveTreeStore.setRootFolder(props.node);
+};
+
+let timer: ReturnType<typeof setTimeout> | null = null;
+const onClickOrDoubleClick = () => {
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+    setRootFolder();
+    return;
+  }
+
+  timer = setTimeout(() => {
+    timer = null;
+    toggleFold();
+  }, 200);
+};
 </script>
 
 <template>
@@ -37,7 +57,7 @@ const toggleFold = async () => {
     :loading="node.loading"
     :disabled="node.disabled"
     preset="plain"
-    @click="toggleFold"
+    @click="onClickOrDoubleClick"
   >
     <div class="drive-node__icon">
       <va-icon

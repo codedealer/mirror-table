@@ -1,6 +1,8 @@
-.he-tree {
+.drive-tree-container {
   --va-tree-node-padding: 3px;
   --node-icon-size: 28px;
+}
+.he-tree {
 
   padding: var(--va-tree-view-padding);
 
@@ -52,24 +54,6 @@
       display: contents;
     }
   }
-  .drive-node__icon {
-    flex: 0 0 auto;
-    display: grid;
-    place-content: center;
-    height: var(--node-icon-size);
-    width: var(--node-icon-size);
-    position: relative;
-    .drive-node__icon--undetermined::before {
-      content: '?';
-      position: absolute;
-      inset: 0;
-      margin: 2px auto auto;
-      color: var(--va-background-secondary);
-      font-family: var(--va-font-family);
-      font-size: 14px;
-      font-weight: 700;
-    }
-  }
   .drive-node__name {
     white-space: nowrap;
     overflow: hidden;
@@ -83,6 +67,51 @@
     gap: 3px;
     display: flex;
   }
+}
+
+.drive-node__icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-content: center;
+  height: var(--node-icon-size);
+  width: var(--node-icon-size);
+  position: relative;
+  .drive-node__icon--undetermined::before {
+    content: '?';
+    position: absolute;
+    inset: 0;
+    margin: 2px auto auto;
+    color: var(--va-background-secondary);
+    font-family: var(--va-font-family);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .root-icon::before {
+    position: absolute;
+    content: '';
+    inset: 0;
+    margin: auto;
+    width: calc(var(--node-icon-size) - 4px);
+    height: calc(var(--node-icon-size) - 4px);
+    background-image: url(/logo.svg);
+    background-size: contain;
+  }
+}
+
+.drive-directory-tree-header {
+  display: flex;
+  justify-content: space-between;
+  background-color: var(--va-background-secondary);
+  padding: var(--va-tree-view-padding);
+}
+.drive-directory-tree-header__content {
+  padding: var(--va-tree-node-padding);
+}
+.drive-directory-tree-header__root-nav {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
 }
 
 .drive-node__context-menu {

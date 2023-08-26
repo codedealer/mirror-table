@@ -138,7 +138,7 @@ const promptFolderName = (parent: DriveTreeNode) => {
 </script>
 
 <template>
-  <div class="ghost-container">
+  <div class="ghost-container drive-tree-container">
     <va-sidebar-item>
       <va-sidebar-item-content>
         <va-popover
@@ -171,6 +171,8 @@ const promptFolderName = (parent: DriveTreeNode) => {
         </va-popover>
       </va-sidebar-item-content>
     </va-sidebar-item>
+
+    <DriveDirectoryTreeHeader />
 
     <Tree
       :value="nodes"
