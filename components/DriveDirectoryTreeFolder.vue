@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Tree } from 'he-tree-vue';
 import type { DriveTreeNode } from '~/models/types';
+import clickOrDoubleClick from '~/utils/clickOrDoubleClick';
 
 interface DriveDirectoryTreeFolderEmits {
   (event: 'createChildFolder', node: DriveTreeNode): void
@@ -32,20 +33,7 @@ const setRootFolder = () => {
   driveTreeStore.setRootFolder(props.node);
 };
 
-let timer: ReturnType<typeof setTimeout> | null = null;
-const onClickOrDoubleClick = () => {
-  if (timer) {
-    clearTimeout(timer);
-    timer = null;
-    setRootFolder();
-    return;
-  }
-
-  timer = setTimeout(() => {
-    timer = null;
-    toggleFold();
-  }, 200);
-};
+const onClickOrDoubleClick = clickOrDoubleClick(toggleFold, setRootFolder);
 </script>
 
 <template>
