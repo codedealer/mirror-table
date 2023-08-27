@@ -6,7 +6,15 @@ import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
 export const useDriveTreeStore = defineStore('drive-tree', () => {
   const _nodes = ref<DriveTreeNode[]>([]);
-  const rootNode = ref<DriveTreeNode>();
+  const rootNode = ref<DriveTreeNode>({
+    id: '',
+    label: '',
+    isFolder: true,
+    loaded: false,
+    loading: false,
+    disabled: false,
+    $folded: false,
+  } as DriveTreeNode);
 
   /**
    * Get a node by its path:
@@ -34,10 +42,6 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     return _nodes.value;
   });
 
-  // can be eschewed in favor of rootNode properties
-  const loading = ref(false);
-  const initialized = ref(false);
-
   const driveStore = useDriveStore();
   const userStore = useUserStore();
 
@@ -61,16 +65,12 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     }
 
     try {
-      loading.value = true;
-
-      await driveWorkspaceSentinel();
-
       if (newRootNode === undefined) {
         rootNode.value = {
           id: profile.value.settings.driveFolderId,
-          label: 'root',
+          label: '',
           isFolder: true,
-          loaded: true,
+          loaded: false,
           loading: false,
           disabled: false,
           $folded: false,
@@ -79,30 +79,31 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
         rootNode.value = structuredClone(toRaw(newRootNode));
       }
 
+      rootNode.value.loading = true;
+
+      await driveWorkspaceSentinel();
+
       _nodes.value = buildNodes(await listFiles(rootNode.value.id));
+
+      rootNode.value.loaded = true;
 
       success = true;
     } catch (e) {
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
     } finally {
-      loading.value = false;
+      rootNode.value.loading = false;
     }
 
     return success;
   };
 
   watch([profile, isReady], async ([profile, isReady]) => {
-    if (initialized.value || !isReady || !profile || loading.value) {
+    if (rootNode.value.loading || rootNode.value.loaded || !isReady || !profile) {
       return;
     }
 
-    loading.value = true;
-
     await setRootFolder();
-
-    loading.value = false;
-    initialized.value = true;
   }, { immediate: true });
 
   const loadChildren = async (node: DriveTreeNode) => {
@@ -146,16 +147,44 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     return success;
   };
 
+  const removeFile = async (node: DriveTreeNode, restore = false) => {
+    let success = false;
+
+    try {
+      node.loading = true;
+
+      await deleteFile(node.id, restore);
+
+      if (node.data) {
+        node.data.trashed = !restore;
+      }
+
+      if (node.isFolder && !restore) {
+        node.$folded = true;
+      }
+
+      node.disabled = !restore;
+
+      success = true;
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+    } finally {
+      node.loading = false;
+    }
+
+    return success;
+  };
+
   return {
     nodes,
     rootNode,
-    initialized,
-    loading,
     isRootFolder,
     setRootFolder,
     loadChildren,
     createChild,
     getNodeByPath,
+    removeFile,
   };
 });
 

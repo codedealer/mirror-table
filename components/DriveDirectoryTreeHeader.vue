@@ -1,7 +1,13 @@
 <script setup lang="ts">
-const driveTreeStore = useDriveTreeStore();
+import type { DriveTreeNode } from '~/models/types';
 
-const { loading, initialized } = toRefs(driveTreeStore);
+interface DriveDirectoryTreeHeaderEmits {
+  (event: 'createChildFolder', node: DriveTreeNode): void
+}
+
+defineEmits<DriveDirectoryTreeHeaderEmits>();
+
+const driveTreeStore = useDriveTreeStore();
 
 const setRoot = () => {
   driveTreeStore.setRootFolder();
@@ -13,14 +19,14 @@ const setRoot = () => {
     <div class="drive-directory-tree-header__content">
       <div class="drive-directory-tree-header__root-nav">
         <va-popover
-          message="Go to root"
+          message="Go to root folder"
         >
           <va-button
             preset="plain"
             color="primary"
             size="medium"
-            :loading="loading"
-            :disabled="!initialized"
+            :loading="driveTreeStore.rootNode.loading"
+            :disabled="driveTreeStore.rootNode.disabled"
             @click="setRoot"
           >
             <div class="drive-node__icon">
@@ -34,7 +40,26 @@ const setRoot = () => {
           </va-button>
         </va-popover>
       </div>
-      <div class="drive-directory-tree-header__actions" />
+      <div
+        v-show="!driveTreeStore.isRootFolder"
+        class="drive-directory-tree-header__folder-title"
+        :title="driveTreeStore.rootNode.label"
+      >
+        <va-icon
+          name="double_arrow"
+          color="background-border"
+          size="small"
+          style="vertical-align: bottom;"
+        />
+        {{ driveTreeStore.rootNode.label }}
+      </div>
+      <div class="drive-directory-tree-header__actions">
+        <DriveDirectoryTreeFolderContextMenu
+          :node="driveTreeStore.rootNode"
+          header
+          @create-child-folder="$emit('createChildFolder', driveTreeStore.rootNode)"
+        />
+      </div>
     </div>
   </div>
 </template>

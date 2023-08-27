@@ -1,6 +1,7 @@
 .drive-tree-container {
   --va-tree-node-padding: 3px;
   --node-icon-size: 28px;
+  --drive-node-gap: 6px;
 }
 .he-tree {
 
@@ -46,7 +47,7 @@
   .drive-node {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--drive-node-gap);
     cursor: pointer;
     width: 100%;
 
@@ -60,11 +61,15 @@
     text-overflow: ellipsis;
     flex-grow: 1;
     text-align: left;
+    &.drive-node__name--trashed {
+      text-decoration: line-through;
+      opacity: .8;
+    }
   }
   .drive-node__actions {
     flex: 0 0 auto;
     align-items: center;
-    gap: 3px;
+    gap: var(--drive-node-gap);
     display: flex;
   }
 }
@@ -99,15 +104,20 @@
 }
 
 .drive-directory-tree-header {
-  display: flex;
-  justify-content: space-between;
-  background-color: var(--va-background-secondary);
   padding: var(--va-tree-view-padding);
+  background-color: var(--va-background-secondary);
 }
 .drive-directory-tree-header__content {
   padding: var(--va-tree-node-padding);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--drive-node-gap);
 }
 .drive-directory-tree-header__root-nav {
+  flex: 0 0 auto;
+}
+.drive-directory-tree-header__folder-title {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -117,6 +127,7 @@
 .drive-node__context-menu {
   --va-list-item-section-icon-margin: 0;
   .va-list-item {
+    margin-bottom: 6px;
     &:hover {
       .va-list-item-label--caption {
         color: var(--va-text-primary);

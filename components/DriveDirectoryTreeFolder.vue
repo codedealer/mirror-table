@@ -2,6 +2,7 @@
 import type { Tree } from 'he-tree-vue';
 import type { DriveTreeNode } from '~/models/types';
 import clickOrDoubleClick from '~/utils/clickOrDoubleClick';
+import DriveDirectoryTreeFolderContextMenu from '~/components/DriveDirectoryTreeFolderContextMenu.vue';
 
 interface DriveDirectoryTreeFolderEmits {
   (event: 'createChildFolder', node: DriveTreeNode): void
@@ -34,6 +35,11 @@ const setRootFolder = () => {
 };
 
 const onClickOrDoubleClick = clickOrDoubleClick(toggleFold, setRootFolder);
+
+const undoTrashFolder = () => {
+  const driveTreeStore = useDriveTreeStore();
+  driveTreeStore.removeFile(props.node, true);
+};
 </script>
 
 <template>
@@ -55,39 +61,31 @@ const onClickOrDoubleClick = clickOrDoubleClick(toggleFold, setRootFolder);
         size="medium"
       />
     </div>
-    <div class="drive-node__name">
+    <div
+      class="drive-node__name"
+      :class="node?.data?.trashed ? 'drive-node__name--trashed' : ''"
+    >
       {{ node.label }}
     </div>
     <div class="drive-node__actions">
-      <va-button-dropdown
-        icon="more_vert"
-        opened-icon="more_vert"
-        preset="plain"
-        color="primary-dark"
-        size="medium"
-        stick-to-edges
-        @click.stop
+      <va-popover
+        message="Undo"
       >
-        <va-list class="drive-node__context-menu">
-          <va-list-item
-            href="#"
-            @click="$emit('createChildFolder', node)"
-          >
-            <va-list-item-section icon>
-              <va-icon
-                name="folder"
-                color="primary"
-                size="small"
-              />
-            </va-list-item-section>
-            <va-list-item-section>
-              <va-list-item-label caption>
-                Create new folder
-              </va-list-item-label>
-            </va-list-item-section>
-          </va-list-item>
-        </va-list>
-      </va-button-dropdown>
+        <va-button
+          v-show="node?.data?.trashed"
+          preset="plain"
+          color="primary-dark"
+          size="medium"
+          icon="replay"
+          @click.stop="undoTrashFolder"
+        />
+      </va-popover>
+
+      <DriveDirectoryTreeFolderContextMenu
+        v-show="!node?.data?.trashed"
+        :node="node"
+        @create-child-folder="$emit('createChildFolder', node)"
+      />
     </div>
   </va-button>
 </template>

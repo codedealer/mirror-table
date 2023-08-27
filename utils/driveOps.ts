@@ -103,3 +103,21 @@ export const buildNodes = (files: DriveFile[]) => {
 
   return nodes;
 };
+
+export const deleteFile = async (id: string, restore: boolean) => {
+  const driveStore = useDriveStore();
+  const client = await driveStore.getClient();
+
+  if (!id) {
+    throw new Error('File ID is empty');
+  }
+
+  // trash the file instead of deleting it
+  await client.drive.files.update({
+    fileId: id,
+    fields: 'id',
+    resource: {
+      trashed: !restore,
+    },
+  });
+};
