@@ -22,9 +22,9 @@ const permissions = computed(() => ({
       : props.node?.data?.capabilities?.canAddChildren
   ),
   canDelete: (
-    driveTreeStore.isRootFolder
+    props.header
       ? false
-      : !props.header && props.node?.data?.capabilities?.canDelete
+      : props.node?.data?.capabilities?.canDelete
   ),
 }));
 
@@ -64,7 +64,7 @@ const trashFolder = () => {
       </va-list-item>
 
       <va-list-item
-        v-show="permissions.canDelete"
+        v-if="permissions.canDelete"
         href="#"
         @click="trashFolder"
       >

@@ -55,6 +55,12 @@
       display: contents;
     }
   }
+  .drive-node__label {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--drive-node-gap);
+  }
   .drive-node__name {
     white-space: nowrap;
     overflow: hidden;
@@ -128,6 +134,9 @@
   --va-list-item-section-icon-margin: 0;
   .va-list-item {
     margin-bottom: 6px;
+    &:last-child {
+      margin-bottom: 0;
+    }
     &:hover {
       .va-list-item-label--caption {
         color: var(--va-text-primary);

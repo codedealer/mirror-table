@@ -43,33 +43,39 @@ const undoTrashFolder = () => {
 </script>
 
 <template>
-  <va-button
+  <div
     class="drive-node drive-node__folder"
-    color="text-primary"
-    hover-behavior="opacity"
-    :hover-opacity="1"
-    :loading="node.loading"
-    :disabled="node.disabled"
-    preset="plain"
-    @click="onClickOrDoubleClick"
   >
-    <div class="drive-node__icon">
-      <va-icon
-        :name="node.$folded ? 'folder' : 'folder_open'"
-        :class="node.loaded ? '' : 'drive-node__icon--undetermined'"
-        color="primary"
-        size="medium"
-      />
-    </div>
-    <div
-      class="drive-node__name"
-      :class="node?.data?.trashed ? 'drive-node__name--trashed' : ''"
+    <va-button
+      color="text-primary"
+      hover-behavior="opacity"
+      class="drive-node__label"
+      :hover-opacity="1"
+      :loading="node.loading"
+      :disabled="node.disabled"
+      preset="plain"
+      @click="onClickOrDoubleClick"
     >
-      {{ node.label }}
-    </div>
+      <div class="drive-node__icon">
+        <va-icon
+          :name="node.$folded ? 'folder' : 'folder_open'"
+          :class="node.loaded ? '' : 'drive-node__icon--undetermined'"
+          color="primary"
+          size="medium"
+        />
+      </div>
+      <div
+        class="drive-node__name"
+        :class="node?.data?.trashed ? 'drive-node__name--trashed' : ''"
+      >
+        {{ node.label }}
+      </div>
+    </va-button>
+
     <div class="drive-node__actions">
       <va-popover
         message="Undo"
+        stick-to-edges
       >
         <va-button
           v-show="node?.data?.trashed"
@@ -87,7 +93,7 @@ const undoTrashFolder = () => {
         @create-child-folder="$emit('createChildFolder', node)"
       />
     </div>
-  </va-button>
+  </div>
 </template>
 
 <style scoped lang="scss">
