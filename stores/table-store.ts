@@ -1,5 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import { useFirestore } from '@vueuse/firebase/index';
+import { useFirestore } from '@vueuse/firebase/useFirestore';
 import type { Table, TableMode, TablePermissions } from '~/models/types';
 import { TableModes } from '~/models/types';
 

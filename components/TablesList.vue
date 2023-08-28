@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useFirestore } from '@vueuse/firebase/index';
+import { useFirestore } from '@vueuse/firebase/useFirestore';
 import type { TableCard } from '~/models/types';
 
 let tables = ref<TableCard[] | undefined>(undefined);
