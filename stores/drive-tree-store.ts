@@ -1,7 +1,7 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import type { DriveTreeNode } from '~/models/types';
 import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
-import { buildNodes, listFiles } from '~/utils/driveOps';
+import { buildNodes, listFiles, uploadFile } from '~/utils/driveOps';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
 export const useDriveTreeStore = defineStore('drive-tree', () => {
@@ -128,13 +128,21 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     return success;
   };
 
-  const createChild = async (name: string, parent: DriveTreeNode) => {
+  const createChild = async (nameOrFile: string | File, parent: DriveTreeNode) => {
     let success = false;
 
     try {
       parent.loading = true;
 
-      await createFolder(name, parent.id);
+      if (typeof nameOrFile === 'string') {
+        await createFolder(nameOrFile, parent.id);
+      } else {
+        await uploadFile(nameOrFile, parent.id);
+      }
+
+      // update and unfold the parent folder
+      parent.children = buildNodes(await listFiles(parent.id));
+      parent.$folded = false;
 
       success = true;
     } catch (e) {

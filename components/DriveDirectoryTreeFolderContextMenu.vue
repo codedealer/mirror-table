@@ -31,6 +31,17 @@ const permissions = computed(() => ({
 const trashFolder = () => {
   driveTreeStore.removeFile(props.node);
 };
+
+const createAsset = () => {
+  const content = '# This is a sample Markdown file\n\nHello World!';
+  const file = new File(
+    [content],
+    `sample${Math.round(Math.random() * 100)}.md`,
+    { type: 'text/markdown' },
+  );
+
+  driveTreeStore.createChild(file, props.node);
+};
 </script>
 
 <template>
@@ -64,6 +75,25 @@ const trashFolder = () => {
       </va-list-item>
 
       <va-list-item
+        v-if="permissions.canAddChildren"
+        href="#"
+        @click="createAsset"
+      >
+        <va-list-item-section icon>
+          <va-icon
+            name="library_add"
+            color="primary"
+            size="small"
+          />
+        </va-list-item-section>
+        <va-list-item-section>
+          <va-list-item-label caption>
+            Create new asset
+          </va-list-item-label>
+        </va-list-item-section>
+      </va-list-item>
+
+      <va-list-item
         v-if="permissions.canDelete"
         href="#"
         @click="trashFolder"
@@ -71,7 +101,7 @@ const trashFolder = () => {
         <va-list-item-section icon>
           <va-icon
             name="delete"
-            color="primary"
+            color="danger"
             size="small"
           />
         </va-list-item-section>

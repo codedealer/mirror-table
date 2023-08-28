@@ -121,3 +121,42 @@ export const deleteFile = async (id: string, restore: boolean) => {
     },
   });
 };
+
+const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+
+export const uploadFile = async (file: File, folderId: string, appProperties = {
+  type: 'asset',
+}) => {
+  if (!folderId) {
+    throw new Error('Folder ID is empty when uploading a file');
+  }
+
+  const metadata = {
+    name: file.name,
+    mimeType: file.type,
+    parents: [folderId],
+    appProperties,
+  };
+
+  const metadataBlob = new Blob(
+    [JSON.stringify(metadata)],
+    { type: 'application/json' },
+  );
+
+  const form = new FormData();
+  form.append('metadata', metadataBlob);
+  form.append('file', file);
+
+  const googleStore = useGoogleAuthStore();
+  const authInfo = await googleStore.client!.requestToken();
+
+  const response = await $fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${authInfo.accessToken}`,
+    },
+    body: form,
+  });
+
+  return response as gapi.client.Response<gapi.client.drive.File>;
+};
