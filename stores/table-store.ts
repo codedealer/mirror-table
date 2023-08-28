@@ -1,5 +1,4 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import { useFirestore } from '@vueuse/firebase/useFirestore';
 import type { Table, TableMode, TablePermissions } from '~/models/types';
 import { TableModes } from '~/models/types';
 
@@ -24,7 +23,7 @@ export const useTableStore = defineStore('table', () => {
     );
   });
 
-  const tables = useFirestore(q, undefined);
+  const tables = ref<Table[]>();
 
   const table = computed(() => {
     if (!tables.value || !Array.isArray(tables.value)) {
