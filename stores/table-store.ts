@@ -10,19 +10,6 @@ export const useTableStore = defineStore('table', () => {
 
   const userStore = useUserStore();
 
-  const q = computed(() => {
-    if (!tableSlug.value || !userStore.isAuthenticated || !userStore.user) {
-      return false;
-    }
-
-    return query(
-      collection($db, 'tables')
-        .withConverter(firestoreDataConverter<Table>()),
-      where('slug', '==', tableSlug.value),
-      where('viewers', 'array-contains', userStore.user.uid),
-    );
-  });
-
   const tables = ref<Table[]>();
 
   const table = computed(() => {
