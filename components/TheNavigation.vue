@@ -1,5 +1,8 @@
 <script setup lang="ts">
-
+const authorize = async () => {
+  const response = await $fetch('/api/auth');
+  console.log(response);
+};
 </script>
 
 <template>
@@ -23,6 +26,14 @@
       </va-navbar-item>
       <va-navbar-item>
         <va-divider class="va-divider--vertical" />
+      </va-navbar-item>
+      <va-navbar-item>
+        <va-button
+          icon="science"
+          preset="primary"
+          color="secondary-dark"
+          @click="authorize"
+        />
       </va-navbar-item>
       <va-navbar-item>
         <TheNavigationDrive />
