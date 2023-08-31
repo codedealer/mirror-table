@@ -1866,10 +1866,10 @@
     "@types/minimatch" "^5.1.2"
     "@types/node" "*"
 
-"@types/google.accounts@^0.0.8":
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/@types/google.accounts/-/google.accounts-0.0.8.tgz#5a1d290e4847b2231a37e3255eb836cbb713ca22"
-  integrity sha512-2PsbBf8fWr0PyC5jzl4Gxc0WzcHVnoPC+0Kv8XutaH0/gaPmW3Vrq2Mdv6WnZOh4K7OSrzvjNkCKEL8EHHx5Aw==
+"@types/google.accounts@^0.0.9":
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/@types/google.accounts/-/google.accounts-0.0.9.tgz#8461df83ad8b0e58f8142550cb143322f59cc6d5"
+  integrity sha512-brOjhe+gTlZ241FMKcLjKp44CRSwdXNe8cWvHg23FBXEop1QRNhK9Gzs438dbCwCnZ0cCWDkQaaMBBYsZatZJg==
 
 "@types/google.picker@^0.0.39":
   version "0.0.39"
