@@ -50,6 +50,7 @@ export const useFirestoreTable = () => {
       thumbnail,
       type: 'private',
       slug: idToSlug(tableRef.id),
+      deleted: false,
     };
 
     batch.set(tableCardRef, tableCardData);
@@ -76,7 +77,7 @@ export const useFirestoreTable = () => {
 
     const sortMapData: WithFieldValue<TableScenesSortMap> = {
       tableId: tableRef.id,
-      map: { [defaultSceneRef.id]: 0 },
+      map: [defaultSceneRef.id],
     };
 
     batch.set(sortMapRef, sortMapData);

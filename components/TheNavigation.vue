@@ -1,7 +1,16 @@
 <script setup lang="ts">
+import { useAuthCodeFlowAuth } from '#imports';
+
 const authorize = async () => {
-  const response = await $fetch('/api/auth');
-  console.log(response);
+  const universalClient = useAuthCodeFlowAuth({});
+
+  try {
+    await universalClient.requestToken();
+  } catch (e) {
+    console.error(e);
+    const notificationStore = useNotificationStore();
+    notificationStore.error(extractErrorMessage(e));
+  }
 };
 </script>
 

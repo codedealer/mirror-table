@@ -90,6 +90,14 @@ export interface Notification {
   color?: string
 }
 
+export interface AccessTokenReturnType {
+  accessToken?: string
+  expiry?: number
+  valid: boolean
+  reason?: string
+  needsConsent?: boolean
+}
+
 export const fieldMask = 'id, trashed, name, ownedByMe, originalFilename, mimeType, shared, iconLink, imageMediaMetadata, createdTime, modifiedTime, fileExtension, properties, appProperties, md5Checksum, version, videoMediaMetadata, thumbnailLink, thumbnailVersion, size, quotaBytesUsed, parents, capabilities/canEdit, capabilities/canCopy, capabilities/canDelete, capabilities/canListChildren, capabilities/canAddChildren, capabilities/canShare, capabilities/canDownload' as const;
 
 export interface DriveFileCapabilities {
@@ -136,6 +144,7 @@ export interface TableCard {
   thumbnail: DriveFile | null
   type: 'private' | 'public'
   slug: string
+  deleted: boolean
 }
 
 /**
@@ -170,7 +179,7 @@ export interface Scene {
  */
 export interface TableScenesSortMap {
   tableId: string
-  map: Record<string, number>
+  map: string[]
 }
 
 export interface TablePermissions {
