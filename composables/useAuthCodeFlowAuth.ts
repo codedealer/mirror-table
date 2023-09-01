@@ -69,9 +69,8 @@ export const useAuthCodeFlowAuth = ({
       return Promise.reject(new Error('User is not authenticated'));
     }
 
-    // the token can expire so it must be refreshed here
-    const idToken = await userStore.user.getIdToken(true);
-    // try to get the new access token from the server
+    const idToken = await userStore.user.getIdToken();
+    // try to get a new access token from the server
     let response = await $fetch<AccessTokenReturnType>('/api/auth', {
       method: 'GET',
       headers: {
@@ -80,8 +79,6 @@ export const useAuthCodeFlowAuth = ({
         'x-id-token': idToken,
       },
     });
-
-    console.log(response);
 
     if (response.valid && response.accessToken && response.expiry) {
       googleAuthStore.authorizationInfo = {
@@ -95,6 +92,10 @@ export const useAuthCodeFlowAuth = ({
       // user needs to authorize the app
       const code = await getAuthCode(userStore.user.email);
 
+      if (!code) {
+        throw new Error('App wasn\'t authorized');
+      }
+
       response = await $fetch<AccessTokenReturnType>('/api/auth', {
         method: 'POST',
         headers: {
@@ -104,8 +105,6 @@ export const useAuthCodeFlowAuth = ({
         },
         body: { code },
       });
-
-      console.log('additional response', response);
 
       if (response.valid && response.accessToken && response.expiry) {
         googleAuthStore.authorizationInfo = {

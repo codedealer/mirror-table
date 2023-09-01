@@ -2,10 +2,15 @@
 import { useAuthCodeFlowAuth } from '#imports';
 
 const authorize = async () => {
-  const universalClient = useAuthCodeFlowAuth({});
+  const config = useRuntimeConfig();
+  const universalClient = useAuthCodeFlowAuth({
+    clientId: config.public.clientId,
+    scope: 'https://www.googleapis.com/auth/drive.install https://www.googleapis.com/auth/drive.file',
+  });
 
   try {
-    await universalClient.requestToken();
+    const authInfo = await universalClient.requestToken();
+    console.log(authInfo.accessToken);
   } catch (e) {
     console.error(e);
     const notificationStore = useNotificationStore();

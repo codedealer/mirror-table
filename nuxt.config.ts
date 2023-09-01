@@ -15,6 +15,8 @@ export default {
   ],
   runtimeConfig: {
     fbServiceAccount: process.env.FB_SERVICE_ACCOUNT,
+    clientSecret: process.env.CLIENT_SECRET,
+    googleAuthRedirectUri: process.env.GOOGLE_AUTH_REDIRECT_URI,
     public: {
       fbApiKey: process.env.FB_API_KEY,
       fbAuthDomain: process.env.FB_AUTH_DOMAIN,

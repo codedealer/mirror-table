@@ -19,6 +19,8 @@ export default defineEventHandler(async (event): Promise<AccessTokenReturnType> 
 
   const client = new OAuth2Client({
     clientId: config.public.clientId,
+    clientSecret: config.clientSecret,
+    redirectUri: config.googleAuthRedirectUri,
   });
 
   const body = await readBody(event) as unknown;
