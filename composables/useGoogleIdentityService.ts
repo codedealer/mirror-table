@@ -16,7 +16,7 @@ export const useGoogleIdentityService = (model: AuthFlowModel, params: Universal
     if (model === 'implicitGrantFlow') {
       client.value = useImplicitGrantFlowAuth(params);
     } else if (model === 'authorizationCodeFlow') {
-      throw new Error('Authorization Code Flow is not yet implemented');
+      client.value = useAuthCodeFlowAuth(params);
     }
   });
 

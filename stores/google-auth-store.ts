@@ -9,7 +9,7 @@ export const useGoogleAuthStore = defineStore('google-auth', () => {
   });
 
   const config = useRuntimeConfig();
-  const { client } = useGoogleIdentityService('implicitGrantFlow', {
+  const { client } = useGoogleIdentityService('authorizationCodeFlow', {
     clientId: config.public.clientId,
     scope: 'https://www.googleapis.com/auth/drive.install https://www.googleapis.com/auth/drive.file',
   });
