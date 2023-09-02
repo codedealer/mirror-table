@@ -14,11 +14,13 @@ const { nodes } = toRefs(driveTreeStore);
 const showFolderModal = ref(false);
 const newFolderName = ref('');
 const newFolderParent = ref<DriveTreeNode | undefined>();
+const newFolderParentPath = ref<string[]>([]);
 
 const cancel = () => {
   showFolderModal.value = false;
   newFolderName.value = '';
   newFolderParent.value = undefined;
+  newFolderParentPath.value = [];
 };
 
 const createChildFolder = async () => {
@@ -36,7 +38,11 @@ const createChildFolder = async () => {
     return;
   }
 
-  const result = await driveTreeStore.createChild(newFolderName.value, newFolderParent.value);
+  const result = await driveTreeStore.createChild(
+    newFolderName.value,
+    newFolderParent.value,
+    newFolderParentPath.value,
+  );
 
   if (!result) {
     showFolderModal.value = true;
@@ -46,15 +52,16 @@ const createChildFolder = async () => {
   cancel();
 };
 
-const promptFolderName = (parent: DriveTreeNode) => {
+const promptFolderName = (parent: DriveTreeNode, path: string[]) => {
   newFolderParent.value = parent;
+  newFolderParentPath.value = path;
   showFolderModal.value = true;
 };
 </script>
 
 <template>
   <div class="ghost-container drive-tree-container">
-    <DriveDirectoryTreeHeader />
+    <DriveDirectoryTreeHeader @create-child-folder="promptFolderName" />
 
     <Tree
       :value="nodes"

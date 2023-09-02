@@ -5,7 +5,6 @@ import { buildNodes, listFiles, uploadFile } from '~/utils/driveOps';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
 export const useDriveTreeStore = defineStore('drive-tree', () => {
-  const _nodes = ref<DriveTreeNode[]>([]);
   const rootNode = ref<DriveTreeNode>({
     id: '',
     label: '',
@@ -15,6 +14,10 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     disabled: false,
     $folded: false,
   } as DriveTreeNode);
+
+  const nodes = computed(() => {
+    return rootNode.value.children ?? [];
+  });
 
   /**
    * Get a node by its path:
@@ -26,7 +29,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
     for (const index of path) {
       if (!node) {
-        node = _nodes.value[Number.parseInt(index)];
+        node = nodes.value[Number.parseInt(index)];
       } else {
         if (!Array.isArray(node.children)) {
           return;
@@ -37,10 +40,6 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
     return node;
   };
-
-  const nodes = computed(() => {
-    return _nodes.value;
-  });
 
   const driveStore = useDriveStore();
   const userStore = useUserStore();
@@ -56,6 +55,28 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
     return rootNode.value.id === profile.value.settings.driveFolderId;
   });
+
+  const loadChildren = async (node: DriveTreeNode) => {
+    let success = false;
+
+    try {
+      node.loading = true;
+
+      node.children = buildNodes(await listFiles(node.id));
+
+      node.loaded = true;
+      success = true;
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+    } finally {
+      if (node) {
+        node.loading = false;
+      }
+    }
+
+    return success;
+  };
 
   const setRootFolder = async (newRootNode?: DriveTreeNode) => {
     let success = false;
@@ -83,11 +104,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
       await driveWorkspaceSentinel();
 
-      _nodes.value = buildNodes(await listFiles(rootNode.value.id));
-
-      rootNode.value.loaded = true;
-
-      success = true;
+      success = await loadChildren(rootNode.value);
     } catch (e) {
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
@@ -106,29 +123,37 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     await setRootFolder();
   }, { immediate: true });
 
-  const loadChildren = async (node: DriveTreeNode) => {
-    let success = false;
+  const toggleFold = async (node: DriveTreeNode, path: string[]) => {
+    const MAX_DEPTH = 3;
 
-    try {
-      node.loading = true;
-
-      node.children = buildNodes(await listFiles(node.id));
-
-      node.loaded = true;
-      success = true;
-    } catch (e) {
-      const notificationStore = useNotificationStore();
-      notificationStore.error(extractErrorMessage(e));
-    } finally {
-      if (node) {
-        node.loading = false;
-      }
+    if (!node.isFolder) {
+      return false;
     }
 
-    return success;
+    if (path.length > MAX_DEPTH) {
+      // instead of unfolding further, reload tree with this node as root
+      return await setRootFolder(node);
+    }
+
+    if (node.loaded) {
+      node.$folded = !node.$folded;
+      return true;
+    }
+
+    const result = await loadChildren(node);
+
+    if (result) {
+      node.$folded = false;
+    }
+
+    return result;
   };
 
-  const createChild = async (nameOrFile: string | File, parent: DriveTreeNode) => {
+  const createChild = async (
+    nameOrFile: string | File,
+    parent: DriveTreeNode,
+    parentPath: string[] = [],
+  ) => {
     let success = false;
 
     try {
@@ -141,10 +166,11 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
       }
 
       // update and unfold the parent folder
-      parent.children = buildNodes(await listFiles(parent.id));
-      parent.$folded = false;
+      success = await loadChildren(parent);
 
-      success = true;
+      if (parent.$folded) {
+        success = success && await toggleFold(parent, parentPath);
+      }
     } catch (e) {
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
@@ -190,6 +216,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     isRootFolder,
     setRootFolder,
     loadChildren,
+    toggleFold,
     createChild,
     getNodeByPath,
     removeFile,

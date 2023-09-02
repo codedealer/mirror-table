@@ -5,7 +5,7 @@ import clickOrDoubleClick from '~/utils/clickOrDoubleClick';
 import DriveDirectoryTreeFolderContextMenu from '~/components/DriveDirectoryTreeFolderContextMenu.vue';
 
 interface DriveDirectoryTreeFolderEmits {
-  (event: 'createChildFolder', node: DriveTreeNode): void
+  (event: 'createChildFolder', node: DriveTreeNode, path: string[]): void
 }
 
 const props = defineProps<{
@@ -17,16 +17,9 @@ const props = defineProps<{
 
 defineEmits<DriveDirectoryTreeFolderEmits>();
 
-const toggleFold = async () => {
-  if (props.node.loaded) {
-    props.tree.toggleFold(props.node, props.path);
-    return;
-  }
-
+const toggleFold = () => {
   const driveTreeStore = useDriveTreeStore();
-  const result = await driveTreeStore.loadChildren(props.node);
-
-  result && props.tree.toggleFold(props.node, props.path);
+  driveTreeStore.toggleFold(props.node, props.path);
 };
 
 const setRootFolder = () => {
@@ -90,7 +83,7 @@ const undoTrashFolder = () => {
       <DriveDirectoryTreeFolderContextMenu
         v-show="!node?.data?.trashed"
         :node="node"
-        @create-child-folder="$emit('createChildFolder', node)"
+        @create-child-folder="$emit('createChildFolder', node, path)"
       />
     </div>
   </div>
