@@ -18,8 +18,6 @@ useServerSeoMeta({
     </h1>
     <div class="dashboard-content">
       <TablesList />
-
-      <AccountCard />
     </div>
   </div>
 </template>
