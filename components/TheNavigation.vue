@@ -1,22 +1,4 @@
 <script setup lang="ts">
-import { useAuthCodeFlowAuth } from '#imports';
-
-const authorize = async () => {
-  const config = useRuntimeConfig();
-  const universalClient = useAuthCodeFlowAuth({
-    clientId: config.public.clientId,
-    scope: 'https://www.googleapis.com/auth/drive.install https://www.googleapis.com/auth/drive.file',
-  });
-
-  try {
-    const authInfo = await universalClient.requestToken();
-    console.log(authInfo.accessToken);
-  } catch (e) {
-    console.error(e);
-    const notificationStore = useNotificationStore();
-    notificationStore.error(extractErrorMessage(e));
-  }
-};
 </script>
 
 <template>
@@ -38,17 +20,11 @@ const authorize = async () => {
           <img src="/github.svg" width="24" height="24" alt="Github repository">
         </a>
       </va-navbar-item>
+
       <va-navbar-item>
         <va-divider class="va-divider--vertical" />
       </va-navbar-item>
-      <va-navbar-item>
-        <va-button
-          icon="science"
-          preset="primary"
-          color="secondary-dark"
-          @click="authorize"
-        />
-      </va-navbar-item>
+
       <va-navbar-item>
         <TheNavigationDrive />
       </va-navbar-item>
