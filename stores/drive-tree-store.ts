@@ -123,6 +123,35 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     await setRootFolder();
   }, { immediate: true });
 
+  const setRootToParent = async () => {
+    if (!rootNode.value || !rootNode.value.data || !rootNode.value.data.parents) {
+      return false;
+    }
+
+    const parentId = rootNode.value.data.parents[0];
+
+    if (!parentId) {
+      return false;
+    }
+
+    let parentNode: DriveTreeNode;
+    try {
+      rootNode.value.loading = true;
+
+      const parentFile = await getFile(parentId);
+
+      parentNode = DriveTreeNodeFactory(parentFile);
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+      return false;
+    } finally {
+      rootNode.value.loading = false;
+    }
+
+    return await setRootFolder(parentNode);
+  };
+
   const toggleFold = async (node: DriveTreeNode, path: string[]) => {
     const MAX_DEPTH = 3;
 
@@ -215,6 +244,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     rootNode,
     isRootFolder,
     setRootFolder,
+    setRootToParent,
     loadChildren,
     toggleFold,
     createChild,

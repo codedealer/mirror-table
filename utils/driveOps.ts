@@ -81,6 +81,22 @@ export const shareFolder = async (id: string) => {
   });
 };
 
+export const getFile = async (id: string) => {
+  const driveStore = useDriveStore();
+  const client = await driveStore.getClient();
+
+  if (!id) {
+    throw new Error('File ID is empty');
+  }
+
+  const response = await client.drive.files.get({
+    fileId: id,
+    fields: fieldMask,
+  });
+
+  return response.result as DriveFile;
+};
+
 export const listFiles = async (folderId: string) => {
   const driveStore = useDriveStore();
   const client = await driveStore.getClient();

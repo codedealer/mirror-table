@@ -15,7 +15,7 @@ const sideBarMinimized = ref(false);
             :alt="userStore.user?.displayName ?? ''"
             size="small"
           />
-          <va-sidebar-item-title>
+          <va-sidebar-item-title class="text-overflow">
             {{ userStore.user?.displayName ?? '' }}
           </va-sidebar-item-title>
         </va-sidebar-item-content>

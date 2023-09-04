@@ -132,6 +132,11 @@
   text-overflow: ellipsis;
   flex-grow: 1;
 }
+.drive-directory-tree-header__actions {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--drive-node-gap) / 2);
+}
 
 .drive-node__context-menu {
   --va-list-item-section-icon-margin: 0;

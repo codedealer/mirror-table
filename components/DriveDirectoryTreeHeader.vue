@@ -12,6 +12,10 @@ const driveTreeStore = useDriveTreeStore();
 const setRoot = () => {
   driveTreeStore.setRootFolder();
 };
+
+const setRootToParent = () => {
+  driveTreeStore.setRootToParent();
+};
 </script>
 
 <template>
@@ -54,6 +58,30 @@ const setRoot = () => {
         {{ driveTreeStore.rootNode.label }}
       </div>
       <div class="drive-directory-tree-header__actions">
+        <va-popover
+          message="Go to parent folder"
+          stick-to-edges
+        >
+          <va-button
+            v-show="!driveTreeStore.isRootFolder"
+            preset="plain"
+            color="primary-dark"
+            size="medium"
+            :loading="driveTreeStore.rootNode.loading"
+            :disabled="driveTreeStore.rootNode.disabled"
+            @click="setRootToParent"
+          >
+            <div class="drive-node__icon">
+              <va-icon
+                name="drive_folder_upload"
+                color="primary-dark"
+                size="medium"
+                class="drive-node__icon"
+              />
+            </div>
+          </va-button>
+        </va-popover>
+
         <DriveDirectoryTreeFolderContextMenu
           :node="driveTreeStore.rootNode"
           header
