@@ -67,6 +67,12 @@ header {
   margin-left: .5rem;
 }
 
+.text-overflow {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* fix for buttons in popover */
 .va-button--loading.va-popover {
   display: inline-flex;
