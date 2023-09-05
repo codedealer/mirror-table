@@ -43,7 +43,6 @@ export const useUserStore = defineStore('user', () => {
   $auth && $auth.onAuthStateChanged(async (authUser) => {
     user.value = authUser;
     if (user.value) {
-      // TODO: this incurs a read every time ID token is refreshed
       subscribeToProfileUpdates(user.value);
 
       idToken.value = await user.value.getIdToken();
