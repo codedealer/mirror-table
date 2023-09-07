@@ -90,6 +90,10 @@ export interface Notification {
   color?: string
 }
 
+export interface ModalWindow {
+  id: string
+}
+
 export interface AccessTokenReturnType {
   accessToken?: string
   expiry?: number

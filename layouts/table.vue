@@ -20,7 +20,8 @@ watchEffect(() => {
       <TheRightPanel />
     </div>
     <div class="main-grid__status">
-      <div><b>Status bar</b></div>
+      <TheWindowManager />
+
       <ClientOnly>
         <TheDriveParentModal />
         <TheNotifications />

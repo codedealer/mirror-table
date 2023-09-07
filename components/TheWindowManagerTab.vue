@@ -1,0 +1,45 @@
+<script setup lang="ts">
+import type { ModalWindow } from '~/models/types';
+
+defineProps<{
+  window: ModalWindow
+}>();
+
+const windowStore = useWindowStore();
+</script>
+
+<template>
+  <div class="window-tab">
+    <va-button
+      preset="plain"
+      icon="push_pin"
+      color="background-border"
+      size="medium"
+    />
+
+    <va-button
+      preset="plain"
+      color="text-primary"
+      size="medium"
+      class="window-tab__button"
+    >
+      <div class="window-tab__title text-overflow">
+        {{ window.id }}
+      </div>
+    </va-button>
+
+    <div class="window-tab__actions">
+      <va-button
+        preset="plain"
+        icon="cancel"
+        color="background-border"
+        size="medium"
+        @click="windowStore.remove(window)"
+      />
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+
+</style>

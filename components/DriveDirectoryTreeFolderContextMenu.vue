@@ -33,14 +33,9 @@ const trashFolder = () => {
 };
 
 const createAsset = () => {
-  const content = '# This is a sample Markdown file\n\nHello World!';
-  const file = new File(
-    [content],
-    `sample${Math.round(Math.random() * 100)}.md`,
-    { type: 'text/markdown' },
-  );
-
-  driveTreeStore.createChild(file, props.node);
+  const id = `sample${Math.round(Math.random() * 100)}.md`;
+  const windowStore = useWindowStore();
+  windowStore.add({ id });
 };
 </script>
 

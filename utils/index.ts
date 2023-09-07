@@ -26,3 +26,17 @@ export const aspectRatio = (width?: number | string, height?: number | string): 
 
   return Number(width) / Number(height);
 };
+
+export const calculateNumberOfElements = (containerWidth: unknown, elementWidth: unknown): number => {
+  if (
+    !containerWidth ||
+    !elementWidth ||
+    Number.isNaN(Number(containerWidth)) ||
+    Number.isNaN(Number(elementWidth)) ||
+    Number(elementWidth) === 0
+  ) {
+    return 1;
+  }
+
+  return Math.floor(Number(containerWidth) / Number(elementWidth)) || 1;
+};
