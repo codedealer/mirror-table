@@ -9,12 +9,16 @@ const windowStore = useWindowStore();
 </script>
 
 <template>
-  <div class="window-tab">
+  <div
+    :class="window.active ? 'window-tab--active' : ''"
+    class="window-tab"
+  >
     <va-button
       preset="plain"
       icon="push_pin"
-      color="background-border"
+      :color="window.pinned ? 'primary' : 'background-border'"
       size="medium"
+      @click="window.pinned ? windowStore.unpin(window) : windowStore.pin(window)"
     />
 
     <va-button
@@ -22,6 +26,8 @@ const windowStore = useWindowStore();
       color="text-primary"
       size="medium"
       class="window-tab__button"
+      :title="window.id"
+      @click="windowStore.toggle(window)"
     >
       <div class="window-tab__title text-overflow">
         {{ window.id }}

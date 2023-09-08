@@ -35,7 +35,7 @@ const trashFolder = () => {
 const createAsset = () => {
   const id = `sample${Math.round(Math.random() * 100)}.md`;
   const windowStore = useWindowStore();
-  windowStore.add({ id });
+  windowStore.add({ id, active: false, pinned: false });
 };
 </script>
 

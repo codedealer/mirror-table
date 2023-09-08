@@ -9,8 +9,8 @@ const minElWidth = 90;
 const { width } = useElementSize(container);
 const windowStore = useWindowStore();
 
-onMounted(() => {
-  windowStore.maxRecentlyOpenedWindows = calculateNumberOfElements(width.value, minElWidth);
+watchEffect(() => {
+  windowStore.maxWindows = calculateNumberOfElements(width.value, minElWidth);
 });
 </script>
 

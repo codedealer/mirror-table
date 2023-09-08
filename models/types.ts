@@ -92,6 +92,8 @@ export interface Notification {
 
 export interface ModalWindow {
   id: string
+  pinned: boolean
+  active: boolean
 }
 
 export interface AccessTokenReturnType {
