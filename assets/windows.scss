@@ -2,13 +2,12 @@
 .h-list-leave-active,
 .h-list-move {
   transition: 500ms cubic-bezier(0.59, 0.12, 0.34, 0.95);
-  transition-property: opacity, width, transform;
+  transition-property: opacity, transform;
 }
 
-.h-list-enter-to,
-.h-list-leave-from {
+.h-list-enter-to {
   opacity: 1;
-  transform: translateX(0) scaleY(1);
+  transform: translateY(0) scaleX(1);
 }
 
 .h-list-leave-active {
@@ -18,7 +17,7 @@
 .h-list-enter-from,
 .h-list-leave-to {
   opacity: 0;
-  transform: scaleY(0);
+  transform: translateY(20px) scaleX(0);
   transform-origin: center top;
 }
 
