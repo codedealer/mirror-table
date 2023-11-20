@@ -8,8 +8,11 @@ export const useGoogleAuthStore = defineStore('google-auth', () => {
     default: (): AuthorizationInfo => ({ accessToken: '', expiry: 0 }),
   });
 
+  const model = process.env.NODE_ENV === 'production'
+    ? 'authorizationCodeFlow'
+    : 'implicitGrantFlow';
   const config = useRuntimeConfig();
-  const { client } = useGoogleIdentityService('authorizationCodeFlow', {
+  const { client } = useGoogleIdentityService(model, {
     clientId: config.public.clientId,
     scope: 'https://www.googleapis.com/auth/drive.install https://www.googleapis.com/auth/drive.file',
   });
