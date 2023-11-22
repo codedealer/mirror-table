@@ -13,3 +13,39 @@
     transform: translateX(50px);
   }
 }
+
+.h-list-enter-active,
+.h-list-leave-active,
+.h-list-move {
+  transition: 500ms cubic-bezier(0.59, 0.12, 0.34, 0.95);
+  transition-property: opacity, transform;
+}
+
+.h-list-enter-to {
+  opacity: 1;
+  transform: translateY(0) scaleX(1);
+}
+
+.h-list-leave-active {
+  position: absolute;
+}
+
+.h-list-enter-from,
+.h-list-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scaleX(0);
+  transform-origin: center top;
+}
+
+.window-enter-from {
+  opacity: 0;
+}
+
+.window-leave-to {
+  opacity: 0;
+}
+
+.window-enter-from,
+.window-leave-to {
+  transform: scale(.5) translateY(140px);
+}

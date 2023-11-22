@@ -1,24 +1,6 @@
-.h-list-enter-active,
-.h-list-leave-active,
-.h-list-move {
-  transition: 500ms cubic-bezier(0.59, 0.12, 0.34, 0.95);
-  transition-property: opacity, transform;
-}
-
-.h-list-enter-to {
-  opacity: 1;
-  transform: translateY(0) scaleX(1);
-}
-
-.h-list-leave-active {
-  position: absolute;
-}
-
-.h-list-enter-from,
-.h-list-leave-to {
-  opacity: 0;
-  transform: translateY(20px) scaleX(0);
-  transform-origin: center top;
+:root {
+  --window-tab-background: var(--va-background-secondary);
+  --window-tab-background-active: color-mix(in oklab, var(--va-background-primary) 100%, var(--va-secondary-dark) 35%);
 }
 
 .main-grid__status {
@@ -38,11 +20,15 @@
   position: relative;
 }
 
-.window-tab {
-  max-width: var(--window-tab-max-size);
+.window-tab-container {
   flex: 1;
+  max-width: var(--window-tab-max-size);
+  overflow: hidden;
+}
+
+.window-tab {
   border-radius: 3px 3px 0 0;
-  background-color: var(--va-background-secondary);
+  background-color: var(--window-tab-background);
   padding: 0 var(--window-tab-padding);
   display: flex;
   gap: calc(var(--window-tab-padding) / 2);
@@ -57,7 +43,7 @@
   }
 
   &.window-tab--active {
-    background-color: color-mix(in oklab, var(--va-background-primary) 100%, var(--va-secondary-dark) 35%);
+    background-color: var(--window-tab-background-active);
   }
 }
 
@@ -83,4 +69,54 @@
   .window-tab:hover & {
     display: flex;
   }
+}
+
+.window-container {
+  --window-container-padding: .5rem;
+  --window-container-border-radius: 3px;
+  --window-container-background: var(--va-background-element);
+  --window-border-color: var(--va-background-border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  border: 1px solid var(--window-border-color);
+  border-radius: var(--window-container-border-radius);
+  background-color: var(--window-container-background);
+  transition:
+    opacity 0.2s ease-in-out,
+    transform 0.2s ease-in-out;
+  > * {
+    padding: var(--window-container-padding);
+  }
+}
+
+.asset-modal {
+  box-shadow: 2px 2px 10px 0px #00000033;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.asset-modal__title {
+  background-color: var(--va-background-secondary);
+  border-bottom: 1px solid var(--va-background-border);
+  cursor: move;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.asset-modal__actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.text-editor {
+  max-height: 150px;
+  overflow: auto;
 }
