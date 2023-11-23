@@ -2,10 +2,10 @@ import { createResolver } from '@nuxt/kit'
 
 const { resolve } = createResolver(import.meta.url);
 export default {
-  alias: {
+  /*alias: {
     "jose": resolve(__dirname, "./node_modules/jose/dist/browser/index.js"),
     "@panva/hkdf": resolve(__dirname, "./node_modules/@panva/hkdf/dist/web/index.js"),
-  },
+  },*/
   nitro: {
     preset: '',
   },
