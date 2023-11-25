@@ -23,10 +23,14 @@
       <va-sidebar-item-content>
         <va-popover message="Scenes" placement="right">
           <va-button
-            icon="map"
             size="large"
             preset="plain"
-          />
+          >
+            <va-icon
+              name="map"
+              size="large"
+            />
+          </va-button>
         </va-popover>
         <va-sidebar-item-title>Scenes</va-sidebar-item-title>
       </va-sidebar-item-content>
