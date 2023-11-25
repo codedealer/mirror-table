@@ -15,7 +15,7 @@ const props = defineProps<{
     <div class="drive-node__icon">
       <va-icon
         name="article"
-        size="medium"
+        size="large"
         color="primary"
       />
     </div>

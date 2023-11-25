@@ -54,7 +54,7 @@ const undoTrashFolder = () => {
           :name="node.$folded ? 'folder' : 'folder_open'"
           :class="node.loaded ? '' : 'drive-node__icon--undetermined'"
           color="primary"
-          size="medium"
+          size="large"
         />
       </div>
       <div
