@@ -5,6 +5,8 @@ export const folderExists = async (id: string) => {
     throw new Error('Folder ID is empty');
   }
 
+  let folder: gapi.client.drive.File | undefined;
+
   try {
     const driveStore = useDriveStore();
     const client = await driveStore.getClient();
@@ -12,23 +14,7 @@ export const folderExists = async (id: string) => {
       fileId: id,
       fields: 'id, trashed, capabilities(canListChildren, canAddChildren, canDelete), shared',
     });
-    const folder = response.result;
-    if (folder.trashed) {
-      // the folder was deleted, we need a new one
-      return false;
-    }
-    if (
-      !folder.shared ||
-      !folder.capabilities?.canListChildren ||
-      !folder.capabilities?.canAddChildren ||
-      !folder.capabilities?.canDelete
-    ) {
-      // the folder is not shared, or we don't have permissions
-      const err = new Error(`The folder ${id} exists but this app lacks permissions to use it.`) as DriveInvalidPermissionsError;
-      err.code = 'drive_invalid_permissions';
-    }
-
-    return true;
+    folder = response.result;
   } catch (e) {
     const gapiErr = e as gapi.client.Response<gapi.client.drive.File>;
     if (gapiErr?.status === 404 || gapiErr?.status === 403) {
@@ -37,6 +23,26 @@ export const folderExists = async (id: string) => {
 
     throw e;
   }
+
+  if (folder.trashed) {
+    // the folder was deleted, we need a new one
+    return false;
+  }
+
+  if (
+    !folder.shared ||
+    !folder.capabilities?.canListChildren ||
+    !folder.capabilities?.canAddChildren ||
+    !folder.capabilities?.canDelete
+  ) {
+    // the folder is not shared, or we don't have permissions
+    const err = new Error(`The folder ${id} exists but this app lacks permissions to use it.`) as DriveInvalidPermissionsError;
+    err.code = 'drive_invalid_permissions';
+
+    throw err;
+  }
+
+  return true;
 };
 
 export const createFolder = async (name: string, parentId?: string) => {
