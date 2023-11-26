@@ -239,6 +239,13 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     return success;
   };
 
+  const setNodeLoading = (node: DriveTreeNode, loading: boolean) => {
+    node.loading = loading;
+    if (node.children) {
+      node.children.forEach(child => setNodeLoading(child, loading));
+    }
+  };
+
   return {
     nodes,
     rootNode,
@@ -250,6 +257,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     createChild,
     getNodeByPath,
     removeFile,
+    setNodeLoading,
   };
 });
 

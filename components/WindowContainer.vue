@@ -32,7 +32,7 @@ const { style } = useDraggable(modal, {
         class="asset-modal__title"
       >
         <h4 class="title">
-          {{ window.id }}
+          {{ window.title }}
         </h4>
 
         <div class="asset-modal__actions">
@@ -49,13 +49,10 @@ const { style } = useDraggable(modal, {
       <div
         class="window-container__content"
       >
-        <div class="text-editor">
-          <textarea
-            class="text-editor__textarea"
-            rows="100"
-            cols="80"
-          />
-        </div>
+        <WindowContainerMarkdown
+          v-if="window.content.type === 'markdown'"
+          :window="window"
+        />
       </div>
     </div>
   </transition>

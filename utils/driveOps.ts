@@ -103,6 +103,22 @@ export const getFile = async (id: string) => {
   return response.result as DriveFile;
 };
 
+export const downloadFile = async (id: string) => {
+  const driveStore = useDriveStore();
+  const client = await driveStore.getClient();
+
+  if (!id) {
+    throw new Error('File ID is empty');
+  }
+
+  const response = await client.drive.files.get({
+    fileId: id,
+    alt: 'media',
+  });
+
+  return response.body;
+};
+
 export const listFiles = async (folderId: string) => {
   const driveStore = useDriveStore();
   const client = await driveStore.getClient();

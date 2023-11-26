@@ -1,5 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { ModalWindow } from '~/models/types';
+import type { ModalWindow, ModalWindowContent } from '~/models/types';
 
 export const useWindowStore = defineStore('window', () => {
   const _recentlyOpenedWindows = ref<ModalWindow[]>([]);
@@ -13,7 +13,15 @@ export const useWindowStore = defineStore('window', () => {
     return [..._pinnedWindows.value, ..._recentlyOpenedWindows.value];
   });
 
-  const add = (window: ModalWindow) => {
+  const add = (id: string, title: string, content: ModalWindowContent) => {
+    const window = {
+      id,
+      title,
+      pinned: false,
+      active: true,
+      content,
+    } as ModalWindow;
+
     if (_recentlyOpenedWindows.value.length < maxRecentlyOpenedWindows.value) {
       _recentlyOpenedWindows.value.push(window);
     } else {

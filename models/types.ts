@@ -90,12 +90,6 @@ export interface Notification {
   color?: string
 }
 
-export interface ModalWindow {
-  id: string
-  pinned: boolean
-  active: boolean
-}
-
 export interface AccessTokenReturnType {
   accessToken?: string
   expiry?: number
@@ -116,7 +110,9 @@ export interface DriveFileCapabilities {
   canDownload?: boolean
 }
 
-type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' | 'ownedByMe' | 'originalFilename' | 'mimeType' | 'shared' | 'iconLink' | 'imageMediaMetadata' | 'createdTime' | 'modifiedTime' | 'size' | 'fileExtension' | 'properties' | 'appProperties' | 'md5Checksum' | 'version' | 'videoMediaMetadata' | 'thumbnailLink' | 'thumbnailVersion' | 'quotaBytesUsed' | 'parents'> & { capabilities?: DriveFileCapabilities };
+type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' | 'ownedByMe' | 'originalFilename' | 'mimeType' | 'shared' | 'iconLink' | 'imageMediaMetadata' | 'createdTime' | 'modifiedTime' | 'size' | 'fileExtension' | 'properties' | 'appProperties' | 'md5Checksum' | 'version' | 'videoMediaMetadata' | 'thumbnailLink' | 'thumbnailVersion' | 'quotaBytesUsed' | 'parents'> & {
+  capabilities?: DriveFileCapabilities
+};
 
 export type DriveFile = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | 'name' | 'originalFilename' | 'shared' | 'ownedByMe'>> & OptionalDriveFile;
 
@@ -131,6 +127,27 @@ export interface DriveTreeNode {
   disabled: boolean
   data?: DriveFile
   children?: DriveTreeNode[]
+}
+
+export interface ModalWindowContent {
+  type: string
+  data: unknown
+}
+
+export interface ModalWindowContentMarkdown extends ModalWindowContent {
+  type: 'markdown'
+  data: {
+    meta: DriveFile
+    body: string
+  }
+}
+
+export interface ModalWindow {
+  id: string
+  title: string
+  pinned: boolean
+  active: boolean
+  content: ModalWindowContent
 }
 
 /**
