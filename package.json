@@ -38,7 +38,7 @@
     "google-auth-library": "^9.2.0",
     "he-tree-vue": "3",
     "pinia": "^2.1.7",
-    "vuestic-ui": "^1.8.4"
+    "vuestic-ui": "^1.8.5"
   },
   "lint-staged": {
     "*.{js,ts,vue}": "eslint --cache --fix"
