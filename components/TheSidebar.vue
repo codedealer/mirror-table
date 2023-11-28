@@ -24,7 +24,7 @@
         <va-popover message="Scenes" placement="right">
           <va-button
             icon="map"
-            size="large"
+            size="medium"
             preset="plain"
           />
         </va-popover>
