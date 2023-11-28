@@ -56,11 +56,18 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     return rootNode.value.id === profile.value.settings.driveFolderId;
   });
 
+  const setNodeLoading = (node: DriveTreeNode, loading: boolean) => {
+    node.loading = loading;
+    if (node.children) {
+      node.children.forEach(child => setNodeLoading(child, loading));
+    }
+  };
+
   const loadChildren = async (node: DriveTreeNode) => {
     let success = false;
 
     try {
-      node.loading = true;
+      setNodeLoading(node, true);
 
       node.children = buildNodes(await listFiles(node.id));
 
@@ -71,7 +78,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
       notificationStore.error(extractErrorMessage(e));
     } finally {
       if (node) {
-        node.loading = false;
+        setNodeLoading(node, false);
       }
     }
 
@@ -186,7 +193,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     let success = false;
 
     try {
-      parent.loading = true;
+      setNodeLoading(parent, true);
 
       if (typeof nameOrFile === 'string') {
         await createFolder(nameOrFile, parent.id);
@@ -204,7 +211,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
     } finally {
-      parent.loading = false;
+      setNodeLoading(parent, false);
     }
 
     return success;
@@ -214,7 +221,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     let success = false;
 
     try {
-      node.loading = true;
+      setNodeLoading(node, true);
 
       await deleteFile(node.id, restore);
 
@@ -233,17 +240,10 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
     } finally {
-      node.loading = false;
+      setNodeLoading(node, false);
     }
 
     return success;
-  };
-
-  const setNodeLoading = (node: DriveTreeNode, loading: boolean) => {
-    node.loading = loading;
-    if (node.children) {
-      node.children.forEach(child => setNodeLoading(child, loading));
-    }
   };
 
   return {
