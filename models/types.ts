@@ -131,22 +131,33 @@ export interface DriveTreeNode {
 
 export interface ModalWindowContent {
   type: string
+  editing: boolean
   data: unknown
 }
 
 export interface ModalWindowContentMarkdown extends ModalWindowContent {
   type: 'markdown'
+  kind: 'simple'
   data: {
     meta: DriveFile
     body: string
   }
 }
 
+export const ModalWindowStatus = {
+  NEW: 'new',
+  DIRTY: 'dirty',
+  LOADING: 'loading',
+  SYNCED: 'sync',
+  ERROR: 'error',
+} as const;
+
 export interface ModalWindow {
   id: string
   title: string
   pinned: boolean
   active: boolean
+  status: typeof ModalWindowStatus[keyof typeof ModalWindowStatus]
   content: ModalWindowContent
 }
 

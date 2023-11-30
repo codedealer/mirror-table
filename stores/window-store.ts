@@ -1,5 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { ModalWindow, ModalWindowContent } from '~/models/types';
+import type { ModalWindow, ModalWindowContent, ModalWindowStatus } from '~/models/types';
 
 export const useWindowStore = defineStore('window', () => {
   const _recentlyOpenedWindows = ref<ModalWindow[]>([]);
@@ -77,6 +77,14 @@ export const useWindowStore = defineStore('window', () => {
     window.active = !window.active;
   };
 
+  const toggleEdit = (window: ModalWindow) => {
+    window.content.editing = !window.content.editing;
+  };
+
+  const setWindowStatus = (window: ModalWindow, status: typeof ModalWindowStatus[keyof typeof ModalWindowStatus]) => {
+    window.status = status;
+  };
+
   return {
     windows,
     maxWindows,
@@ -86,6 +94,8 @@ export const useWindowStore = defineStore('window', () => {
     pin,
     unpin,
     toggle,
+    toggleEdit,
+    setWindowStatus,
   };
 });
 

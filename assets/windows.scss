@@ -79,6 +79,8 @@
   position: fixed;
   top: 0;
   left: 0;
+  resize: both;
+  overflow: auto;
   border: 1px solid var(--window-border-color);
   border-radius: var(--window-container-border-radius);
   background-color: var(--window-container-background);
@@ -119,4 +121,14 @@
 .text-editor {
   max-height: 150px;
   overflow: auto;
+}
+
+.window-container-markdown__actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.window-container-markdown__meta__item {
+  margin-bottom: 0.5rem;
 }

@@ -162,19 +162,16 @@ export const deleteFile = async (id: string, restore: boolean) => {
 
 const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
 
-export const uploadFile = async (file: File, folderId: string, appProperties = {
-  type: 'asset',
-}) => {
-  if (!folderId) {
-    throw new Error('Folder ID is empty when uploading a file');
-  }
-
-  const metadata = {
+const generateFileFormData = (file: File, appProperties: { [x: string]: string }, parentId = '') => {
+  const metadata: Record<string, any> = {
     name: file.name,
     mimeType: file.type,
-    parents: [folderId],
     appProperties,
   };
+
+  if (parentId.length) {
+    metadata.parents = [parentId];
+  }
 
   const metadataBlob = new Blob(
     [JSON.stringify(metadata)],
@@ -185,8 +182,51 @@ export const uploadFile = async (file: File, folderId: string, appProperties = {
   form.append('metadata', metadataBlob);
   form.append('file', file);
 
+  return form;
+};
+
+export const updateFile = async (fileId: string, file: File, appProperties: { [x: string]: string } = { type: 'asset' }) => {
+  if (!fileId) {
+    throw new Error('File ID is empty when updating a file');
+  }
+
+  const form = generateFileFormData(file, appProperties);
+  const updateUrl = new URL(uploadUrl);
+  updateUrl.pathname = `/upload/drive/v3/files/${fileId}`;
+
   const googleStore = useGoogleAuthStore();
-  const authInfo = await googleStore.client!.requestToken();
+  if (!googleStore.client) {
+    throw new Error('Google client is not initialized');
+  }
+
+  const authInfo = await googleStore.client.requestToken();
+
+  const response = await $fetch(updateUrl.toString(), {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${authInfo.accessToken}`,
+    },
+    body: form,
+  });
+
+  return response as gapi.client.Response<gapi.client.drive.File>;
+};
+
+export const uploadFile = async (file: File, folderId: string, appProperties = {
+  type: 'asset',
+}) => {
+  if (!folderId) {
+    throw new Error('Folder ID is empty when uploading a file');
+  }
+
+  const form = generateFileFormData(file, appProperties, folderId);
+
+  const googleStore = useGoogleAuthStore();
+  if (!googleStore.client) {
+    throw new Error('Google client is not initialized');
+  }
+
+  const authInfo = await googleStore.client.requestToken();
 
   const response = await $fetch(uploadUrl, {
     method: 'POST',
