@@ -37,7 +37,6 @@ const submit = async () => {
       contentData.value.meta.appProperties,
     );
 
-    console.log('updated: ', response);
     // update the modified time
     contentData.value.meta.modifiedTime = (new Date()).toISOString();
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
