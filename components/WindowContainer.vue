@@ -2,7 +2,7 @@
 import { useDraggable } from '@vueuse/core';
 import type { ModalWindow } from '~/models/types';
 
-defineProps<{
+const props = defineProps<{
   window: ModalWindow
 }>();
 
@@ -16,6 +16,36 @@ const { style } = useDraggable(modal, {
     x: 60,
     y: 60,
   },
+});
+
+const statusIconName = computed(() => {
+  switch (props.window.status) {
+    case ModalWindowStatus.LOADING:
+      return 'loading';
+    case ModalWindowStatus.DIRTY:
+      return 'warning';
+    case ModalWindowStatus.SYNCED:
+      return 'check';
+    case ModalWindowStatus.ERROR:
+      return 'error';
+    default:
+      return '';
+  }
+});
+
+const statusLabel = computed(() => {
+  switch (props.window.status) {
+    case ModalWindowStatus.LOADING:
+      return 'Syncing changes...';
+    case ModalWindowStatus.DIRTY:
+      return 'Unsaved changes';
+    case ModalWindowStatus.SYNCED:
+      return 'Asset is up to date';
+    case ModalWindowStatus.ERROR:
+      return 'Error';
+    default:
+      return '';
+  }
 });
 </script>
 
@@ -36,6 +66,15 @@ const { style } = useDraggable(modal, {
         </h4>
 
         <div class="asset-modal__actions">
+          <va-popover :message="statusLabel" placement="bottom">
+            <va-icon
+              v-if="statusIconName"
+              :name="statusIconName"
+              :color="window.status === ModalWindowStatus.ERROR ? 'error' : 'background-border'"
+              size="medium"
+            />
+          </va-popover>
+
           <va-button
             preset="plain"
             icon="cancel"

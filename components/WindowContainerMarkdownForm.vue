@@ -13,8 +13,17 @@ const contentData = computed(() =>
 
 const isLoading = computed(() => props.window.status === ModalWindowStatus.LOADING);
 
+const windowStore = useWindowStore();
+
+const setDirty = () => {
+  if (props.window.status === ModalWindowStatus.LOADING) {
+    return;
+  }
+
+  windowStore.setWindowStatus(props.window, ModalWindowStatus.DIRTY);
+};
+
 const submit = async () => {
-  const windowStore = useWindowStore();
   try {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.LOADING);
 
@@ -63,19 +72,23 @@ const submit = async () => {
         :min-length="1"
         :max-length="180"
         required
+        :disabled="isLoading"
+        @update:dirty="setDirty"
       />
 
       <va-textarea
         v-model="contentData.body"
         name="content"
         placeholder="Enter markdown here"
-        :disabled="!props.window.content.editing"
+        :disabled="isLoading"
+        @update:dirty="setDirty"
       />
 
       <div class="vertical-form__actions">
         <va-button
           preset="outlined"
           type="submit"
+          :disabled="window.status === ModalWindowStatus.SYNCED"
           :loading="isLoading"
         >
           Save

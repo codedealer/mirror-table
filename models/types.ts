@@ -137,7 +137,6 @@ export interface ModalWindowContent {
 
 export interface ModalWindowContentMarkdown extends ModalWindowContent {
   type: 'markdown'
-  kind: 'simple'
   data: {
     meta: DriveFile
     body: string
@@ -159,6 +158,7 @@ export interface ModalWindow {
   active: boolean
   status: typeof ModalWindowStatus[keyof typeof ModalWindowStatus]
   content: ModalWindowContent
+  node?: DriveTreeNode
 }
 
 /**

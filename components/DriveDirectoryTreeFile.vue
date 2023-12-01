@@ -34,13 +34,19 @@ const toggleFile = async () => {
     // create a new window
     const windowContent: ModalWindowContentMarkdown = {
       type: 'markdown',
+      editing: false,
       data: {
         meta: props.node.data,
         body: file,
       },
     };
 
-    windowStore.add(props.node.data.id, props.node.data.name, windowContent);
+    windowStore.add(
+      props.node.data.id,
+      props.node.data.name,
+      windowContent,
+      props.node,
+    );
   } catch (e) {
     console.error(e);
     const notificationStore = useNotificationStore();
