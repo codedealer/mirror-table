@@ -55,7 +55,9 @@ const statusLabel = computed(() => {
       v-show="window.active"
       ref="modal"
       class="window-container"
+      :class="windowStore.lastActiveWindowId === window.id ? 'window-container--top' : ''"
       :style="style"
+      @pointerdown.capture="windowStore.setLastActiveWindowId(window)"
     >
       <div
         ref="modalTitle"

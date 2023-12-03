@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import type { ModalWindow } from '~/models/types';
 
-defineProps<{
+const props = defineProps<{
   window: ModalWindow
 }>();
+
+const tabClassList = computed(() => ({
+  'window-tab--active': props.window.active,
+  'window-tab--pinned': props.window.pinned,
+}));
 
 const windowStore = useWindowStore();
 </script>
 
 <template>
-  <div class="window-tab-container">
+  <div class="window-tab-container" :class="tabClassList">
     <div
-      :class="window.active ? 'window-tab--active' : ''"
+      :class="tabClassList"
       class="window-tab"
     >
       <va-button
@@ -35,7 +40,10 @@ const windowStore = useWindowStore();
         :title="window.title ?? window.id"
         @click="windowStore.toggle(window)"
       >
-        <div class="window-tab__title text-overflow">
+        <div
+          :class="{ unsaved: window.status === ModalWindowStatus.DIRTY }"
+          class="window-tab__title text-overflow"
+        >
           {{ window.title ?? window.id }}
         </div>
       </va-button>

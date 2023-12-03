@@ -7,6 +7,8 @@ const props = defineProps<{
   window: ModalWindow
 }>();
 
+const editor = ref();
+
 const contentData = computed(() =>
   (props.window.content as ModalWindowContentMarkdown).data,
 );
@@ -16,7 +18,8 @@ const isLoading = computed(() => props.window.status === ModalWindowStatus.LOADI
 const windowStore = useWindowStore();
 
 const setDirty = () => {
-  if (props.window.status === ModalWindowStatus.LOADING) {
+  if (props.window.status === ModalWindowStatus.LOADING ||
+      props.window.status === ModalWindowStatus.DIRTY) {
     return;
   }
 
@@ -45,7 +48,7 @@ const submit = async () => {
       throw new Error('No parent folder found');
     }
 
-    const response = await updateFile(
+    await updateFile(
       contentData.value.meta.id,
       file,
       contentData.value.meta.appProperties,
@@ -86,6 +89,7 @@ const submit = async () => {
       />
 
       <va-textarea
+        ref="editor"
         v-model="contentData.body"
         name="content"
         class="markdown-editor"

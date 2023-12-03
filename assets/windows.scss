@@ -21,12 +21,16 @@
 }
 
 .window-tab-container {
+  display: block;
   flex: 1;
   max-width: var(--window-tab-max-size);
-  overflow: hidden;
+  &.window-tab--pinned {
+    --window-tab-max-size: 96px;
+  }
 }
 
 .window-tab {
+  flex: 1;
   border-radius: 3px 3px 0 0;
   background-color: var(--window-tab-background);
   padding: 0 var(--window-tab-padding);
@@ -54,6 +58,15 @@
   overflow: hidden;
   .va-button__content {
     display: contents;
+  }
+}
+
+.window-tab__title {
+  &.unsaved {
+    font-style: italic;
+    &:after {
+      content: " *"
+    }
   }
 }
 
@@ -94,6 +107,15 @@
   transition:
     opacity 0.2s ease-in-out,
     transform 0.2s ease-in-out;
+
+  &.window-container--top {
+    z-index: 2;
+
+    .asset-modal__title {
+      background-color: color-mix(in oklab, var(--va-background-primary) 100%, var(--va-secondary-dark) 35%);
+    }
+  }
+
   > * {
     padding: var(--window-container-padding);
   }

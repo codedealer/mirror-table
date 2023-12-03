@@ -9,6 +9,12 @@ export const useWindowStore = defineStore('window', () => {
     return maxWindows.value - _pinnedWindows.value.length;
   });
 
+  const lastActiveWindowId = ref<string | null>(null);
+
+  const setLastActiveWindowId = (window: ModalWindow) => {
+    lastActiveWindowId.value = window.id;
+  };
+
   const windows = computed(() => {
     return [..._pinnedWindows.value, ..._recentlyOpenedWindows.value];
   });
@@ -38,24 +44,29 @@ export const useWindowStore = defineStore('window', () => {
       // can't remove active windows
       const removableWindows = _recentlyOpenedWindows.value.filter(w => !w.active);
       let deleteCount = _recentlyOpenedWindows.value.length - maxRecentlyOpenedWindows.value + 1;
+
       if (deleteCount > removableWindows.length) {
         const notificationStore = useNotificationStore();
         notificationStore.error('Cannot open more windows');
-      } else {
-        const newWindows: ModalWindow[] = [];
-        for (let i = 0; i < _recentlyOpenedWindows.value.length; i++) {
-          if (deleteCount > 0 && !_recentlyOpenedWindows.value[i].active) {
-            deleteCount--;
-          } else {
-            newWindows.push(_recentlyOpenedWindows.value[i]);
-          }
-        }
 
-        newWindows.push(window);
-
-        _recentlyOpenedWindows.value = newWindows;
+        return;
       }
+
+      const newWindows: ModalWindow[] = [];
+      for (let i = 0; i < _recentlyOpenedWindows.value.length; i++) {
+        if (deleteCount > 0 && !_recentlyOpenedWindows.value[i].active) {
+          deleteCount--;
+        } else {
+          newWindows.push(_recentlyOpenedWindows.value[i]);
+        }
+      }
+
+      newWindows.push(window);
+
+      _recentlyOpenedWindows.value = newWindows;
     }
+
+    setLastActiveWindowId(window);
   };
 
   const remove = (window: ModalWindow) => {
@@ -85,6 +96,9 @@ export const useWindowStore = defineStore('window', () => {
 
   const toggle = (window: ModalWindow) => {
     window.active = !window.active;
+    if (window.active) {
+      setLastActiveWindowId(window);
+    }
   };
 
   const toggleEdit = (window: ModalWindow) => {
@@ -99,6 +113,7 @@ export const useWindowStore = defineStore('window', () => {
     windows,
     maxWindows,
     maxRecentlyOpenedWindows,
+    lastActiveWindowId,
     add,
     remove,
     pin,
@@ -106,6 +121,7 @@ export const useWindowStore = defineStore('window', () => {
     toggle,
     toggleEdit,
     setWindowStatus,
+    setLastActiveWindowId,
   };
 });
 
