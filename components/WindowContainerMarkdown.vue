@@ -94,12 +94,11 @@ const toggleEdit = () => {
       </VaButtonDropdown>
     </div>
     <div class="window-container-markdown__content mb">
-      <div
+      <WindowContainerMarkdownRenderer
         v-show="!window.content.editing"
-        class="window-container-markdown__markdown"
-      >
-        {{ modalContentData.body }}
-      </div>
+        :source="modalContentData.body"
+      />
+
       <WindowContainerMarkdownForm
         v-show="window.content.editing"
         :window="window"

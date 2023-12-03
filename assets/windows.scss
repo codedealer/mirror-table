@@ -95,6 +95,7 @@
   min-width: var(--window-min-width);
   max-width: var(--window-max-width);
   min-height: var(--window-min-height);
+  max-height: 100dvh;
   position: fixed;
   top: 0;
   left: 0;
@@ -147,11 +148,6 @@
   gap: 0.5rem;
 }
 
-.text-editor {
-  max-height: 150px;
-  overflow: auto;
-}
-
 .window-container-markdown__actions {
   display: flex;
   flex-direction: row;
@@ -164,4 +160,5 @@
 
 .markdown-editor {
   width: 100%;
+  min-height: 150px;
 }
