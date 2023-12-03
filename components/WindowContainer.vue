@@ -54,7 +54,7 @@ const statusLabel = computed(() => {
     <div
       v-show="window.active"
       ref="modal"
-      class="window-container asset-modal"
+      class="window-container"
       :style="style"
     >
       <div

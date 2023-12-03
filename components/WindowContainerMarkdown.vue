@@ -93,7 +93,7 @@ const toggleEdit = () => {
         </div>
       </VaButtonDropdown>
     </div>
-    <div class="window-container-markdown__content">
+    <div class="window-container-markdown__content mb">
       <div
         v-show="!window.content.editing"
         class="window-container-markdown__markdown"

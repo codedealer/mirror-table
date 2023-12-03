@@ -88,7 +88,9 @@ const submit = async () => {
       <va-textarea
         v-model="contentData.body"
         name="content"
+        class="markdown-editor"
         placeholder="Enter markdown here"
+        :min-rows="5"
         :disabled="isLoading"
         @update:dirty="setDirty"
       />

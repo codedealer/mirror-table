@@ -76,6 +76,12 @@
   --window-container-border-radius: 3px;
   --window-container-background: var(--va-background-element);
   --window-border-color: var(--va-background-border);
+  --window-min-width: 400px;
+  --window-min-height: 200px;
+  --window-max-width: calc(100vw - 2 * var(--window-container-padding) - 16rem - 60px);
+  min-width: var(--window-min-width);
+  max-width: var(--window-max-width);
+  min-height: var(--window-min-height);
   position: fixed;
   top: 0;
   left: 0;
@@ -84,6 +90,7 @@
   border: 1px solid var(--window-border-color);
   border-radius: var(--window-container-border-radius);
   background-color: var(--window-container-background);
+  box-shadow: 2px 2px 10px 0px #00000033;
   transition:
     opacity 0.2s ease-in-out,
     transform 0.2s ease-in-out;
@@ -131,4 +138,8 @@
 
 .window-container-markdown__meta__item {
   margin-bottom: 0.5rem;
+}
+
+.markdown-editor {
+  width: 100%;
 }

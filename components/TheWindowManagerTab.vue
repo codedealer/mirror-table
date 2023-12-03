@@ -16,22 +16,26 @@ const windowStore = useWindowStore();
     >
       <va-button
         preset="plain"
-        icon="push_pin"
-        :color="window.pinned ? 'primary' : 'background-border'"
         size="medium"
         @click="window.pinned ? windowStore.unpin(window) : windowStore.pin(window)"
-      />
+      >
+        <va-icon
+          name="push_pin"
+          :color="window.pinned ? 'primary' : 'background-border'"
+          :rotation="window.pinned ? 0 : 45"
+        />
+      </va-button>
 
       <va-button
         preset="plain"
         color="text-primary"
         size="medium"
         class="window-tab__button"
-        :title="window.id"
+        :title="window.title ?? window.id"
         @click="windowStore.toggle(window)"
       >
         <div class="window-tab__title text-overflow">
-          {{ window.id }}
+          {{ window.title ?? window.id }}
         </div>
       </va-button>
 
