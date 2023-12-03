@@ -24,6 +24,11 @@ const setDirty = () => {
 };
 
 const submit = async () => {
+  const driveTreeStore = useDriveTreeStore();
+  if (props.window.node) {
+    driveTreeStore.setNodeLoading(props.window.node, true);
+  }
+
   try {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.LOADING);
 
@@ -54,6 +59,10 @@ const submit = async () => {
     notificationStore.error(extractErrorMessage(e));
 
     windowStore.setWindowStatus(props.window, ModalWindowStatus.ERROR);
+  } finally {
+    if (props.window.node) {
+      driveTreeStore.setNodeLoading(props.window.node, false);
+    }
   }
 };
 </script>
