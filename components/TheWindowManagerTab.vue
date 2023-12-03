@@ -21,6 +21,7 @@ const windowStore = useWindowStore();
       >
         <va-icon
           name="push_pin"
+          size="medium"
           :color="window.pinned ? 'primary' : 'background-border'"
           :rotation="window.pinned ? 0 : 45"
         />
@@ -41,6 +42,7 @@ const windowStore = useWindowStore();
 
       <div class="window-tab__actions">
         <va-button
+          v-show="!window.pinned"
           preset="plain"
           icon="cancel"
           color="background-border"
