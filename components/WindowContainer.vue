@@ -21,11 +21,11 @@ const { style } = useDraggable(modal, {
 const statusIconName = computed(() => {
   switch (props.window.status) {
     case ModalWindowStatus.LOADING:
-      return 'loading';
+      return 'sync';
     case ModalWindowStatus.DIRTY:
       return 'warning';
     case ModalWindowStatus.SYNCED:
-      return 'check';
+      return 'cloud_done';
     case ModalWindowStatus.ERROR:
       return 'error';
     default:
@@ -71,7 +71,8 @@ const statusLabel = computed(() => {
               v-if="statusIconName"
               :name="statusIconName"
               :color="window.status === ModalWindowStatus.ERROR ? 'error' : 'background-border'"
-              size="medium"
+              :spin="window.status === ModalWindowStatus.LOADING"
+              size="large"
             />
           </va-popover>
 
