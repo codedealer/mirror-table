@@ -43,6 +43,7 @@
     "markdown-it-footnote": "^3.0.3",
     "markdown-it-sub": "^1.0.0",
     "markdown-it-sup": "^1.0.0",
+    "markdown-it-task-lists": "^2.1.1",
     "pinia": "^2.1.7",
     "vuestic-ui": "^1.8.5"
   },
