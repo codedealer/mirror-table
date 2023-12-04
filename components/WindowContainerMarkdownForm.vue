@@ -2,6 +2,7 @@
 import type { ModalWindow, ModalWindowContentMarkdown } from '~/models/types';
 import { ModalWindowStatus } from '~/models/types';
 import { updateFile } from '~/utils/driveOps';
+import { stripFileExtension } from '~/utils';
 
 const props = defineProps<{
   window: ModalWindow
@@ -14,8 +15,25 @@ const contentData = computed(() =>
 );
 
 const isLoading = computed(() => props.window.status === ModalWindowStatus.LOADING);
+const title = computed(() => {
+  return stripFileExtension(contentData.value.meta.name);
+});
 
 const windowStore = useWindowStore();
+
+const updateFileName = (fileName: string) => {
+  let newName = fileName;
+  if (contentData.value.meta.fileExtension) {
+    newName += `.${contentData.value.meta.fileExtension}`;
+  }
+  contentData.value.meta.name = newName;
+  windowStore.setWindowTitle(props.window, fileName);
+
+  if (props.window.node) {
+    const driveTreeStore = useDriveTreeStore();
+    driveTreeStore.setNodeLabel(props.window.node, fileName);
+  }
+};
 
 const setDirty = () => {
   if (props.window.status === ModalWindowStatus.LOADING ||
@@ -43,10 +61,6 @@ const submit = async () => {
         type: 'text/markdown',
       },
     );
-
-    if (!contentData.value.meta.parents) {
-      throw new Error('No parent folder found');
-    }
 
     await updateFile(
       contentData.value.meta.id,
@@ -78,7 +92,7 @@ const submit = async () => {
       @submit.prevent="submit"
     >
       <va-input
-        v-model="contentData.meta.name"
+        :model-value="title"
         name="title"
         label="Title"
         :min-length="1"
@@ -86,6 +100,7 @@ const submit = async () => {
         required
         :disabled="isLoading"
         @update:dirty="setDirty"
+        @update:model-value="updateFileName"
       />
 
       <va-textarea

@@ -3,7 +3,7 @@ import type { DriveFile, DriveTreeNode } from '~/models/types';
 export const DriveTreeNodeFactory = (file: DriveFile): DriveTreeNode => ({
   $folded: true,
   id: file.id,
-  label: file.name,
+  label: file.fileExtension ? stripFileExtension(file.name) : file.name,
   icon: undefined,
   isFolder: file.mimeType === DriveMimeTypes.FOLDER,
   loaded: file.mimeType !== DriveMimeTypes.FOLDER,

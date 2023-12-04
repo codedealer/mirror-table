@@ -2,6 +2,7 @@
 import type { Tree } from 'he-tree-vue';
 import type { DriveTreeNode, ModalWindowContentMarkdown } from '~/models/types';
 import { downloadFile } from '~/utils/driveOps';
+import { WindowFactory } from '~/models/Window';
 
 const props = defineProps<{
   node: DriveTreeNode
@@ -41,12 +42,15 @@ const toggleFile = async () => {
       },
     };
 
-    windowStore.add(
+    const window = WindowFactory(
       props.node.data.id,
-      props.node.data.name,
+      stripFileExtension(props.node.data.name),
       windowContent,
-      props.node,
     );
+
+    window.node = props.node;
+
+    windowStore.add(window);
   } catch (e) {
     console.error(e);
     const notificationStore = useNotificationStore();

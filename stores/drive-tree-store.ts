@@ -246,6 +246,10 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     return success;
   };
 
+  const setNodeLabel = (node: DriveTreeNode, label: string) => {
+    node.label = label;
+  };
+
   return {
     nodes,
     rootNode,
@@ -258,6 +262,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     getNodeByPath,
     removeFile,
     setNodeLoading,
+    setNodeLabel,
   };
 });
 

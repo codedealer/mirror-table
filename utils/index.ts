@@ -40,3 +40,12 @@ export const calculateNumberOfElements = (containerWidth: unknown, elementWidth:
 
   return Math.floor(Number(containerWidth) / Number(elementWidth)) || 1;
 };
+
+export const stripFileExtension = (filename: string): string => {
+  const index = filename.lastIndexOf('.');
+  if (index === -1) {
+    return filename;
+  }
+
+  return filename.substring(0, index);
+};
