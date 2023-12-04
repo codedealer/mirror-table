@@ -19,6 +19,11 @@ const title = computed(() => {
   return stripFileExtension(contentData.value.meta.name);
 });
 
+const nameValidationsRules = [
+  (v: string) => /^[^\\/:*?"<>|]{0,180}$/.test(v) || 'No special symbols in name',
+  (v: string) => v.length > 0 || 'Fill out the name',
+];
+
 const windowStore = useWindowStore();
 
 const updateFileName = (fileName: string) => {
@@ -45,6 +50,10 @@ const setDirty = () => {
 };
 
 const submit = async () => {
+  if (nameValidationsRules.some(rule => rule(title.value) !== true)) {
+    return;
+  }
+
   const driveTreeStore = useDriveTreeStore();
   if (props.window.node) {
     driveTreeStore.setNodeLoading(props.window.node, true);
@@ -97,6 +106,7 @@ const submit = async () => {
         label="Title"
         :min-length="1"
         :max-length="180"
+        :rules="nameValidationsRules"
         required
         :disabled="isLoading"
         @update:dirty="setDirty"
