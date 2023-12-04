@@ -11,7 +11,7 @@ defineProps<{
   source: string
 }>();
 
-const md = new MarkdownIt()
+const md = new MarkdownIt({ breaks: true })
   .use(MarkdownItAbbr)
   .use(MarkdownItFootnote)
   .use(MarkdownItSub)
@@ -22,7 +22,9 @@ const md = new MarkdownIt()
 
 <template>
   <div class="window-container-markdown-renderer">
-    <div v-html="md.render(source)" />
+    <va-scroll-container vertical>
+      <div v-html="md.render(source)" />
+    </va-scroll-container>
   </div>
 </template>
 

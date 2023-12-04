@@ -94,8 +94,10 @@ const submit = async () => {
         name="content"
         class="markdown-editor"
         placeholder="Enter markdown here"
-        autosize
+
+        resize
         :min-rows="5"
+        :max-rows="25"
         :disabled="isLoading"
         @update:dirty="setDirty"
       />

@@ -91,16 +91,18 @@
   --window-border-color: var(--va-background-border);
   --window-min-width: 400px;
   --window-min-height: 200px;
-  --window-max-width: calc(100vw - 2 * var(--window-container-padding) - 16rem - 60px);
+  --window-max-width: 80ch;
   min-width: var(--window-min-width);
-  max-width: var(--window-max-width);
-  min-height: var(--window-min-height);
-  max-height: 100dvh;
+  max-width: min(var(--window-max-width), calc(100vw - 2 * var(--window-container-padding)));
+  height: clamp(var(--window-min-height), 50dvh, 100%);
+  max-height: 80dvh;
+  display: flex;
+  flex-direction: column;
   position: fixed;
   top: 0;
   left: 0;
   resize: both;
-  overflow: auto;
+  overflow: hidden; /*auto;*/
   border: 1px solid var(--window-border-color);
   border-radius: var(--window-container-border-radius);
   background-color: var(--window-container-background);
@@ -138,6 +140,13 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+  position: sticky;
+  z-index: 2;
+  top: 0;
+
+  & + * {
+    flex: 1;
+  }
 }
 
 .asset-modal__actions {
@@ -158,7 +167,38 @@
   margin-bottom: 0.5rem;
 }
 
+.window-container-markdown {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.window-container-markdown__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+
+  > div {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+  }
+}
+
+.markdown-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.window-container-markdown-renderer {
+  overflow: hidden;
+}
+
 .markdown-editor {
   width: 100%;
+  min-width: calc(80ch - 4 * (var(--window-container-padding) + 1px));
   min-height: 150px;
+  flex-grow: 1;
 }

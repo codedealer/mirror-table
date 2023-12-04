@@ -88,14 +88,10 @@ const statusLabel = computed(() => {
         </div>
       </div>
 
-      <div
-        class="window-container__content"
-      >
-        <WindowContainerMarkdown
-          v-if="window.content.type === 'markdown'"
-          :window="window"
-        />
-      </div>
+      <WindowContainerMarkdown
+        v-if="window.content.type === 'markdown'"
+        :window="window"
+      />
     </div>
   </transition>
 </template>
