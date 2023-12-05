@@ -78,6 +78,12 @@ export const isGapiErrorResponseResult = (obj: unknown): obj is GapiErrorRespons
 
 export const DriveMimeTypes = {
   FOLDER: 'application/vnd.google-apps.folder',
+  MARKDOWN: 'text/markdown',
+} as const;
+
+export const DriveFileExtensions = {
+  'application/vnd.google-apps.folder': '',
+  'text/markdown': 'md',
 } as const;
 
 export interface Notification {

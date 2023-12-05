@@ -1,12 +1,4 @@
 <script setup lang="ts">
-import type { DriveTreeNode } from '~/models/types';
-
-interface DriveDirectoryTreeHeaderEmits {
-  (event: 'createChildFolder', node: DriveTreeNode, path: string[]): void
-}
-
-defineEmits<DriveDirectoryTreeHeaderEmits>();
-
 const driveTreeStore = useDriveTreeStore();
 
 const setRoot = () => {
@@ -85,7 +77,6 @@ const setRootToParent = () => {
         <DriveDirectoryTreeFolderContextMenu
           :node="driveTreeStore.rootNode"
           header
-          @create-child-folder="$emit('createChildFolder', driveTreeStore.rootNode, [])"
         />
       </div>
     </div>

@@ -4,18 +4,12 @@ import type { DriveTreeNode } from '~/models/types';
 import clickOrDoubleClick from '~/utils/clickOrDoubleClick';
 import DriveDirectoryTreeFolderContextMenu from '~/components/DriveDirectoryTreeFolderContextMenu.vue';
 
-interface DriveDirectoryTreeFolderEmits {
-  (event: 'createChildFolder', node: DriveTreeNode, path: string[]): void
-}
-
 const props = defineProps<{
   node: DriveTreeNode
   index: number
   path: string[]
   tree: Tree
 }>();
-
-defineEmits<DriveDirectoryTreeFolderEmits>();
 
 const toggleFold = () => {
   const driveTreeStore = useDriveTreeStore();
@@ -83,7 +77,7 @@ const undoTrashFolder = () => {
       <DriveDirectoryTreeFolderContextMenu
         v-show="!node?.data?.trashed"
         :node="node"
-        @create-child-folder="$emit('createChildFolder', node, path)"
+        :path="path"
       />
     </div>
   </div>

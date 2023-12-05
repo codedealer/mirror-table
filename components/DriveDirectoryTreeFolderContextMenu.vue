@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import type { DriveTreeNode } from '~/models/types';
 
-interface DriveDirectoryTreeFolderContextMenuEmits {
-  (event: 'createChildFolder', node: DriveTreeNode): void
-}
-
 const props = defineProps<{
   node: DriveTreeNode
+  path?: string[]
   header?: boolean
 }>();
-
-defineEmits<DriveDirectoryTreeFolderContextMenuEmits>();
 
 const tableStore = useTableStore();
 const driveTreeStore = useDriveTreeStore();
@@ -32,10 +27,21 @@ const trashFolder = () => {
   driveTreeStore.removeFile(props.node);
 };
 
+const createChildFolder = () => {
+  const driveTreeModalStore = useDriveTreeModalStore();
+
+  driveTreeModalStore.show('New folder', DriveMimeTypes.FOLDER, props.node, props.path);
+};
+
 const createAsset = () => {
-  const id = `sample${Math.round(Math.random() * 100)}.md`;
-  const windowStore = useWindowStore();
-  windowStore.add({ id, active: false, pinned: false });
+  const driveTreeModalStore = useDriveTreeModalStore();
+
+  driveTreeModalStore.show(
+    'New asset',
+    DriveMimeTypes.MARKDOWN,
+    props.node,
+    props.path,
+  );
 };
 </script>
 
@@ -53,7 +59,7 @@ const createAsset = () => {
       <va-list-item
         v-show="permissions.canAddChildren"
         href="#"
-        @click="$emit('createChildFolder', node)"
+        @click="createChildFolder"
       >
         <va-list-item-section icon>
           <va-icon
