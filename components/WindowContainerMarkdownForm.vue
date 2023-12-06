@@ -2,7 +2,7 @@
 import type { ModalWindow, ModalWindowContentMarkdown } from '~/models/types';
 import { ModalWindowStatus } from '~/models/types';
 import { updateFile } from '~/utils/driveOps';
-import { stripFileExtension } from '~/utils';
+import { nameValidationsRules, stripFileExtension } from '~/utils';
 
 const props = defineProps<{
   window: ModalWindow
@@ -18,11 +18,6 @@ const isLoading = computed(() => props.window.status === ModalWindowStatus.LOADI
 const title = computed(() => {
   return stripFileExtension(contentData.value.meta.name);
 });
-
-const nameValidationsRules = [
-  (v: string) => /^[^\\/:*?"<>|]{0,180}$/.test(v) || 'No special symbols in name',
-  (v: string) => v.length > 0 || 'Fill out the name',
-];
 
 const windowStore = useWindowStore();
 
@@ -105,7 +100,7 @@ const submit = async () => {
         name="title"
         label="Title"
         :min-length="1"
-        :max-length="180"
+        :max-length="100"
         :rules="nameValidationsRules"
         required
         :disabled="isLoading"

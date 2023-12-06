@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { nameValidationsRules } from '~/utils';
+
 const driveTreeModalStore = useDriveTreeModalStore();
 </script>
 
@@ -22,6 +24,7 @@ const driveTreeModalStore = useDriveTreeModalStore();
         label="Title"
         :min-length="1"
         :max-length="100"
+        :rules="nameValidationsRules"
         counter
         required
         autofocus

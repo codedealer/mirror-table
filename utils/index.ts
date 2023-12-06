@@ -49,3 +49,8 @@ export const stripFileExtension = (filename: string): string => {
 
   return filename.substring(0, index);
 };
+
+export const nameValidationsRules = [
+  (v: string) => /^[^\\/:*?"<>|]{0,100}$/.test(v) || 'No special symbols in name',
+  (v: string) => v.length > 0 || 'Fill out the name',
+];
