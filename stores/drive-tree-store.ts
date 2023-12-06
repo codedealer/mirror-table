@@ -1,5 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { DriveTreeNode } from '~/models/types';
+import type { AppProperties, DriveTreeNode } from '~/models/types';
 import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
 import { buildNodes, listFiles, uploadFile } from '~/utils/driveOps';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
@@ -189,6 +189,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     nameOrFile: string | File,
     parent: DriveTreeNode,
     parentPath: string[] = [],
+    appProperties?: AppProperties,
   ) => {
     let success = false;
 
@@ -197,8 +198,10 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
       if (typeof nameOrFile === 'string') {
         await createFolder(nameOrFile, parent.id);
+      } else if (appProperties) {
+        await uploadFile(nameOrFile, parent.id, appProperties);
       } else {
-        await uploadFile(nameOrFile, parent.id);
+        throw new Error('App Properties are not filled');
       }
 
       // update and unfold the parent folder

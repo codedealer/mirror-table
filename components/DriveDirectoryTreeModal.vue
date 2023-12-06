@@ -21,10 +21,19 @@ const driveTreeModalStore = useDriveTreeModalStore();
         name="title"
         label="Title"
         :min-length="1"
-        :max-length="180"
+        :max-length="100"
         counter
         required
         autofocus
+      />
+
+      <va-select
+        v-if="driveTreeModalStore.fileOptions.length > 1"
+        v-model="driveTreeModalStore.selectedOption"
+        name="options"
+        label="Asset type"
+        :options="driveTreeModalStore.fileOptions"
+        required
       />
 
       <div class="vertical-form__actions">

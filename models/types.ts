@@ -106,6 +106,34 @@ export interface AccessTokenReturnType {
 
 export const fieldMask = 'id, trashed, name, ownedByMe, originalFilename, mimeType, shared, iconLink, imageMediaMetadata, createdTime, modifiedTime, fileExtension, properties, appProperties, md5Checksum, version, videoMediaMetadata, thumbnailLink, thumbnailVersion, size, quotaBytesUsed, parents, capabilities/canEdit, capabilities/canCopy, capabilities/canDelete, capabilities/canListChildren, capabilities/canAddChildren, capabilities/canShare, capabilities/canDownload' as const;
 
+export const AppPropertiesTypes = {
+  ASSET: 'asset',
+  DEPENDENCY: 'dependency',
+  WIDGET: 'widget',
+} as const;
+
+export type AppPropertiesType = typeof AppPropertiesTypes[keyof typeof AppPropertiesTypes];
+
+export interface AppProperties {
+  type: AppPropertiesType
+}
+
+export const AssetPropertiesKinds = {
+  TEXT: 'text',
+  IMAGE: 'image',
+  COMPLEX: 'complex',
+} as const;
+
+export type AssetPropertiesKind = typeof AssetPropertiesKinds[keyof typeof AssetPropertiesKinds];
+
+export interface AssetProperties extends AppProperties {
+  type: 'asset'
+  kind: AssetPropertiesKind
+  title: string
+  showTitle: string
+  preview: string
+}
+
 export interface DriveFileCapabilities {
   canEdit?: boolean
   canCopy?: boolean
@@ -116,9 +144,7 @@ export interface DriveFileCapabilities {
   canDownload?: boolean
 }
 
-type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' | 'ownedByMe' | 'originalFilename' | 'mimeType' | 'shared' | 'iconLink' | 'imageMediaMetadata' | 'createdTime' | 'modifiedTime' | 'size' | 'fileExtension' | 'properties' | 'appProperties' | 'md5Checksum' | 'version' | 'videoMediaMetadata' | 'thumbnailLink' | 'thumbnailVersion' | 'quotaBytesUsed' | 'parents'> & {
-  capabilities?: DriveFileCapabilities
-};
+type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' | 'ownedByMe' | 'originalFilename' | 'mimeType' | 'shared' | 'iconLink' | 'imageMediaMetadata' | 'createdTime' | 'modifiedTime' | 'size' | 'fileExtension' | 'properties' | 'appProperties' | 'md5Checksum' | 'version' | 'videoMediaMetadata' | 'thumbnailLink' | 'thumbnailVersion' | 'quotaBytesUsed' | 'parents'> & { capabilities?: DriveFileCapabilities } & { appProperties?: AppProperties };
 
 export type DriveFile = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | 'name' | 'originalFilename' | 'shared' | 'ownedByMe'>> & OptionalDriveFile;
 
@@ -165,6 +191,11 @@ export interface ModalWindow {
   status: typeof ModalWindowStatus[keyof typeof ModalWindowStatus]
   content: ModalWindowContent
   node?: DriveTreeNode
+}
+
+export interface SelectOption {
+  text: string
+  value: string
 }
 
 /**

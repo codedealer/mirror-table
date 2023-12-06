@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DriveTreeNode } from '~/models/types';
+import { generateSelectOptions } from '~/models/AssetProperties';
 
 const props = defineProps<{
   node: DriveTreeNode
@@ -41,6 +42,7 @@ const createAsset = () => {
     DriveMimeTypes.MARKDOWN,
     props.node,
     props.path,
+    generateSelectOptions(),
   );
 };
 </script>

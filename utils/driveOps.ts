@@ -1,4 +1,4 @@
-import type { DriveFile, DriveInvalidPermissionsError } from '~/models/types';
+import type { AppProperties, DriveFile, DriveInvalidPermissionsError } from '~/models/types';
 
 export const folderExists = async (id: string) => {
   if (!id) {
@@ -162,7 +162,7 @@ export const deleteFile = async (id: string, restore: boolean) => {
 
 const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
 
-const generateFileFormData = (file: File, appProperties: { [x: string]: string }, parentId = '') => {
+const generateFileFormData = (file: File, appProperties: AppProperties, parentId = '') => {
   const metadata: Record<string, any> = {
     name: file.name,
     mimeType: file.type,
@@ -185,7 +185,11 @@ const generateFileFormData = (file: File, appProperties: { [x: string]: string }
   return form;
 };
 
-export const updateFile = async (fileId: string, file: File, appProperties: { [x: string]: string } = { type: 'asset' }) => {
+export const updateFile = async (
+  fileId: string,
+  file: File,
+  appProperties: AppProperties,
+) => {
   if (!fileId) {
     throw new Error('File ID is empty when updating a file');
   }
@@ -212,9 +216,11 @@ export const updateFile = async (fileId: string, file: File, appProperties: { [x
   return response as gapi.client.Response<gapi.client.drive.File>;
 };
 
-export const uploadFile = async (file: File, folderId: string, appProperties = {
-  type: 'asset',
-}) => {
+export const uploadFile = async (
+  file: File,
+  folderId: string,
+  appProperties: AppProperties,
+) => {
   if (!folderId) {
     throw new Error('Folder ID is empty when uploading a file');
   }

@@ -1,6 +1,13 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { DriveTreeNode } from '~/models/types';
-import { DriveFileExtensions } from '~/models/types';
+import type {
+  AppProperties,
+  AppPropertiesType,
+  AssetPropertiesKind,
+  DriveTreeNode,
+  SelectOption,
+} from '~/models/types';
+import { AppPropertiesTypes, DriveFileExtensions } from '~/models/types';
+import { AssetPropertiesFactory } from '~/models/AssetProperties';
 
 export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
   const modalState = ref(false);
@@ -8,9 +15,17 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
   const formTitle = ref('');
   const fileName = ref('');
   const mimeType = ref<typeof DriveMimeTypes[keyof typeof DriveMimeTypes]>();
-  const fileOptions = ref<string[]>([]);
+  const fileOptions = ref<SelectOption[]>([]);
+  const selectedOption = ref<SelectOption>();
   const fileParent = ref<DriveTreeNode>();
   const filePath = ref<string[]>([]);
+  const fileType = ref<AppPropertiesType>('asset');
+  const fileKind = computed<AssetPropertiesKind | undefined>(() => {
+    if (fileType.value === AppPropertiesTypes.ASSET) {
+      return selectedOption.value?.value as AssetPropertiesKind | undefined;
+    }
+    return undefined;
+  });
 
   const cancel = () => {
     formTitle.value = '';
@@ -19,6 +34,7 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
     fileParent.value = undefined;
     filePath.value = [];
     fileOptions.value = [];
+    selectedOption.value = undefined;
   };
 
   const show = (
@@ -26,7 +42,7 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
     type: typeof DriveMimeTypes[keyof typeof DriveMimeTypes],
     parent: DriveTreeNode,
     path?: string[],
-    options?: string[],
+    options?: SelectOption[],
   ) => {
     cancel();
 
@@ -35,6 +51,10 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
     fileParent.value = parent;
     filePath.value = path ?? [];
     fileOptions.value = options ?? [];
+
+    if (fileOptions.value.length > 0) {
+      selectedOption.value = fileOptions.value[0];
+    }
 
     modalState.value = true;
   };
@@ -45,7 +65,7 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
   };
 
   const createFile = async () => {
-    const filename = fileName.value.trim();
+    let filename = fileName.value.trim();
     if (!filename) {
       const notificationStore = useNotificationStore();
       notificationStore.error('File name is required.');
@@ -66,14 +86,32 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
 
     const extension = DriveFileExtensions[mimeType.value];
     if (extension.length > 0) {
-      fileName.value = `${filename}.${mimeType.value}`;
+      filename = `${filename}.${extension}`;
     }
 
     const driveTreeStore = useDriveTreeStore();
 
     loading.value = true;
 
-    const result = await driveTreeStore.createChild(fileName.value, fileParent.value, filePath.value);
+    const fileOrName = mimeType.value === DriveMimeTypes.FOLDER
+      ? filename
+      : new File([], filename, { type: mimeType.value });
+
+    let appProperties: AppProperties | undefined;
+    if (mimeType.value !== DriveMimeTypes.FOLDER && fileKind.value) {
+      if (fileType.value === AppPropertiesTypes.ASSET) {
+        appProperties = AssetPropertiesFactory(fileKind.value, filename);
+      } else {
+        throw new Error('Not implemented');
+      }
+    }
+
+    const result = await driveTreeStore.createChild(
+      fileOrName,
+      fileParent.value,
+      filePath.value,
+      appProperties,
+    );
 
     loading.value = false;
 
@@ -89,8 +127,10 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
     fileName,
     mimeType,
     fileOptions,
+    selectedOption,
     fileParent,
     filePath,
+    fileKind,
     show,
     hide,
     createFile,
