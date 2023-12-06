@@ -59,6 +59,11 @@ const toggleFile = async () => {
     driveTreeStore.setNodeLoading(props.node, false);
   }
 };
+
+const undoTrashFolder = () => {
+  const driveTreeStore = useDriveTreeStore();
+  driveTreeStore.removeFile(props.node, true);
+};
 </script>
 
 <template>
@@ -88,7 +93,27 @@ const toggleFile = async () => {
       </div>
     </va-button>
 
-    <div class="drive-node__actions" />
+    <div class="drive-node__actions">
+      <va-popover
+        message="Undo"
+        stick-to-edges
+      >
+        <va-button
+          v-show="node?.data?.trashed"
+          preset="plain"
+          color="primary-dark"
+          size="medium"
+          icon="replay"
+          @click.stop="undoTrashFolder"
+        />
+      </va-popover>
+
+      <DriveDirectoryTreeFileContextMenu
+        v-show="!node?.data?.trashed"
+        :node="node"
+        :path="path"
+      />
+    </div>
   </div>
 </template>
 
