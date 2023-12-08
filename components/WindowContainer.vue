@@ -72,7 +72,7 @@ const statusLabel = computed(() => {
             <va-icon
               v-if="statusIconName"
               :name="statusIconName"
-              :color="window.status === ModalWindowStatus.ERROR ? 'error' : 'background-border'"
+              :color="window.status === ModalWindowStatus.ERROR ? 'danger' : 'background-border'"
               :spin="window.status === ModalWindowStatus.LOADING"
               size="large"
             />

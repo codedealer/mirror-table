@@ -135,7 +135,7 @@ export interface AssetProperties extends AppProperties {
 }
 
 export const isAssetProperties = (obj: unknown): obj is AssetProperties => {
-  return isObject(obj) && 'type' in obj && obj.type === AppPropertiesTypes.ASSET && 'kind' in obj && Object.hasOwn(AssetPropertiesKinds, obj.kind as string);
+  return isObject(obj) && 'type' in obj && obj.type === AppPropertiesTypes.ASSET && 'kind' in obj && Object.values(AssetPropertiesKinds).includes(obj.kind as AssetPropertiesKind);
 };
 
 export interface DriveFileCapabilities {

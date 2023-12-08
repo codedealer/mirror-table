@@ -8,7 +8,6 @@ import type {
 } from '~/models/types';
 import { AppPropertiesTypes, DriveFileExtensions } from '~/models/types';
 import { AssetPropertiesFactory } from '~/models/AssetProperties';
-import { nameValidationsRules } from '~/utils';
 
 export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
   const modalState = ref(false);
@@ -67,11 +66,6 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
 
   const createFile = async () => {
     let filename = fileName.value.trim();
-    if (!filename || nameValidationsRules.some(rule => rule(filename) !== true)) {
-      const notificationStore = useNotificationStore();
-      notificationStore.error('File name is required and can\'t contain special symbols.');
-      return;
-    }
 
     if (!fileParent.value) {
       const notificationStore = useNotificationStore();
@@ -99,9 +93,9 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
       : new File([], filename, { type: mimeType.value });
 
     let appProperties: AppProperties | undefined;
-    // TODO: move this out
-    if (mimeType.value !== DriveMimeTypes.FOLDER && fileKind.value) {
-      if (fileType.value === AppPropertiesTypes.ASSET) {
+    // should probably move this out
+    if (mimeType.value !== DriveMimeTypes.FOLDER) {
+      if (fileType.value === AppPropertiesTypes.ASSET && fileKind.value) {
         appProperties = AssetPropertiesFactory({
           type: AppPropertiesTypes.ASSET,
           kind: fileKind.value,

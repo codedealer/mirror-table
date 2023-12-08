@@ -160,6 +160,24 @@ export const deleteFile = async (id: string, restore: boolean) => {
   });
 };
 
+export const updateMetadata = async (id: string, metadata: Partial<DriveFileRaw>) => {
+  const driveStore = useDriveStore();
+  const client = await driveStore.getClient();
+
+  if (!id) {
+    throw new Error('File ID is empty');
+  }
+
+  const response = await client.drive.files.update({
+    fileId: id,
+    fields: 'id, version, md5Checksum, modifiedTime, size, quotaBytesUsed',
+    resource: metadata,
+  });
+
+  console.log(response);
+  return response.result;
+};
+
 const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
 
 const generateFileFormData = (file: File, appProperties: Record<string, string>, parentId = '') => {
@@ -213,6 +231,7 @@ export const updateMedia = async (
     body: form,
   });
 
+  console.log(response);
   return response as gapi.client.Response<gapi.client.drive.File>;
 };
 

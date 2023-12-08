@@ -1,5 +1,5 @@
 import type { AppProperties, DriveAsset, DriveFile, DriveFileRaw } from '~/models/types';
-import { getFile as loadFile, updateMedia, uploadMedia } from '~/utils/driveOps';
+import { getFile as loadFile, updateMedia, updateMetadata, uploadMedia } from '~/utils/driveOps';
 import { serializeAppProperties } from '~/utils/appPropertiesSerializer';
 
 export const useDriveFileStore = defineStore('drive-file', () => {
@@ -37,6 +37,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     }
   };
 
+  // TODO: instead of passing the object itself we need to pass the id and have clients reference files from the store
   const getFile = async (id: string) => {
     const rawResult = await loadFile(id);
 
@@ -77,7 +78,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     _files.value[id].trashed = !restore;
   };
 
-  const saveFile = async (fileId: string, blob: File) => {
+  const saveFile = async (fileId: string, blob?: File) => {
     if (!_files.value[fileId]) {
       throw new Error('File not found');
     }
@@ -92,7 +93,12 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
     const propertiesObject = serializeAppProperties(file.appProperties);
 
-    await updateMedia(fileId, blob, propertiesObject);
+    // TODO: update file in array after the request is done
+    if (blob) {
+      await updateMedia(fileId, blob, propertiesObject);
+    } else {
+      await updateMetadata(fileId, propertiesObject as Partial<DriveFileRaw>);
+    }
 
     // WARNING: each update invalidates the file object in _files (checksum, version etc) so we can't rely on it for persistent caching purposes
     file.modifiedTime = new Date().toISOString();
