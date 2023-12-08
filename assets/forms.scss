@@ -17,3 +17,9 @@
   align-self: self-end;
   align-items: center;
 }
+.horizontal-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}

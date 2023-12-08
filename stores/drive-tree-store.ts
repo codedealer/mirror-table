@@ -1,7 +1,7 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import type { AppProperties, DriveTreeNode } from '~/models/types';
 import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
-import { buildNodes, listFiles, uploadFile } from '~/utils/driveOps';
+import { buildNodes } from '~/utils/driveOps';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
 export const useDriveTreeStore = defineStore('drive-tree', () => {
@@ -69,7 +69,9 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     try {
       setNodeLoading(node, true);
 
-      node.children = buildNodes(await listFiles(node.id));
+      const driveFileStore = useDriveFileStore();
+
+      node.children = buildNodes(await driveFileStore.getFiles(node.id));
 
       node.loaded = true;
       success = true;
@@ -145,7 +147,8 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     try {
       rootNode.value.loading = true;
 
-      const parentFile = await getFile(parentId);
+      const driveFileStore = useDriveFileStore();
+      const parentFile = await driveFileStore.getFile(parentId);
 
       parentNode = DriveTreeNodeFactory(parentFile);
     } catch (e) {
@@ -196,13 +199,8 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     try {
       setNodeLoading(parent, true);
 
-      if (typeof nameOrFile === 'string') {
-        await createFolder(nameOrFile, parent.id);
-      } else if (appProperties) {
-        await uploadFile(nameOrFile, parent.id, appProperties);
-      } else {
-        throw new Error('App Properties are not filled');
-      }
+      const driveFileStore = useDriveFileStore();
+      await driveFileStore.createFile(nameOrFile, parent.id, appProperties);
 
       // update and unfold the parent folder
       success = await loadChildren(parent);
@@ -226,11 +224,8 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     try {
       setNodeLoading(node, true);
 
-      await deleteFile(node.id, restore);
-
-      if (node.data) {
-        node.data.trashed = !restore;
-      }
+      const driveFileStore = useDriveFileStore();
+      await driveFileStore.removeFile(node.id, restore);
 
       if (node.isFolder && !restore) {
         node.$folded = true;

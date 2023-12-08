@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Tree } from 'he-tree-vue';
 import type { DriveTreeNode, ModalWindowContentMarkdown } from '~/models/types';
-import { downloadFile } from '~/utils/driveOps';
+import { downloadMedia } from '~/utils/driveOps';
 import { WindowFactory } from '~/models/Window';
 
 const props = defineProps<{
@@ -29,7 +29,7 @@ const toggleFile = async () => {
   try {
     driveTreeStore.setNodeLoading(props.node, true);
 
-    const file = await downloadFile(props.node.data.id);
+    const file = await downloadMedia(props.node.data.id);
 
     // assuming the file is a markdown file for now
     // create a new window

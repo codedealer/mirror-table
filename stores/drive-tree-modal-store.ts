@@ -99,9 +99,14 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
       : new File([], filename, { type: mimeType.value });
 
     let appProperties: AppProperties | undefined;
+    // TODO: move this out
     if (mimeType.value !== DriveMimeTypes.FOLDER && fileKind.value) {
       if (fileType.value === AppPropertiesTypes.ASSET) {
-        appProperties = AssetPropertiesFactory(fileKind.value, stripFileExtension(filename));
+        appProperties = AssetPropertiesFactory({
+          type: AppPropertiesTypes.ASSET,
+          kind: fileKind.value,
+          title: stripFileExtension(filename),
+        });
       } else {
         throw new Error('Not implemented');
       }

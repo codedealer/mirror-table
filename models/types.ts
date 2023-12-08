@@ -130,9 +130,13 @@ export interface AssetProperties extends AppProperties {
   type: 'asset'
   kind: AssetPropertiesKind
   title: string
-  showTitle: string
-  preview: string
+  showTitle: boolean
+  preview: Record<string, unknown> // TODO: qualify this
 }
+
+export const isAssetProperties = (obj: unknown): obj is AssetProperties => {
+  return isObject(obj) && 'type' in obj && obj.type === AppPropertiesTypes.ASSET && 'kind' in obj && Object.hasOwn(AssetPropertiesKinds, obj.kind as string);
+};
 
 export interface DriveFileCapabilities {
   canEdit?: boolean
@@ -144,9 +148,17 @@ export interface DriveFileCapabilities {
   canDownload?: boolean
 }
 
-type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' | 'ownedByMe' | 'originalFilename' | 'mimeType' | 'shared' | 'iconLink' | 'imageMediaMetadata' | 'createdTime' | 'modifiedTime' | 'size' | 'fileExtension' | 'properties' | 'appProperties' | 'md5Checksum' | 'version' | 'videoMediaMetadata' | 'thumbnailLink' | 'thumbnailVersion' | 'quotaBytesUsed' | 'parents'> & { capabilities?: DriveFileCapabilities } & { appProperties?: AppProperties };
+type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' | 'ownedByMe' | 'originalFilename' | 'mimeType' | 'shared' | 'iconLink' | 'imageMediaMetadata' | 'createdTime' | 'modifiedTime' | 'size' | 'fileExtension' | 'properties' | 'appProperties' | 'md5Checksum' | 'version' | 'videoMediaMetadata' | 'thumbnailLink' | 'thumbnailVersion' | 'quotaBytesUsed' | 'parents'> & { capabilities?: DriveFileCapabilities };
 
-export type DriveFile = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | 'name' | 'originalFilename' | 'shared' | 'ownedByMe'>> & OptionalDriveFile;
+export type DriveFileRaw = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | 'name' | 'originalFilename' | 'shared' | 'ownedByMe'>> & OptionalDriveFile;
+
+export interface DriveFile extends Omit<DriveFileRaw, 'appProperties'> {
+  appProperties?: AppProperties
+}
+
+export interface DriveAsset extends DriveFile {
+  appProperties: AssetProperties
+}
 
 export interface DriveTreeNode {
   $folded: boolean
@@ -170,7 +182,7 @@ export interface ModalWindowContent {
 export interface ModalWindowContentMarkdown extends ModalWindowContent {
   type: 'markdown'
   data: {
-    meta: DriveFile
+    meta: DriveAsset
     body: string
   }
 }

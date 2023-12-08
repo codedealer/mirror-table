@@ -1,4 +1,4 @@
-import type { AppProperties, DriveFile, DriveInvalidPermissionsError } from '~/models/types';
+import type { DriveFile, DriveFileRaw, DriveInvalidPermissionsError } from '~/models/types';
 
 export const folderExists = async (id: string) => {
   if (!id) {
@@ -100,10 +100,10 @@ export const getFile = async (id: string) => {
     fields: fieldMask,
   });
 
-  return response.result as DriveFile;
+  return response.result as DriveFileRaw;
 };
 
-export const downloadFile = async (id: string) => {
+export const downloadMedia = async (id: string) => {
   const driveStore = useDriveStore();
   const client = await driveStore.getClient();
 
@@ -133,7 +133,7 @@ export const listFiles = async (folderId: string) => {
     orderBy: 'folder, name',
   });
 
-  return response.result.files ? response.result.files as DriveFile[] : [];
+  return response.result.files ? response.result.files as DriveFileRaw[] : [];
 };
 
 export const buildNodes = (files: DriveFile[]) => {
@@ -162,7 +162,7 @@ export const deleteFile = async (id: string, restore: boolean) => {
 
 const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
 
-const generateFileFormData = (file: File, appProperties: AppProperties, parentId = '') => {
+const generateFileFormData = (file: File, appProperties: Record<string, string>, parentId = '') => {
   const metadata: Record<string, any> = {
     name: file.name,
     mimeType: file.type,
@@ -185,10 +185,10 @@ const generateFileFormData = (file: File, appProperties: AppProperties, parentId
   return form;
 };
 
-export const updateFile = async (
+export const updateMedia = async (
   fileId: string,
   file: File,
-  appProperties: AppProperties,
+  appProperties: Record<string, string>,
 ) => {
   if (!fileId) {
     throw new Error('File ID is empty when updating a file');
@@ -216,10 +216,10 @@ export const updateFile = async (
   return response as gapi.client.Response<gapi.client.drive.File>;
 };
 
-export const uploadFile = async (
+export const uploadMedia = async (
   file: File,
   folderId: string,
-  appProperties: AppProperties,
+  appProperties: Record<string, string>,
 ) => {
   if (!folderId) {
     throw new Error('Folder ID is empty when uploading a file');

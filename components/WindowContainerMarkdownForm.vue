@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { useForm } from 'vuestic-ui';
 import type { ModalWindow, ModalWindowContentMarkdown } from '~/models/types';
 import { ModalWindowStatus } from '~/models/types';
-import { updateFile } from '~/utils/driveOps';
 import { nameValidationsRules, stripFileExtension } from '~/utils';
 
 const props = defineProps<{
@@ -35,6 +35,11 @@ const updateFileName = (fileName: string) => {
   }
 };
 
+// TODO: this
+const updateShowTitle = (showTitle: boolean) => {
+
+};
+
 const setDirty = () => {
   if (props.window.status === ModalWindowStatus.LOADING ||
       props.window.status === ModalWindowStatus.DIRTY) {
@@ -44,8 +49,13 @@ const setDirty = () => {
   windowStore.setWindowStatus(props.window, ModalWindowStatus.DIRTY);
 };
 
+const windowForm = ref();
+const { isValid } = useForm(windowForm);
+
 const submit = async () => {
-  if (nameValidationsRules.some(rule => rule(title.value) !== true)) {
+  if (!isValid.value) {
+    const notificationStore = useNotificationStore();
+    notificationStore.error('Please fix the errors in the form');
     return;
   }
 
@@ -58,22 +68,18 @@ const submit = async () => {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.LOADING);
 
     // should be moved to a markdown content store?
+    // TODO: file needs to be sent only if the body has changed
     const file = new File(
       [contentData.value.body],
       contentData.value.meta.name,
       {
-        type: 'text/markdown',
+        type: DriveMimeTypes.MARKDOWN,
       },
     );
 
-    await updateFile(
-      contentData.value.meta.id,
-      file,
-      contentData.value.meta.appProperties,
-    );
+    const driveFileStore = useDriveFileStore();
+    await driveFileStore.saveFile(contentData.value.meta.id, file);
 
-    // update the modified time
-    contentData.value.meta.modifiedTime = (new Date()).toISOString();
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
   } catch (e) {
     const notificationStore = useNotificationStore();
@@ -91,22 +97,39 @@ const submit = async () => {
 <template>
   <div class="markdown-form-container">
     <va-form
+      ref="windowForm"
       tag="form"
       class="vertical-form markdown-form"
       @submit.prevent="submit"
     >
-      <va-input
-        :model-value="title"
-        name="title"
-        label="Title"
-        :min-length="1"
-        :max-length="100"
-        :rules="nameValidationsRules"
-        required
-        :disabled="isLoading"
-        @update:dirty="setDirty"
-        @update:model-value="updateFileName"
-      />
+      <div class="horizontal-control">
+        <va-input
+          :model-value="title"
+          name="title"
+          label="Title"
+          :min-length="1"
+          :max-length="100"
+          :rules="nameValidationsRules"
+          counter
+          required
+          :disabled="isLoading"
+          @update:dirty="setDirty"
+          @update:model-value="updateFileName"
+        />
+
+        <div
+          v-if="contentData.meta.appProperties.kind !== AssetPropertiesKinds.TEXT"
+          class="horizontal-control__item"
+        >
+          <va-checkbox
+            v-model="contentData.meta.appProperties.showTitle"
+            name="show"
+            label="Show title"
+            :disabled="isLoading"
+            @update:dirty="setDirty"
+          />
+        </div>
+      </div>
 
       <va-textarea
         ref="editor"
@@ -114,7 +137,6 @@ const submit = async () => {
         name="content"
         class="markdown-editor"
         placeholder="Enter markdown here"
-
         resize
         :min-rows="5"
         :max-rows="25"
