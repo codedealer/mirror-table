@@ -14,6 +14,10 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   };
 
   const convertToDriveFile = (file: DriveFileRaw) => {
+    const driveFile = file as DriveFile;
+    driveFile.loading = false;
+
+    // convert to DriveAsset if needed
     if (
       file.appProperties &&
       Object.hasOwn(file.appProperties, 'type')
@@ -24,7 +28,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       ) {
         const appProperties = AssetPropertiesFactory(file.appProperties);
         const asset = {
-          ...file,
+          ...driveFile,
           appProperties,
         } as unknown as DriveAsset;
 
@@ -33,7 +37,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
         throw new Error('Not implemented');
       }
     } else {
-      return file as DriveFile;
+      return driveFile;
     }
   };
 

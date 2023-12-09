@@ -135,7 +135,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
   const setRootToParent = async () => {
     const driveFileStore = useDriveFileStore();
     const rootFile = driveFileStore.files[rootNode.value.id];
-    if (!rootNode.value || !rootFile.parents) {
+    if (!rootNode.value || !rootFile?.parents) {
       return false;
     }
 

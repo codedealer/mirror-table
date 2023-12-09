@@ -40,7 +40,7 @@ const undoTrashFolder = () => {
       hover-behavior="opacity"
       class="drive-node__label"
       :hover-opacity="1"
-      :loading="node.loading"
+      :loading="node.loading || file?.loading"
       :disabled="node.disabled || !file"
       preset="plain"
       @click="onClickOrDoubleClick"

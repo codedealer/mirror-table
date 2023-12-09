@@ -18,7 +18,7 @@ const nodeLabel = computed(() => {
 });
 
 const toggleFile = async () => {
-  if (!props.node.data || file.value.trashed) {
+  if (!file.value || file.value.trashed) {
     return;
   }
   const windowStore = useWindowStore();
@@ -80,7 +80,7 @@ const undoTrashFolder = () => {
       hover-behavior="opacity"
       class="drive-node__label"
       :hover-opacity="1"
-      :loading="node.loading"
+      :loading="node.loading || file?.loading"
       :disabled="node.disabled || !file"
       preset="plain"
       @click="toggleFile"

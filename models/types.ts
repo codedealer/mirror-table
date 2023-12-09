@@ -154,6 +154,7 @@ export type DriveFileRaw = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | '
 
 export interface DriveFile extends Omit<DriveFileRaw, 'appProperties'> {
   appProperties?: AppProperties
+  loading: boolean
 }
 
 export interface DriveAsset extends DriveFile {
