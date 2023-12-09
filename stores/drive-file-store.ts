@@ -37,7 +37,6 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     }
   };
 
-  // TODO: instead of passing the object itself we need to pass the id and have clients reference files from the store
   const getFile = async (id: string) => {
     const rawResult = await loadFile(id);
 

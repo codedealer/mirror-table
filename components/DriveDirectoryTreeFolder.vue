@@ -11,6 +11,8 @@ const props = defineProps<{
   tree: Tree
 }>();
 
+const { file, label } = useDriveFileHelper(ref(props.node.id));
+
 const toggleFold = () => {
   const driveTreeStore = useDriveTreeStore();
   driveTreeStore.toggleFold(props.node, props.path);
@@ -39,7 +41,7 @@ const undoTrashFolder = () => {
       class="drive-node__label"
       :hover-opacity="1"
       :loading="node.loading"
-      :disabled="node.disabled"
+      :disabled="node.disabled || !file"
       preset="plain"
       @click="onClickOrDoubleClick"
     >
@@ -53,9 +55,9 @@ const undoTrashFolder = () => {
       </div>
       <div
         class="drive-node__name"
-        :class="node?.data?.trashed ? 'drive-node__name--trashed' : ''"
+        :class="file?.trashed ? 'drive-node__name--trashed' : ''"
       >
-        {{ node.label }}
+        {{ label }}
       </div>
     </va-button>
 
@@ -65,7 +67,7 @@ const undoTrashFolder = () => {
         stick-to-edges
       >
         <va-button
-          v-show="node?.data?.trashed"
+          v-show="file?.trashed"
           preset="plain"
           color="primary-dark"
           size="medium"
@@ -75,7 +77,7 @@ const undoTrashFolder = () => {
       </va-popover>
 
       <DriveDirectoryTreeFolderContextMenu
-        v-show="!node?.data?.trashed"
+        v-show="file && !file.trashed"
         :node="node"
         :path="path"
       />

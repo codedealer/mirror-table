@@ -11,13 +11,19 @@ const props = defineProps<{
   tree: Tree
 }>();
 
+const { file, label } = useDriveFileHelper(ref(props.node.id));
+
+const nodeLabel = computed(() => {
+  return label.value ?? props.node.label;
+});
+
 const toggleFile = async () => {
-  if (!props.node.data || props.node.data.trashed) {
+  if (!props.node.data || file.value.trashed) {
     return;
   }
   const windowStore = useWindowStore();
   // check if file is already open
-  const window = windowStore.windows.find(window => window.id === props.node.data!.id);
+  const window = windowStore.windows.find(window => window.id === props.node.id);
 
   if (window) {
     windowStore.toggle(window);
@@ -25,6 +31,7 @@ const toggleFile = async () => {
   }
 
   // open file
+  // TODO: move it out
   const driveTreeStore = useDriveTreeStore();
   try {
     driveTreeStore.setNodeLoading(props.node, true);
@@ -74,7 +81,7 @@ const undoTrashFolder = () => {
       class="drive-node__label"
       :hover-opacity="1"
       :loading="node.loading"
-      :disabled="node.disabled"
+      :disabled="node.disabled || !file"
       preset="plain"
       @click="toggleFile"
     >
@@ -87,9 +94,9 @@ const undoTrashFolder = () => {
       </div>
       <div
         class="drive-node__name"
-        :class="node?.data?.trashed ? 'drive-node__name--trashed' : ''"
+        :class="file?.trashed ? 'drive-node__name--trashed' : ''"
       >
-        {{ node.label }}
+        {{ nodeLabel }}
       </div>
     </va-button>
 
@@ -99,7 +106,7 @@ const undoTrashFolder = () => {
         stick-to-edges
       >
         <va-button
-          v-show="node?.data?.trashed"
+          v-show="file?.trashed"
           preset="plain"
           color="primary-dark"
           size="medium"
@@ -109,7 +116,7 @@ const undoTrashFolder = () => {
       </va-popover>
 
       <DriveDirectoryTreeFileContextMenu
-        v-show="!node?.data?.trashed"
+        v-show="file && !file.trashed"
         :node="node"
         :path="path"
       />

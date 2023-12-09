@@ -6,9 +6,11 @@ const props = defineProps<{
   path: string[]
 }>();
 
+const { file } = useDriveFileHelper(ref(props.node.id));
+
 const permissions = computed(() => ({
   canDelete: (
-    props.node?.data?.capabilities?.canDelete
+    file.value?.capabilities?.canDelete
   ),
 }));
 

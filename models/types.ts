@@ -162,14 +162,14 @@ export interface DriveAsset extends DriveFile {
 
 export interface DriveTreeNode {
   $folded: boolean
-  id: string
+  id: string // coincides with DriveFile.id
   label: string
   icon?: string
   isFolder: boolean
   loaded: boolean
   loading: boolean
   disabled: boolean
-  data?: DriveFile
+  /* data?: { id: string } */
   children?: DriveTreeNode[]
 }
 

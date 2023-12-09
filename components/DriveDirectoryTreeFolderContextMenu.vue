@@ -11,16 +11,18 @@ const props = defineProps<{
 const tableStore = useTableStore();
 const driveTreeStore = useDriveTreeStore();
 
+const { file } = useDriveFileHelper(ref(props.node.id));
+
 const permissions = computed(() => ({
   canAddChildren: (
     driveTreeStore.isRootFolder
       ? tableStore.permissions.isOwner
-      : props.node?.data?.capabilities?.canAddChildren
+      : file.value?.capabilities?.canAddChildren
   ),
   canDelete: (
     props.header
       ? false
-      : props.node?.data?.capabilities?.canDelete
+      : file.value?.capabilities?.canDelete
   ),
 }));
 
