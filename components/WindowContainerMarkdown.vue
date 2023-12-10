@@ -7,12 +7,14 @@ const props = defineProps<{
   window: ModalWindow
 }>();
 
-const modalContentData = computed(() =>
-  (props.window.content as ModalWindowContentMarkdown).data,
+const windowContent = computed(() =>
+  props.window.content as ModalWindowContentMarkdown,
 );
 
+const { file } = useDriveFileHelper(ref(props.window.id));
+
 const permissions = computed(() => ({
-  canEdit: modalContentData.value.meta.capabilities?.canEdit,
+  canEdit: file.value?.capabilities?.canEdit,
 }));
 
 const toggleEdit = () => {
@@ -38,12 +40,15 @@ const toggleEdit = () => {
 
       <va-spacer />
 
-      <WindowContainerMarkdownMeta :content="window.content" />
+      <WindowContainerMarkdownMeta
+        :content="windowContent"
+        :file="file"
+      />
     </div>
     <div class="window-container-markdown__content mb">
       <WindowContainerMarkdownRenderer
         v-show="!window.content.editing"
-        :source="modalContentData.body"
+        :source="windowContent.data"
       />
 
       <WindowContainerMarkdownForm

@@ -1,24 +1,25 @@
 <script setup lang="ts">
-import type { ModalWindowContentMarkdown } from '~/models/types';
+import type { DriveFile, ModalWindowContentMarkdown } from '~/models/types';
 
 const props = defineProps<{
   content: ModalWindowContentMarkdown
+  file?: DriveFile
 }>();
 
 const createdDate = computed(() => {
-  if (!props.content.data.meta.createdTime) {
+  if (!props.file?.createdTime) {
     return '';
   }
 
-  return new Date(props.content.data.meta.createdTime).toLocaleString();
+  return new Date(props.file.createdTime).toLocaleString();
 });
 
 const modifiedDate = computed(() => {
-  if (!props.content.data.meta.modifiedTime) {
+  if (!props.file?.modifiedTime) {
     return '';
   }
 
-  return new Date(props.content.data.meta.modifiedTime).toLocaleString();
+  return new Date(props.file.modifiedTime).toLocaleString();
 });
 </script>
 
@@ -41,7 +42,7 @@ const modifiedDate = computed(() => {
           Filename:
         </span>
         <span class="window-container-markdown__meta__item__value">
-          {{ content.data.meta.name }}
+          {{ file?.name }}
         </span>
       </div>
       <div class="window-container-markdown__meta__item">

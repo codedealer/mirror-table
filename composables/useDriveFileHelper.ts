@@ -1,19 +1,31 @@
-import type { MaybeRef } from 'vue';
+import type { ComputedRef, MaybeRef } from 'vue';
+import type { AppPropertiesType, DriveAsset, DriveFile } from '~/models/types';
 
-export const useDriveFileHelper = (id: MaybeRef<string>) => {
+export const useDriveFileHelper = <T extends DriveAsset | DriveFile>
+  (id: MaybeRef<string>, typeGuard?: AppPropertiesType): {
+    file: ComputedRef<T | undefined>
+    label: ComputedRef<string>
+  } => {
   const idRef = ref(id);
 
   const driveFileStore = useDriveFileStore();
 
   const file = computed(() => {
     if (!idRef.value) {
-      return null;
+      return;
     }
-    return driveFileStore.files[idRef.value];
-  });
+    const maybeFile = driveFileStore.files[idRef.value];
+    if (!maybeFile) {
+      return;
+    }
 
-  const isAsset = computed(() => {
-    return file.value?.appProperties?.type === AppPropertiesTypes.ASSET;
+    if (!typeGuard) {
+      return maybeFile as T;
+    }
+
+    if (maybeFile.appProperties?.type === typeGuard) {
+      return maybeFile as T;
+    }
   });
 
   const label = computed(() => {
@@ -21,16 +33,15 @@ export const useDriveFileHelper = (id: MaybeRef<string>) => {
       return '[no data]';
     }
 
-    if (file.value.name && file.value.fileExtension) {
-      return stripFileExtension(file.value.name);
+    if (file.value?.name && file.value?.fileExtension) {
+      return stripFileExtension(file.value?.name);
     }
 
-    return file.value.name ?? '';
+    return file.value?.name ?? '';
   });
 
   return {
     file,
-    isAsset,
     label,
   };
 };

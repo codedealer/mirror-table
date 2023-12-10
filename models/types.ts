@@ -182,10 +182,7 @@ export interface ModalWindowContent {
 
 export interface ModalWindowContentMarkdown extends ModalWindowContent {
   type: 'markdown'
-  data: {
-    meta: DriveAsset
-    body: string
-  }
+  data: string // markdown content
 }
 
 export const ModalWindowStatus = {
@@ -203,7 +200,6 @@ export interface ModalWindow {
   active: boolean
   status: typeof ModalWindowStatus[keyof typeof ModalWindowStatus]
   content: ModalWindowContent
-  node?: DriveTreeNode
 }
 
 export interface SelectOption {

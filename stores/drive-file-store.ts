@@ -1,5 +1,11 @@
 import type { AppProperties, DriveAsset, DriveFile, DriveFileRaw } from '~/models/types';
-import { getFile as loadFile, updateMedia, updateMetadata, uploadMedia } from '~/utils/driveOps';
+import {
+  getFile as loadFile,
+  downloadMedia as loadMedia,
+  updateMedia,
+  updateMetadata,
+  uploadMedia,
+} from '~/utils/driveOps';
 import { serializeAppProperties } from '~/utils/appPropertiesSerializer';
 
 export const useDriveFileStore = defineStore('drive-file', () => {
@@ -97,14 +103,38 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     const propertiesObject = serializeAppProperties(file.appProperties);
 
     // TODO: update file in array after the request is done
-    if (blob) {
-      await updateMedia(fileId, blob, propertiesObject);
-    } else {
-      await updateMetadata(fileId, propertiesObject as Partial<DriveFileRaw>);
+    try {
+      file.loading = true;
+
+      if (blob) {
+        await updateMedia(fileId, blob, propertiesObject);
+      } else {
+        await updateMetadata(fileId, propertiesObject as Partial<DriveFileRaw>);
+      }
+    } finally {
+      file.loading = false;
     }
 
     // WARNING: each update invalidates the file object in _files (checksum, version etc) so we can't rely on it for persistent caching purposes
     file.modifiedTime = new Date().toISOString();
+  };
+
+  const downloadMedia = async (fileId: string) => {
+    const file = _files.value[fileId];
+    if (!file) {
+      throw new Error('File not found');
+    }
+    if (file.mimeType === DriveMimeTypes.FOLDER) {
+      throw new Error('Cannot download folder');
+    }
+
+    try {
+      file.loading = true;
+
+      return await loadMedia(fileId);
+    } finally {
+      file.loading = false;
+    }
   };
 
   return {
@@ -115,6 +145,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     createFile,
     removeFile,
     saveFile,
+    downloadMedia,
   };
 });
 

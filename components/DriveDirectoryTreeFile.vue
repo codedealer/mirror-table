@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { Tree } from 'he-tree-vue';
 import type { DriveTreeNode, ModalWindowContentMarkdown } from '~/models/types';
-import { downloadMedia } from '~/utils/driveOps';
 import { WindowFactory } from '~/models/Window';
 
 const props = defineProps<{
@@ -18,7 +17,7 @@ const nodeLabel = computed(() => {
 });
 
 const toggleFile = async () => {
-  if (!file.value || file.value.trashed) {
+  if (!file.value || file.value?.trashed) {
     return;
   }
   const windowStore = useWindowStore();
@@ -31,39 +30,29 @@ const toggleFile = async () => {
   }
 
   // open file
-  // TODO: move it out
-  const driveTreeStore = useDriveTreeStore();
   try {
-    driveTreeStore.setNodeLoading(props.node, true);
-
-    const file = await downloadMedia(props.node.data.id);
+    const driveFileStore = useDriveFileStore();
+    const blob = await driveFileStore.downloadMedia(props.node.id);
 
     // assuming the file is a markdown file for now
     // create a new window
     const windowContent: ModalWindowContentMarkdown = {
       type: 'markdown',
       editing: false,
-      data: {
-        meta: props.node.data,
-        body: file,
-      },
+      data: blob,
     };
 
     const window = WindowFactory(
-      props.node.data.id,
-      stripFileExtension(props.node.data.name),
+      props.node.id,
+      nodeLabel.value,
       windowContent,
     );
-
-    window.node = props.node;
 
     windowStore.add(window);
   } catch (e) {
     console.error(e);
     const notificationStore = useNotificationStore();
     notificationStore.error(extractErrorMessage(e));
-  } finally {
-    driveTreeStore.setNodeLoading(props.node, false);
   }
 };
 

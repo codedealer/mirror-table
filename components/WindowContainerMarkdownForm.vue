@@ -1,51 +1,56 @@
 <script setup lang="ts">
 import { useForm } from 'vuestic-ui';
-import type { ModalWindow, ModalWindowContentMarkdown } from '~/models/types';
+import type { DriveAsset, ModalWindow, ModalWindowContentMarkdown } from '~/models/types';
 import { ModalWindowStatus } from '~/models/types';
-import { nameValidationsRules, stripFileExtension } from '~/utils';
+import { nameValidationsRules } from '~/utils';
 
 const props = defineProps<{
   window: ModalWindow
 }>();
 
-const contentData = computed(() =>
-  (props.window.content as ModalWindowContentMarkdown).data,
+const windowContent = computed(() =>
+  props.window.content as ModalWindowContentMarkdown,
 );
 
-const isLoading = computed(() => props.window.status === ModalWindowStatus.LOADING);
-const title = computed(() => {
-  return stripFileExtension(contentData.value.meta.name);
-});
+const { file, label } = useDriveFileHelper<DriveAsset>(
+  ref(props.window.id),
+  AppPropertiesTypes.ASSET,
+);
+
+const isLoading = computed(() => (
+  props.window.status === ModalWindowStatus.LOADING ||
+        file.value?.loading
+));
 const body = ref('');
 
-onMounted(() => {
-  body.value = contentData.value.body;
+watchEffect(() => {
+  body.value = windowContent.value.data;
 });
 
 const windowStore = useWindowStore();
 
 const updateFileName = (fileName: string) => {
-  let newName = fileName;
-  if (contentData.value.meta.fileExtension) {
-    newName += `.${contentData.value.meta.fileExtension}`;
+  if (!file.value) {
+    return;
   }
-  contentData.value.meta.name = newName;
+
+  let newName = fileName;
+  if (file.value?.fileExtension) {
+    newName += `.${file.value.fileExtension}`;
+  }
+
+  file.value.name = newName;
 
   // update properties title
-  contentData.value.meta.appProperties.title = fileName;
-
-  // update window title
-  windowStore.setWindowTitle(props.window, fileName);
-
-  // update node label
-  if (props.window.node) {
-    const driveTreeStore = useDriveTreeStore();
-    driveTreeStore.setNodeLabel(props.window.node, fileName);
-  }
+  file.value.appProperties.title = fileName;
 };
 
+watchEffect(() => {
+  windowStore.setWindowTitle(props.window, label.value);
+});
+
 const setDirty = () => {
-  if (props.window.status === ModalWindowStatus.LOADING ||
+  if (isLoading.value ||
       props.window.status === ModalWindowStatus.DIRTY) {
     return;
   }
@@ -57,8 +62,11 @@ const windowForm = ref();
 const { validate } = useForm(windowForm);
 
 const submit = async () => {
-  if (contentData.value.meta.appProperties.title === '') {
-    contentData.value.meta.appProperties.title = title.value;
+  if (!file.value || isLoading.value) {
+    return;
+  }
+  if (file.value.appProperties.title === '') {
+    file.value.appProperties.title = label.value;
     await nextTick();
   }
   if (!validate()) {
@@ -67,21 +75,16 @@ const submit = async () => {
     return;
   }
 
-  const driveTreeStore = useDriveTreeStore();
-  if (props.window.node) {
-    driveTreeStore.setNodeLoading(props.window.node, true);
-  }
-
   try {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.LOADING);
 
     // file needs to be sent only if the body has changed
-    let file: File | undefined;
+    let blob: File | undefined;
     // check if the editor is dirty
-    if (body.value !== contentData.value.body) {
-      file = new File(
+    if (body.value !== windowContent.value.data) {
+      blob = new File(
         [body.value],
-        contentData.value.meta.name,
+        file.value.name,
         {
           type: DriveMimeTypes.MARKDOWN,
         },
@@ -89,9 +92,9 @@ const submit = async () => {
     }
 
     const driveFileStore = useDriveFileStore();
-    await driveFileStore.saveFile(contentData.value.meta.id, file);
-    if (file) {
-      contentData.value.body = body.value;
+    await driveFileStore.saveFile(file.value.id, blob);
+    if (blob) {
+      windowContent.value.data = body.value;
     }
 
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
@@ -101,10 +104,6 @@ const submit = async () => {
     notificationStore.error(extractErrorMessage(e));
 
     windowStore.setWindowStatus(props.window, ModalWindowStatus.ERROR);
-  } finally {
-    if (props.window.node) {
-      driveTreeStore.setNodeLoading(props.window.node, false);
-    }
   }
 };
 </script>
@@ -119,7 +118,7 @@ const submit = async () => {
     >
       <div class="horizontal-control">
         <va-input
-          :model-value="title"
+          :model-value="label"
           name="title"
           label="Title"
           :min-length="1"
@@ -133,11 +132,12 @@ const submit = async () => {
         />
 
         <div
-          v-if="contentData.meta.appProperties.kind !== AssetPropertiesKinds.TEXT"
+          v-if="file?.appProperties?.kind !== AssetPropertiesKinds.TEXT"
           class="horizontal-control"
         >
           <va-checkbox
-            v-model="contentData.meta.appProperties.showTitle"
+            v-if="file"
+            v-model="file.appProperties.showTitle"
             name="show"
             label="Show title"
             color="primary-dark"
@@ -146,8 +146,9 @@ const submit = async () => {
           />
 
           <va-input
-            v-show="contentData.meta.appProperties.showTitle"
-            v-model="contentData.meta.appProperties.title"
+            v-if="file"
+            v-show="file.appProperties.showTitle"
+            v-model="file.appProperties.title"
             name="display-title"
             label="Display Title"
             :min-length="1"
