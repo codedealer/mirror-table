@@ -14,7 +14,13 @@ export interface UniversalAuthClientParams {
   scope?: string
 }
 
-export type PickerViewTemplate = 'all' | 'images' | 'media';
+export const PickerViewTemplates = {
+  ALL: 'all',
+  IMAGES: 'images',
+  MEDIA: 'media',
+} as const;
+
+export type PickerViewTemplate = typeof PickerViewTemplates[keyof typeof PickerViewTemplates];
 
 export interface BuildPickerOptions {
   parentId: string

@@ -180,8 +180,11 @@ const submit = async () => {
           :file-is-loading="imageLoading"
           width="200"
           height="200"
+          allow-upload
           removable
           @remove="imageFileId = ''"
+          @error="console.error"
+          @upload="imageFileId = $event"
         />
       </div>
 
@@ -201,7 +204,7 @@ const submit = async () => {
         <va-button
           preset="outlined"
           type="submit"
-          :disabled="window.status === ModalWindowStatus.SYNCED"
+          :disabled="!file || window.status === ModalWindowStatus.SYNCED"
           :loading="isLoading"
         >
           Save

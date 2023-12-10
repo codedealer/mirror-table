@@ -2,6 +2,7 @@
 import { useCssVar } from '@vueuse/core';
 import type { DriveFile } from '~/models/types';
 import { aspectRatio } from '~/utils';
+import { PickerViewTemplates } from '~/models/types';
 
 interface DriveThumbnailProps {
   file?: DriveFile | null
@@ -12,12 +13,14 @@ interface DriveThumbnailProps {
   width: string
   height: string
   removable?: boolean
+  allowUpload?: boolean
   fit?: 'auto' | 'cover' | 'contain'
 }
 
 interface DriveThumbnailEmits {
   (event: 'error', e: Event): void
   (event: 'remove'): void
+  (event: 'upload', id: string): void
 }
 
 const props = withDefaults(defineProps<DriveThumbnailProps>(), {
@@ -27,6 +30,7 @@ const props = withDefaults(defineProps<DriveThumbnailProps>(), {
   src: '',
   title: '',
   removable: false,
+  allowUpload: false,
   fit: 'auto',
 });
 
@@ -117,6 +121,33 @@ onMounted(() => {
     heightVar.value = props.height;
   });
 });
+
+const uploadImage = async () => {
+  const { buildPicker } = usePicker();
+  const userStore = useUserStore();
+
+  try {
+    await buildPicker({
+      parentId: userStore.profile!.settings.driveFolderId,
+      template: PickerViewTemplates.IMAGES,
+      allowUpload: true,
+      callback: (result) => {
+        console.log('picker callback: ', result);
+        if (
+          result.action === google.picker.Action.PICKED &&
+            result.docs.length > 0
+        ) {
+          const pickedFile = result.docs[0];
+
+          emits('upload', pickedFile.id);
+        }
+      },
+    });
+  } catch (e) {
+    const notificationStore = useNotificationStore();
+    notificationStore.error(extractErrorMessage(e));
+  }
+};
 </script>
 
 <template>
@@ -180,6 +211,19 @@ onMounted(() => {
         />
         <small>{{ fileErrorMessage }}</small>
       </div>
+      <template v-if="allowUpload && !fileIsLoading">
+        <va-button
+          icon="cloud_upload"
+          preset="primary"
+          color="primary"
+          class="drive-thumbnail__upload-button"
+          size="large"
+          title="Upload image"
+          @click="uploadImage"
+        >
+          Upload image
+        </va-button>
+      </template>
     </div>
   </div>
 </template>
@@ -231,11 +275,17 @@ onMounted(() => {
     filter: saturate(.2);
     width: 100%;
     height: 100%;
+    grid-column: 1;
+    grid-row: 1;
   }
   small {
     opacity: .6;
     font-size: 0.8rem;
     text-transform: lowercase;
   }
+}
+.drive-thumbnail__upload-button {
+  grid-column: 1;
+  grid-row: 1;
 }
 </style>
