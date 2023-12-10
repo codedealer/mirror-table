@@ -1,4 +1,4 @@
-import type { AppProperties, DriveAsset, DriveFile, DriveFileRaw } from '~/models/types';
+import type { AppProperties, DriveAsset, DriveFile, DriveFileRaw, DriveFileUpdateReturnType } from '~/models/types';
 import {
   getFile as loadFile,
   downloadMedia as loadMedia,
@@ -7,6 +7,7 @@ import {
   uploadMedia,
 } from '~/utils/driveOps';
 import { serializeAppProperties } from '~/utils/appPropertiesSerializer';
+import { updateFieldMask } from '~/models/types';
 
 export const useDriveFileStore = defineStore('drive-file', () => {
   const _files = ref<Record<string, DriveFile>>({});
@@ -48,7 +49,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   };
 
   const getFile = async (id: string) => {
-    const rawResult = await loadFile(id);
+    const rawResult = await loadFile<DriveFileRaw>(id);
 
     const file = convertToDriveFile(rawResult);
     setFile(file);
@@ -102,21 +103,24 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
     const propertiesObject = serializeAppProperties(file.appProperties);
 
-    // TODO: update file in array after the request is done
     try {
       file.loading = true;
 
+      let updatedMetadata: DriveFileUpdateReturnType;
       if (blob) {
+        // in this case another request is needed to get the new metadata
         await updateMedia(fileId, blob, propertiesObject);
+
+        updatedMetadata = await loadFile<DriveFileUpdateReturnType>(fileId, updateFieldMask);
       } else {
-        await updateMetadata(fileId, propertiesObject as Partial<DriveFileRaw>);
+        updatedMetadata = await updateMetadata(fileId, propertiesObject as Partial<DriveFileRaw>);
       }
+
+      // update file object with new metadata
+      Object.assign(file, updatedMetadata);
     } finally {
       file.loading = false;
     }
-
-    // WARNING: each update invalidates the file object in _files (checksum, version etc) so we can't rely on it for persistent caching purposes
-    file.modifiedTime = new Date().toISOString();
   };
 
   const downloadMedia = async (fileId: string) => {

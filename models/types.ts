@@ -106,6 +106,10 @@ export interface AccessTokenReturnType {
 
 export const fieldMask = 'id, trashed, name, ownedByMe, originalFilename, mimeType, shared, iconLink, imageMediaMetadata, createdTime, modifiedTime, fileExtension, properties, appProperties, md5Checksum, version, videoMediaMetadata, thumbnailLink, thumbnailVersion, size, quotaBytesUsed, parents, capabilities/canEdit, capabilities/canCopy, capabilities/canDelete, capabilities/canListChildren, capabilities/canAddChildren, capabilities/canShare, capabilities/canDownload' as const;
 
+export const updateFieldMask = 'id, version, md5Checksum, modifiedTime, size, quotaBytesUsed' as const;
+
+export type DriveFileUpdateReturnType = Required<Pick<gapi.client.drive.File, 'id' | 'version' | 'md5Checksum' | 'modifiedTime' | 'size' | 'quotaBytesUsed'>>;
+
 export const AppPropertiesTypes = {
   ASSET: 'asset',
   DEPENDENCY: 'dependency',

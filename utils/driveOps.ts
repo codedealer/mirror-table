@@ -1,4 +1,5 @@
-import type { DriveFile, DriveFileRaw, DriveInvalidPermissionsError } from '~/models/types';
+import type { DriveFile, DriveFileRaw, DriveFileUpdateReturnType, DriveInvalidPermissionsError } from '~/models/types';
+import { updateFieldMask } from '~/models/types';
 
 export const folderExists = async (id: string) => {
   if (!id) {
@@ -87,7 +88,7 @@ export const shareFolder = async (id: string) => {
   });
 };
 
-export const getFile = async (id: string) => {
+export const getFile = async <T extends gapi.client.drive.File>(id: string, mask: string = fieldMask) => {
   const driveStore = useDriveStore();
   const client = await driveStore.getClient();
 
@@ -97,10 +98,10 @@ export const getFile = async (id: string) => {
 
   const response = await client.drive.files.get({
     fileId: id,
-    fields: fieldMask,
+    fields: mask,
   });
 
-  return response.result as DriveFileRaw;
+  return response.result as T;
 };
 
 export const downloadMedia = async (id: string) => {
@@ -170,12 +171,11 @@ export const updateMetadata = async (id: string, metadata: Partial<DriveFileRaw>
 
   const response = await client.drive.files.update({
     fileId: id,
-    fields: 'id, version, md5Checksum, modifiedTime, size, quotaBytesUsed',
+    fields: updateFieldMask,
     resource: metadata,
   });
 
-  console.log(response);
-  return response.result;
+  return response.result as DriveFileUpdateReturnType;
 };
 
 const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
@@ -223,16 +223,13 @@ export const updateMedia = async (
 
   const authInfo = await googleStore.client.requestToken();
 
-  const response = await $fetch(updateUrl.toString(), {
+  void await $fetch(updateUrl.toString(), {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${authInfo.accessToken}`,
     },
     body: form,
   });
-
-  console.log(response);
-  return response as gapi.client.Response<gapi.client.drive.File>;
 };
 
 export const uploadMedia = async (
@@ -253,13 +250,11 @@ export const uploadMedia = async (
 
   const authInfo = await googleStore.client.requestToken();
 
-  const response = await $fetch(uploadUrl, {
+  void await $fetch(uploadUrl, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${authInfo.accessToken}`,
     },
     body: form,
   });
-
-  return response as gapi.client.Response<gapi.client.drive.File>;
 };
