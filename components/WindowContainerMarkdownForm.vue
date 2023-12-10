@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useForm } from 'vuestic-ui';
-import type { DriveAsset, ModalWindow, ModalWindowContentMarkdown } from '~/models/types';
+import type { DriveAsset, DriveImage, ModalWindow, ModalWindowContentMarkdown } from '~/models/types';
 import { ModalWindowStatus } from '~/models/types';
 import { nameValidationsRules } from '~/utils';
 
@@ -12,15 +12,24 @@ const windowContent = computed(() =>
   props.window.content as ModalWindowContentMarkdown,
 );
 
-const { file, label } = useDriveFileHelper<DriveAsset>(
+const imageFileId = ref('');
+const { file: imageFile, isLoading: imageLoading, error: imageError } = useDriveFile<DriveImage>(imageFileId, {
+  activelyLoad: true,
+});
+
+const { file, label } = useDriveFile<DriveAsset>(
   ref(props.window.id),
-  AppPropertiesTypes.ASSET,
+  {
+    appPropertiesType: AppPropertiesTypes.ASSET,
+  },
 );
 
 const isLoading = computed(() => (
   props.window.status === ModalWindowStatus.LOADING ||
-        file.value?.loading
+  file.value?.loading ||
+  imageLoading.value
 ));
+
 const body = ref('');
 
 watchEffect(() => {
@@ -159,6 +168,21 @@ const submit = async () => {
             @update:dirty="setDirty"
           />
         </div>
+      </div>
+
+      <div
+        v-if="file?.appProperties?.kind !== AssetPropertiesKinds.TEXT"
+        class="vertical-form__image"
+      >
+        <DriveThumbnail
+          :file="imageFile"
+          :error="imageError"
+          :file-is-loading="imageLoading"
+          width="200"
+          height="200"
+          removable
+          @remove="imageFileId = ''"
+        />
       </div>
 
       <va-textarea

@@ -7,7 +7,7 @@ export const useFirestoreTable = () => {
 
   const create = async (
     title: string,
-    thumbnail: DriveFile | null,
+    thumbnail?: DriveFile,
   ) => {
     const userStore = useUserStore();
     if (!userStore.isAuthenticated || !userStore.user || !userStore.user.email) {
@@ -47,7 +47,7 @@ export const useFirestoreTable = () => {
         email: userStore.user.email,
       },
       role: 'owner',
-      thumbnail,
+      thumbnail: thumbnail ?? null,
       type: 'private',
       slug: idToSlug(tableRef.id),
       deleted: false,

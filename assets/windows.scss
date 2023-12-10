@@ -94,7 +94,7 @@
   --window-max-width: 80ch;
   min-width: var(--window-min-width);
   max-width: min(var(--window-max-width), calc(100vw - 2 * var(--window-container-padding)));
-  height: clamp(var(--window-min-height), 50dvh, 100%);
+  min-height: var(--window-min-height);
   max-height: 80dvh;
   display: flex;
   flex-direction: column;
@@ -190,6 +190,15 @@
   flex-direction: column;
   gap: 0.5rem;
   flex: 1;
+
+  .vertical-form__actions {
+    width: 100%;
+    position: sticky;
+    bottom: 0;
+    background-color: var(--window-container-background);
+    justify-content: end;
+    padding: 0.5rem;
+  }
 }
 
 .window-container-markdown-renderer {
@@ -197,8 +206,13 @@
 }
 
 .markdown-editor {
+  --min-editor-height: 150px;
   width: 100%;
   min-width: calc(80ch - 4 * (var(--window-container-padding) + 1px));
-  min-height: 150px;
+  min-height: var(--min-editor-height);
   flex-grow: 1;
+
+  textarea {
+    min-height: var(--min-editor-height);
+  }
 }

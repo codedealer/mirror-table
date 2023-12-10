@@ -4,7 +4,9 @@ import { extractErrorMessage } from '~/utils/extractErrorMessage';
 const showModal = ref(false);
 const title = ref('');
 const fileId = ref('');
-const { file, error, isLoading } = useDriveFile(fileId);
+const { file, error, isLoading } = useDriveFile(fileId, {
+  activelyLoad: true,
+});
 const isBusy = ref(false);
 
 const cancel = () => {

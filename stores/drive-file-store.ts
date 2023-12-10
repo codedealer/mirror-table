@@ -48,6 +48,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     }
   };
 
+  // TODO: this can be triggered from multiple places, so we need to
+  //       make sure we don't load the same file multiple times
   const getFile = async (id: string) => {
     const rawResult = await loadFile<DriveFileRaw>(id);
 

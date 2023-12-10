@@ -165,6 +165,8 @@ export interface DriveAsset extends DriveFile {
   appProperties: AssetProperties
 }
 
+export type DriveImage = DriveFile & Required<Pick<gapi.client.drive.File, 'imageMediaMetadata'>>;
+
 export interface DriveTreeNode {
   $folded: boolean
   id: string // coincides with DriveFile.id

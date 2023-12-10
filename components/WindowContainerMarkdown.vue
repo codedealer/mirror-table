@@ -11,7 +11,7 @@ const windowContent = computed(() =>
   props.window.content as ModalWindowContentMarkdown,
 );
 
-const { file } = useDriveFileHelper(ref(props.window.id));
+const { file } = useDriveFile(ref(props.window.id));
 
 const permissions = computed(() => ({
   canEdit: file.value?.capabilities?.canEdit,
@@ -51,10 +51,12 @@ const toggleEdit = () => {
         :source="windowContent.data"
       />
 
-      <WindowContainerMarkdownForm
-        v-show="window.content.editing"
-        :window="window"
-      />
+      <va-scroll-container vertical>
+        <WindowContainerMarkdownForm
+          v-show="window.content.editing"
+          :window="window"
+        />
+      </va-scroll-container>
     </div>
   </div>
 </template>

@@ -11,7 +11,7 @@ const props = defineProps<{
   tree: Tree
 }>();
 
-const { file, label } = useDriveFileHelper(ref(props.node.id));
+const { file, label } = useDriveFile(ref(props.node.id));
 
 const toggleFold = () => {
   const driveTreeStore = useDriveTreeStore();
