@@ -1,5 +1,6 @@
 import type { AssetProperties, AssetPropertiesKind, SelectOption } from '~/models/types';
 import { AppPropertiesTypes } from '~/models/types';
+import { PreviewPropertiesFactory, serializePreviewProperties } from '~/models/PreviewProprerties';
 
 export const generateSelectOptions = (): SelectOption[] => {
   return [
@@ -27,30 +28,26 @@ export const AssetPropertiesFactory = (obj: Record<string, string>): AssetProper
     throw new Error('Invalid object');
   }
 
-  let previewObject: Record<string, unknown> = {};
-  if (Object.hasOwn(obj, 'preview') && obj.preview) {
-    try {
-      previewObject = JSON.parse(obj.preview) as unknown as Record<string, unknown>;
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  return {
+  const assetProperties: AssetProperties = {
     type: AppPropertiesTypes.ASSET,
     kind: obj.kind as AssetPropertiesKind,
     title: obj.title ?? '',
     showTitle: !!obj.showTitle,
-    preview: previewObject,
   };
+
+  if (obj.preview) {
+    assetProperties.preview = PreviewPropertiesFactory(obj.preview);
+  }
+
+  return assetProperties;
 };
 
-export const plainObjFromAssetProperties = (assetProperties: AssetProperties): Record<string, string> => {
+export const plainObjFromAssetProperties = (assetProperties: AssetProperties): Record<string, string | null> => {
   return {
     type: AppPropertiesTypes.ASSET,
     kind: assetProperties.kind,
     title: assetProperties.title,
     showTitle: assetProperties.showTitle ? 'true' : '',
-    preview: JSON.stringify(assetProperties.preview),
+    preview: serializePreviewProperties(assetProperties.preview),
   };
 };

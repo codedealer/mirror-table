@@ -3,6 +3,7 @@ import { useForm } from 'vuestic-ui';
 import type { DriveAsset, DriveImage, ModalWindow, ModalWindowContentMarkdown } from '~/models/types';
 import { ModalWindowStatus } from '~/models/types';
 import { nameValidationsRules } from '~/utils';
+import { PreviewPropertiesFactory } from '~/models/PreviewProprerties';
 
 const props = defineProps<{
   window: ModalWindow
@@ -30,8 +31,23 @@ const isLoading = computed(() => (
   imageLoading.value
 ));
 
+// update the image id when the file changes
+watchEffect(() => {
+  if (!file.value) {
+    return;
+  }
+
+  if (
+    file.value.appProperties.kind !== AssetPropertiesKinds.TEXT &&
+    file.value.appProperties.preview
+  ) {
+    imageFileId.value = file.value.appProperties.preview.id;
+  }
+});
+
 const body = ref('');
 
+// update the editor when the media is downloaded
 watchEffect(() => {
   body.value = windowContent.value.data;
 });
@@ -59,19 +75,53 @@ watchEffect(() => {
 });
 
 const setDirty = () => {
-  if (isLoading.value ||
-      props.window.status === ModalWindowStatus.DIRTY) {
+  if (
+    isLoading.value ||
+    props.window.status === ModalWindowStatus.DIRTY
+  ) {
     return;
   }
 
   windowStore.setWindowStatus(props.window, ModalWindowStatus.DIRTY);
 };
 
+const onImageUpdate = (fileId: string = '') => {
+  imageFileId.value = fileId;
+  setDirty();
+};
+
 const windowForm = ref();
 const { validate } = useForm(windowForm);
 
+const updatePreviewProperties = () => {
+  if (!file.value) {
+    return;
+  }
+
+  // check if the image is dirty
+  if (
+    (!imageFileId.value && !file.value.appProperties.preview) ||
+    (imageFileId.value === file.value.appProperties.preview?.id)
+  ) {
+    return;
+  }
+
+  if (!imageFile.value) {
+    // remove the existing preview
+    file.value.appProperties.preview = null;
+    return;
+  }
+
+  // set the new preview
+  file.value.appProperties.preview = PreviewPropertiesFactory({
+    id: imageFile.value.id,
+    nativeWidth: imageFile.value.imageMediaMetadata.width,
+    nativeHeight: imageFile.value.imageMediaMetadata.height,
+  });
+};
+
 const submit = async () => {
-  if (!file.value || isLoading.value) {
+  if (!file.value || isLoading.value || imageLoading.value) {
     return;
   }
   if (file.value.appProperties.title === '') {
@@ -86,6 +136,11 @@ const submit = async () => {
 
   try {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.LOADING);
+
+    // save image if available
+    if (file.value.appProperties.kind !== AssetPropertiesKinds.TEXT) {
+      updatePreviewProperties();
+    }
 
     // file needs to be sent only if the body has changed
     let blob: File | undefined;
@@ -183,9 +238,9 @@ const submit = async () => {
           height="200"
           :allow-upload="!!file"
           removable
-          @remove="imageFileId = ''"
+          @remove="onImageUpdate"
+          @upload="onImageUpdate"
           @error="console.error"
-          @upload="imageFileId = $event"
         />
       </div>
 

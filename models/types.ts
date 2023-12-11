@@ -137,12 +137,21 @@ export const AssetPropertiesKinds = {
 
 export type AssetPropertiesKind = typeof AssetPropertiesKinds[keyof typeof AssetPropertiesKinds];
 
+export interface PreviewProperties {
+  id: string // drive file id of an image
+  nativeWidth: number
+  nativeHeight: number
+  rotation?: number
+  width?: number
+  height?: number
+}
+
 export interface AssetProperties extends AppProperties {
   type: 'asset'
   kind: AssetPropertiesKind
   title: string
   showTitle: boolean
-  preview: Record<string, unknown> // TODO: qualify this
+  preview?: PreviewProperties | null // null is for the api to remove the property
 }
 
 export const isAssetProperties = (obj: unknown): obj is AssetProperties => {
