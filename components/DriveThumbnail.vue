@@ -42,6 +42,8 @@ const fileError = computed(() => {
   return props.error ?? canDownloadError.value ?? isImageError.value;
 });
 
+const containerAspectRatio = computed(() => aspectRatio(props.width, props.height));
+
 const objectFit = computed(() => {
   if (props.fit === 'auto') {
     if (!props.file || !props.file.imageMediaMetadata) {
@@ -52,14 +54,10 @@ const objectFit = computed(() => {
       props.file.imageMediaMetadata.width,
       props.file.imageMediaMetadata.height,
     );
-    const containerAspectRatio = aspectRatio(
-      props.width,
-      props.height,
-    );
 
     if (
-      (imageAspectRatio > 1 && containerAspectRatio > 1) ||
-      (imageAspectRatio < 1 && containerAspectRatio < 1)
+      (imageAspectRatio > 1 && containerAspectRatio.value > 1) ||
+      (imageAspectRatio < 1 && containerAspectRatio.value < 1)
     ) {
       return 'cover';
     }
@@ -162,7 +160,7 @@ const uploadImage = async () => {
     >
       <va-image
         :src="imageSrc"
-        :ratio="width / height"
+        :ratio="containerAspectRatio"
         :fit="objectFit"
         @error="e => emits('error', e)"
       >
