@@ -1,4 +1,5 @@
 import type { PreviewProperties } from '~/models/types';
+import { validatePayloadSize } from '~/utils/appPropertiesSerializer';
 
 export const PreviewPropertiesFactory = (
   objOrString: Partial<PreviewProperties> | string,
@@ -6,7 +7,19 @@ export const PreviewPropertiesFactory = (
   let obj: Partial<PreviewProperties>;
   if (typeof objOrString === 'string') {
     try {
-      obj = JSON.parse(objOrString) as Partial<PreviewProperties>;
+      const deserializedObj = JSON.parse(objOrString) as Record<string, unknown>;
+
+      // take values of the keys in the deserialized object that are contained in deserializedPropertyDictionary and put then in obj
+      obj = Object.fromEntries(
+        Object.entries(deserializedObj).filter(
+          ([key]) => key in deserializedPropertyDictionary)
+          .map(
+            ([key, value]) => [deserializedPropertyDictionary[key], value],
+          ),
+      );
+
+      obj.nativeHeight = Number(obj.nativeHeight);
+      obj.nativeWidth = Number(obj.nativeWidth);
     } catch (e) {
       console.error(e);
       throw new Error('Invalid JSON object');
@@ -39,6 +52,13 @@ export const PreviewPropertiesFactory = (
     }
   }
 
+  if ('rotation' in obj) {
+    const rotation = Number(obj.rotation);
+    if (Number.isInteger(rotation)) {
+      previewObject.rotation = rotation;
+    }
+  }
+
   return previewObject;
 };
 
@@ -47,5 +67,16 @@ export const serializePreviewProperties = (previewProperties?: PreviewProperties
     return null;
   }
 
-  return JSON.stringify(previewProperties);
+  const serializedObj = Object.fromEntries(
+    Object.entries(previewProperties).filter(
+      ([key]) => key in serializedPropertyDictionary)
+      .map(
+        ([key, value]) => [serializedPropertyDictionary[key], value],
+      ),
+  );
+
+  const payload = JSON.stringify(serializedObj);
+  validatePayloadSize('preview', payload);
+
+  return payload;
 };
