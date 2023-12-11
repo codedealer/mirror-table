@@ -5,13 +5,13 @@ import { aspectRatio } from '~/utils';
 import { PickerViewTemplates } from '~/models/types';
 
 interface DriveThumbnailProps {
+  width: string | number
+  height: string | number
   file?: DriveFile | null
   error?: any
   fileIsLoading?: boolean
   src?: string
   title?: string
-  width: string
-  height: string
   removable?: boolean
   allowUpload?: boolean
   uploadParentId?: string
@@ -117,8 +117,8 @@ const heightVar = useCssVar('--height', container);
 
 onMounted(() => {
   watchEffect(() => {
-    widthVar.value = props.width;
-    heightVar.value = props.height;
+    widthVar.value = String(props.width);
+    heightVar.value = String(props.height);
   });
 });
 

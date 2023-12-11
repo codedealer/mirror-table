@@ -22,9 +22,7 @@ const md = new MarkdownIt({ breaks: true })
 
 <template>
   <div class="window-container-markdown-renderer">
-    <va-scroll-container vertical>
-      <div v-html="md.render(source)" />
-    </va-scroll-container>
+    <div v-html="md.render(source)" />
   </div>
 </template>
 

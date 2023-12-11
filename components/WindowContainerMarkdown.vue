@@ -46,12 +46,14 @@ const toggleEdit = () => {
       />
     </div>
     <div class="window-container-markdown__content mb">
-      <WindowContainerMarkdownRenderer
-        v-show="!window.content.editing"
-        :source="windowContent.data"
-      />
+      <va-scroll-container
+        vertical
+      >
+        <WindowContainerMarkdownContent
+          v-show="!window.content.editing"
+          :window="window"
+        />
 
-      <va-scroll-container vertical>
         <WindowContainerMarkdownForm
           v-show="window.content.editing"
           :window="window"
