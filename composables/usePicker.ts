@@ -1,9 +1,11 @@
 import type { BuildPickerOptions } from '~/models/types';
 import { folderExists } from '~/utils/driveOps';
 import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
+import { PickerViewTemplates } from '~/models/types';
 
 const buildPickerOptionsDefaults = {
-  template: 'all' as const,
+  uploadParentId: '',
+  template: PickerViewTemplates.ALL,
   allowMultiSelect: false,
   allowUpload: true,
   uploadOnly: false,
@@ -44,7 +46,8 @@ const buildPicker = async (opts: BuildPickerOptions): Promise<google.picker.Pick
 
   if (options.allowUpload || options.uploadOnly) {
     builder.addView(
-      new window.google.picker.DocsUploadView().setParent(options.parentId),
+      new window.google.picker.DocsUploadView()
+        .setParent(options.uploadParentId || options.parentId),
     );
   }
 

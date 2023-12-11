@@ -24,6 +24,7 @@ export type PickerViewTemplate = typeof PickerViewTemplates[keyof typeof PickerV
 
 export interface BuildPickerOptions {
   parentId: string
+  uploadParentId?: string
   template?: PickerViewTemplate
   allowMultiSelect?: boolean
   allowUpload?: boolean

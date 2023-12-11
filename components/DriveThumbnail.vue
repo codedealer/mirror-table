@@ -14,6 +14,7 @@ interface DriveThumbnailProps {
   height: string
   removable?: boolean
   allowUpload?: boolean
+  uploadParentId?: string
   fit?: 'auto' | 'cover' | 'contain'
 }
 
@@ -31,6 +32,7 @@ const props = withDefaults(defineProps<DriveThumbnailProps>(), {
   title: '',
   removable: false,
   allowUpload: false,
+  uploadParentId: '',
   fit: 'auto',
 });
 
@@ -127,10 +129,10 @@ const uploadImage = async () => {
   try {
     await buildPicker({
       parentId: userStore.profile!.settings.driveFolderId,
+      uploadParentId: props.uploadParentId,
       template: PickerViewTemplates.IMAGES,
       allowUpload: true,
       callback: (result) => {
-        console.log('picker callback: ', result);
         if (
           result.action === google.picker.Action.PICKED &&
             result.docs.length > 0

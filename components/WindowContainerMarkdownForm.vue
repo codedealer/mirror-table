@@ -178,9 +178,10 @@ const submit = async () => {
           :file="imageFile"
           :error="imageError"
           :file-is-loading="imageLoading"
+          :upload-parent-id="file?.parents?.[0]"
           width="200"
           height="200"
-          allow-upload
+          :allow-upload="!!file"
           removable
           @remove="imageFileId = ''"
           @error="console.error"
@@ -189,6 +190,7 @@ const submit = async () => {
       </div>
 
       <va-textarea
+        v-if="file?.appProperties.kind !== AssetPropertiesKinds.IMAGE"
         v-model="body"
         name="content"
         class="markdown-editor"
