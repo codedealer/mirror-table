@@ -161,7 +161,10 @@ export const deleteFile = async (id: string, restore: boolean) => {
   });
 };
 
-export const updateMetadata = async (id: string, metadata: Partial<DriveFileRaw>) => {
+export const updateMetadata = async (
+  id: string,
+  metadata: { [key in keyof gapi.client.drive.File]?: string | { [x: string]: string | null } },
+) => {
   const driveStore = useDriveStore();
   const client = await driveStore.getClient();
 
@@ -172,6 +175,7 @@ export const updateMetadata = async (id: string, metadata: Partial<DriveFileRaw>
   const response = await client.drive.files.update({
     fileId: id,
     fields: updateFieldMask,
+    // @ts-expect-error - gapi types are wrong; null is accepted
     resource: metadata,
   });
 
@@ -180,7 +184,11 @@ export const updateMetadata = async (id: string, metadata: Partial<DriveFileRaw>
 
 const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
 
-const generateFileFormData = (file: File, appProperties: Record<string, string>, parentId = '') => {
+const generateFileFormData = (
+  file: File,
+  appProperties: Record<string, string | null>,
+  parentId = '',
+) => {
   const metadata: Record<string, any> = {
     name: file.name,
     mimeType: file.type,
@@ -206,7 +214,7 @@ const generateFileFormData = (file: File, appProperties: Record<string, string>,
 export const updateMedia = async (
   fileId: string,
   file: File,
-  appProperties: Record<string, string>,
+  appProperties: Record<string, string | null>,
 ) => {
   if (!fileId) {
     throw new Error('File ID is empty when updating a file');
@@ -235,7 +243,7 @@ export const updateMedia = async (
 export const uploadMedia = async (
   file: File,
   folderId: string,
-  appProperties: Record<string, string>,
+  appProperties: Record<string, string | null>,
 ) => {
   if (!folderId) {
     throw new Error('Folder ID is empty when uploading a file');
