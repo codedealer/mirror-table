@@ -11,6 +11,7 @@ import { updateFieldMask } from '~/models/types';
 
 export const useDriveFileStore = defineStore('drive-file', () => {
   const _files = ref<Record<string, DriveFile>>({});
+  const fileRequestRegistry: Map<string, Promise<DriveFileRaw>> = new Map();
 
   const files = computed(() => {
     return _files.value;
@@ -48,10 +49,19 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     }
   };
 
-  // TODO: this can be triggered from multiple places, so we need to
-  //       make sure we don't load the same file multiple times
   const getFile = async (id: string) => {
-    const rawResult = await loadFile<DriveFileRaw>(id);
+    let rawResult: DriveFileRaw;
+
+    try {
+      if (fileRequestRegistry.has(id)) {
+        console.warn(`Duplicate request for file ${id}`);
+        rawResult = await fileRequestRegistry.get(id) as DriveFileRaw;
+      } else {
+        rawResult = await loadFile<DriveFileRaw>(id);
+      }
+    } finally {
+      fileRequestRegistry.delete(id);
+    }
 
     const file = convertToDriveFile(rawResult);
     setFile(file);
