@@ -115,10 +115,17 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
         updatedMetadata = await loadFile<DriveFileUpdateReturnType>(fileId, updateFieldMask);
       } else {
-        updatedMetadata = await updateMetadata(fileId, propertiesObject as Partial<DriveFileRaw>);
+        updatedMetadata = await updateMetadata(
+          fileId,
+          {
+            name: file.name,
+            appProperties: propertiesObject,
+          },
+        );
       }
 
       // update file object with new metadata
+      // WARNING: this is a naive merge relying on the fact that update mask only has primitive values
       Object.assign(file, updatedMetadata);
     } finally {
       file.loading = false;
