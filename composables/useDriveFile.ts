@@ -25,8 +25,6 @@ export const useDriveFile = <T extends DriveAsset | DriveFile | DriveImage>
   const driveFileStore = useDriveFileStore();
 
   const loadFile = async (id: string) => {
-    console.warn('File load triggered', id);
-
     error.value = null;
     isLoading.value = true;
 

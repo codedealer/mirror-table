@@ -57,7 +57,10 @@ export const useDriveFileStore = defineStore('drive-file', () => {
         console.warn(`Duplicate request for file ${id}`);
         rawResult = await fileRequestRegistry.get(id) as DriveFileRaw;
       } else {
-        rawResult = await loadFile<DriveFileRaw>(id);
+        const request = loadFile<DriveFileRaw>(id);
+
+        fileRequestRegistry.set(id, request);
+        rawResult = await request;
       }
     } finally {
       fileRequestRegistry.delete(id);
