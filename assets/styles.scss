@@ -32,7 +32,7 @@ header {
 }
 .dashboard-content {
   display: grid;
-  grid-template-columns: 1fr minmax(250px, 350px);
+  grid-template-columns: 1fr;
   gap: 2rem;
 }
 .tables-list {
