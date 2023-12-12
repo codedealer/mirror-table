@@ -145,6 +145,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     }
   };
 
+  // TODO: needs a request registry of its own
   const downloadMedia = async (fileId: string) => {
     const file = _files.value[fileId];
     if (!file) {

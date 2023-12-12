@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useForm } from 'vuestic-ui';
-import type { DriveAsset, DriveImage, ModalWindow, ModalWindowContentMarkdown } from '~/models/types';
+import type { DriveAsset, ModalWindow, ModalWindowContentMarkdown } from '~/models/types';
 import { ModalWindowStatus } from '~/models/types';
 import { nameValidationsRules } from '~/utils';
 import { PreviewPropertiesFactory } from '~/models/PreviewProprerties';
+import { usePreviewImage } from '~/composables/usePreviewImage';
 
 const props = defineProps<{
   window: ModalWindow
@@ -13,11 +14,6 @@ const windowContent = computed(() =>
   props.window.content as ModalWindowContentMarkdown,
 );
 
-const imageFileId = ref('');
-const { file: imageFile, isLoading: imageLoading, error: imageError } = useDriveFile<DriveImage>(imageFileId, {
-  activelyLoad: true,
-});
-
 const { file, label } = useDriveFile<DriveAsset>(
   ref(props.window.id),
   {
@@ -25,25 +21,20 @@ const { file, label } = useDriveFile<DriveAsset>(
   },
 );
 
+const {
+  imageFileId,
+  file: imageFile,
+  isLoading: imageLoading,
+  error: imageError,
+} = usePreviewImage(file, {
+  activelyLoad: true,
+});
+
 const isLoading = computed(() => (
   props.window.status === ModalWindowStatus.LOADING ||
   file.value?.loading ||
   imageLoading.value
 ));
-
-// update the image id when the file changes
-watchEffect(() => {
-  if (!file.value) {
-    return;
-  }
-
-  if (
-    file.value.appProperties.kind !== AssetPropertiesKinds.TEXT &&
-    file.value.appProperties.preview
-  ) {
-    imageFileId.value = file.value.appProperties.preview.id;
-  }
-});
 
 const body = ref('');
 
