@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { useFirestore } from '@vueuse/firebase/useFirestore';
+import { collection, orderBy, query } from '@firebase/firestore';
 import type { TableCard } from '~/models/types';
 
 let tables = ref<TableCard[] | undefined>(undefined);
 
 onMounted(() => {
-  const { $db, $ops } = useNuxtApp();
+  const { $db } = useNuxtApp();
 
   const userStore = useUserStore();
-  const { collection, query, orderBy } = $ops;
+
   const q = computed(() => {
     if (!userStore.isAuthenticated || !userStore.user) {
       return false;

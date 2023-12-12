@@ -1,13 +1,13 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
+import { collection, query, where } from '@firebase/firestore';
 import type { Table, TableMode, TablePermissions } from '~/models/types';
 import { TableModes } from '~/models/types';
 
 export const useTableStore = defineStore('table', () => {
-  const { $db, $ops } = useNuxtApp();
+  const { $db } = useNuxtApp();
 
   const tableSlug = ref('');
-  const { collection, query, where } = $ops;
 
   const userStore = useUserStore();
 

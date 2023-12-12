@@ -1,9 +1,10 @@
 import type { WithFieldValue } from '@firebase/firestore';
+import { collection, doc, serverTimestamp, writeBatch } from '@firebase/firestore';
 import type { Category, DriveFile, Scene, Table, TableCard, TableSession } from '~/models/types';
 import { idToSlug } from '~/utils';
 
 export const useFirestoreTable = () => {
-  const { $db, $ops } = useNuxtApp();
+  const { $db } = useNuxtApp();
 
   const create = async (
     title: string,
@@ -13,8 +14,6 @@ export const useFirestoreTable = () => {
     if (!userStore.isAuthenticated || !userStore.user || !userStore.user.email) {
       throw new Error('User is not authenticated');
     }
-
-    const { doc, serverTimestamp, collection, writeBatch } = $ops;
 
     const batch = writeBatch($db);
 
@@ -93,26 +92,9 @@ export const useFirestoreTable = () => {
     await batch.commit();
   };
 
-  const remove = async (tableId: string) => {
+  const remove = (): never => {
     // TODO: move this to api call on the server to delete entire collections of scenes.
-    const userStore = useUserStore();
-    if (!userStore.isAuthenticated || !userStore.user || !userStore.user.email) {
-      throw new Error('User is not authenticated');
-    }
-
-    const { doc, collection, writeBatch } = $ops;
-
-    const batch = writeBatch($db);
-
-    const tableRef = doc(collection($db, 'tables'), tableId);
-
-    batch.delete(tableRef);
-
-    const tableCardRef = doc($db, 'users', userStore.user.uid, 'tables', tableId);
-
-    batch.delete(tableCardRef);
-
-    await batch.commit();
+    throw new Error('Not implemented');
   };
 
   return {
