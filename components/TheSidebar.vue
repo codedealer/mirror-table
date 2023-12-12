@@ -19,15 +19,13 @@
       </va-sidebar-item-content>
     </va-sidebar-item>
     <va-divider />
-    <va-sidebar-item>
+    <va-sidebar-item @click="console.log('registered')">
       <va-sidebar-item-content>
-        <va-popover message="Scenes" placement="right">
-          <va-button
-            icon="map"
-            size="medium"
-            preset="plain"
-          />
-        </va-popover>
+        <div class="toolbar-button">
+          <va-icon name="map" size="large" color="primary" />
+
+          <span class="toolbar-button__content">Scenes</span>
+        </div>
         <va-sidebar-item-title>Scenes</va-sidebar-item-title>
       </va-sidebar-item-content>
     </va-sidebar-item>

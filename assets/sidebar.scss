@@ -1,6 +1,5 @@
 .main-grid__left {
   --sidebar-minimized-width: 48;
-  --dynamic-panel-offset: var(--sidebar-minimized-width);
   display: flex;
 
   .toolbar {
@@ -8,15 +7,28 @@
     --va-sidebar-item-active-border-size: 0;
 
     .va-sidebar__item__content {
-      min-height: var(--sidebar-minimized-width); /* for the icon to be square */
       justify-content: center;
       --va-sidebar-item-content-gap: 0;
     }
   }
 
   .dynamic-panel {
-    left: calc(var(--dynamic-panel-offset) * 1px);
+    left: calc(var(--dynamic-panel-offset-left) * 1px);
     border-left: 1px solid var(--va-background-border);
+  }
+}
+
+.toolbar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .toolbar-button__content {
+    font-size: 11px;
+    text-transform: lowercase;
+    color: var(--va-primary);
   }
 }
 
@@ -33,7 +45,7 @@
   }
 
   .dynamic-panel {
-    right: calc(var(--dynamic-panel-offset) * 1px);
+    right: calc(var(--dynamic-panel-offset-right) * 1px);
     left: auto;
     border-right: 1px solid var(--va-background-border);
   }

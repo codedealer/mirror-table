@@ -20,7 +20,7 @@ const classes = computed(() => {
 
 const sidebar = ref(null);
 
-const panelOffset = useCssVar('--dynamic-panel-offset', sidebar);
+const panelOffset = useCssVar(`--dynamic-panel-offset-${props.name}`, sidebar);
 
 if (props.name === DynamicPanelModelTypes.RIGHT) {
   const rightPanelStore = useRightPanelStore();
@@ -29,11 +29,19 @@ if (props.name === DynamicPanelModelTypes.RIGHT) {
 
   watchEffect(() => {
     if (sideBarMinimized.value) {
-      console.warn('sideBarMinimized 0');
       panelOffset.value = '0';
     } else {
-      console.warn('sideBarMinimized 256');
       panelOffset.value = '256';
+    }
+  });
+} else {
+  const tableStore = useTableStore();
+
+  watchEffect(() => {
+    if (tableStore.permissions.isEditor) {
+      panelOffset.value = '48'; // there is a toolbar
+    } else {
+      panelOffset.value = '0';
     }
   });
 }
