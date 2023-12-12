@@ -2,7 +2,8 @@
 import DriveDirectoryTree from '~/components/DriveDirectoryTree.vue';
 
 const userStore = useUserStore();
-const sideBarMinimized = ref(false);
+const rightPanelStore = useRightPanelStore();
+const { sideBarMinimized } = toRefs(rightPanelStore);
 </script>
 
 <template>
@@ -18,11 +19,29 @@ const sideBarMinimized = ref(false);
           <va-sidebar-item-title class="text-overflow">
             {{ userStore.user?.displayName ?? '' }}
           </va-sidebar-item-title>
+          <va-button
+            icon="chevron_right"
+            size="large"
+            preset="plain"
+            @click="sideBarMinimized = true"
+          />
         </va-sidebar-item-content>
       </va-sidebar-item>
 
       <DriveDirectoryTree />
     </va-sidebar>
+
+    <div
+      v-show="sideBarMinimized"
+      class="right-panel-flying-container"
+    >
+      <va-button
+        icon="chevron_left"
+        size="large"
+        preset="plain"
+        @click="sideBarMinimized = false"
+      />
+    </div>
   </div>
 </template>
 

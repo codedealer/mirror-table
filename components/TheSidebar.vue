@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <va-sidebar minimized minimized-width="48px" class="centered-icons">
+  <va-sidebar minimized minimized-width="48px" class="toolbar centered-icons">
     <va-sidebar-item>
       <va-sidebar-item-content>
         <va-popover message="Back to Dashboard" placement="right">

@@ -15,9 +15,13 @@ watchEffect(() => {
     </div>
     <div class="main-grid__left">
       <TheSidebar />
+
+      <DynamicPanel name="left" />
     </div>
     <div class="main-grid__right">
       <TheRightPanel />
+
+      <DynamicPanel name="right" />
     </div>
     <div class="main-grid__status">
       <TheWindowManager />

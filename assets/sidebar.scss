@@ -1,16 +1,28 @@
 .main-grid__left {
-  .va-sidebar {
+  --sidebar-minimized-width: 48;
+  --dynamic-panel-offset: var(--sidebar-minimized-width);
+  display: flex;
+
+  .toolbar {
     --va-sidebar-item-content-padding: 0.5rem;
     --va-sidebar-item-active-border-size: 0;
+
+    .va-sidebar__item__content {
+      min-height: var(--sidebar-minimized-width); /* for the icon to be square */
+      justify-content: center;
+      --va-sidebar-item-content-gap: 0;
+    }
   }
-  .va-sidebar__item__content {
-    min-height: 48px;
-    justify-content: center;
-    --va-sidebar-item-content-gap: 0;
+
+  .dynamic-panel {
+    left: calc(var(--dynamic-panel-offset) * 1px);
+    border-left: 1px solid var(--va-background-border);
   }
 }
 
 .main-grid__right {
+  display: flex;
+
   .va-sidebar {
     --va-sidebar-item-content-padding: 1rem;
     --va-sidebar-item-active-border-size: 0;
@@ -19,4 +31,23 @@
   .profile-item {
     /*background-color: var(--va-background-secondary);*/
   }
+
+  .dynamic-panel {
+    right: calc(var(--dynamic-panel-offset) * 1px);
+    left: auto;
+    border-right: 1px solid var(--va-background-border);
+  }
+}
+
+.right-panel-flying-container {
+  position: absolute;
+  top: 1rem;
+  right: 0;
+  z-index: 1;
+}
+
+.dynamic-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
 }

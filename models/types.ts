@@ -229,6 +229,13 @@ export interface SelectOption {
   value: string
 }
 
+export const DynamicPanelModelTypes = {
+  RIGHT: 'right',
+  LEFT: 'left',
+} as const;
+
+export type DynamicPanelModelType = typeof DynamicPanelModelTypes[keyof typeof DynamicPanelModelTypes];
+
 // FIRESTORE TYPES
 
 /**
