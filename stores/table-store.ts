@@ -62,16 +62,16 @@ export const useTableStore = defineStore('table', () => {
     }
 
     if (table.value === null) {
-      return TableModes.invalid;
+      return TableModes.INVALID;
     }
 
     if (permissions.value.isOwner) {
-      return TableModes.own;
+      return TableModes.OWN;
     } else if (permissions.value.isEditor) {
-      return TableModes.edit;
+      return TableModes.EDIT;
     }
 
-    return TableModes.view;
+    return TableModes.VIEW;
   });
 
   const { create, remove } = useFirestoreTable();

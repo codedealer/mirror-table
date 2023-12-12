@@ -28,7 +28,7 @@ onMounted(() => {
   });
 
   watchEffect(() => {
-    if (tableStore.mode === TableModes.invalid) {
+    if (tableStore.mode === TableModes.INVALID) {
       return navigateTo('/dashboard');
     }
   });

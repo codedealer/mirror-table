@@ -1,5 +1,5 @@
 import type { WithFieldValue } from '@firebase/firestore';
-import type { DriveFile, Scene, Table, TableCard, TableScenesSortMap } from '~/models/types';
+import type { Category, DriveFile, Scene, Table, TableCard, TableSession } from '~/models/types';
 import { idToSlug } from '~/utils';
 
 export const useFirestoreTable = () => {
@@ -20,15 +20,21 @@ export const useFirestoreTable = () => {
 
     const tableRef = doc(collection($db, 'tables'));
     const defaultSceneRef = doc(collection($db, 'tables', tableRef.id, 'scenes'));
+    const rootCategoryRef = doc(collection($db, 'tables', tableRef.id, 'categories'));
+
+    const session: TableSession = {
+      [userStore.user.uid]: defaultSceneRef.id,
+    };
 
     const tableData: WithFieldValue<Table> = {
       id: tableRef.id,
       title,
-      pointer: defaultSceneRef.id,
-      createdAt: serverTimestamp(),
+      rootCategoryId: rootCategoryRef.id,
       owner: userStore.user.uid,
-      viewers: [userStore.user.uid],
       editors: [userStore.user.uid],
+      viewers: [userStore.user.uid],
+      session,
+      createdAt: serverTimestamp(),
       slug: idToSlug(tableRef.id),
     };
 
@@ -55,32 +61,34 @@ export const useFirestoreTable = () => {
 
     batch.set(tableCardRef, tableCardData);
 
+    const category: WithFieldValue<Category> = {
+      id: rootCategoryRef.id,
+      tableId: tableRef.id,
+      title: 'Default Category',
+      parentId: null,
+      owner: userStore.user.uid,
+      createdAt: serverTimestamp(),
+      deletable: false,
+      deleted: false,
+    };
+
+    batch.set(rootCategoryRef, category);
+
     const scene: WithFieldValue<Scene> = {
       id: defaultSceneRef.id,
       tableId: tableRef.id,
+      categoryId: rootCategoryRef.id,
       title: 'Default Scene',
+      owner: userStore.user.uid,
       thumbnail: null,
       createdAt: serverTimestamp(),
       archived: false,
+      deletable: false,
+      deleted: false,
       slug: idToSlug(defaultSceneRef.id),
     };
 
     batch.set(defaultSceneRef, scene);
-
-    const sortMapRef = doc(
-      $db,
-      'users',
-      userStore.user.uid,
-      'sortMaps',
-      tableRef.id,
-    );
-
-    const sortMapData: WithFieldValue<TableScenesSortMap> = {
-      tableId: tableRef.id,
-      map: [defaultSceneRef.id],
-    };
-
-    batch.set(sortMapRef, sortMapData);
 
     await batch.commit();
   };

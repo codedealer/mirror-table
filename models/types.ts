@@ -229,6 +229,8 @@ export interface SelectOption {
   value: string
 }
 
+// FIRESTORE TYPES
+
 /**
  * Data for a table card that appears on a dashboard. Each user has a copy.
  */
@@ -242,11 +244,19 @@ export interface TableCard {
     photoURL: string
     email: string
   }
-  role: string
+  role: 'owner' | 'editor' | 'viewer'
   thumbnail: DriveFile | null
   type: 'private' | 'public'
   slug: string
   deleted: boolean
+}
+
+/**
+ * Session object for a table.
+ * Property is a user id, value is a scene id to which the user is assigned.
+ */
+export interface TableSession {
+  [x: string]: string
 }
 
 /**
@@ -255,12 +265,29 @@ export interface TableCard {
 export interface Table {
   id: string
   title: string
-  pointer: string
-  createdAt: Timestamp
+  rootCategoryId: string
   owner: string
   editors: string[]
   viewers: string[]
+  session: TableSession
+  createdAt: Timestamp
   slug: string
+}
+
+/**
+ * Entity in subcollection of a table. Each table has many categories.
+ * Categories are used to group scenes.
+ * Supports hierarchical structure: a category can have a parent category.
+ */
+export interface Category {
+  id: string
+  tableId: string
+  title: string
+  parentId: string | null
+  owner: string
+  createdAt: Timestamp
+  deletable: boolean
+  deleted: boolean
 }
 
 /**
@@ -269,14 +296,19 @@ export interface Table {
 export interface Scene {
   id: string
   tableId: string
+  categoryId: string
   title: string
+  owner: string
   thumbnail: DriveFile | string | null
   createdAt: Timestamp
   archived: boolean
+  deletable: boolean
+  deleted: boolean
   slug: string
 }
 
 /**
+ * DEPRECATED: needs to be replaced with CategoryOrder
  * Document that holds the sort map for a scene. Stored under user entity.
  */
 export interface TableScenesSortMap {
@@ -291,10 +323,11 @@ export interface TablePermissions {
 }
 
 export const TableModes = {
-  own: 'own',
-  edit: 'edit',
-  view: 'view',
-  invalid: 'invalid',
+  OWN: 'own',
+  EDIT: 'edit',
+  VIEW: 'view',
+  PRESENTATION: 'local',
+  INVALID: 'invalid',
 } as const;
 
 export type TableMode = typeof TableModes[keyof typeof TableModes];
