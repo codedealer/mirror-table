@@ -207,13 +207,24 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
       } else {
         await updateDoc(categoryRef, {
           title,
-          parentId: parent.id,
         });
+
+        // update the node
+        const { item } = useExplorerItem(parent);
+
+        if (!item.value) {
+          throw new Error('Category not found after update');
+        }
+
+        item.value.title = title;
+
+        return;
       }
     } catch (error) {
       console.error(error);
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(error));
+      return;
     }
 
     // update the cache
@@ -256,8 +267,14 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
     return loadItem<Scene>(id, scenesRef.value);
   };
 
+  /**
+   * Save a scene to firestore.
+   * @param title new title for a scene
+   * @param parent the node that initiated the save (can be category or scene)
+   * @param id this is the same as parent.id
+   */
   const saveScene = async (title: string, parent: TreeNode, id?: string) => {
-    if (!tableStore.table || !parent.children) {
+    if (!tableStore.table || (!id && !parent.children)) {
       return;
     }
 
@@ -285,8 +302,18 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
       } else {
         await updateDoc(sceneRef, {
           title,
-          categoryId: parent.id,
         });
+
+        // update the node
+        const { item } = useExplorerItem(parent);
+
+        if (!item.value) {
+          throw new Error('Scene not found after update');
+        }
+
+        item.value.title = title;
+
+        return;
       }
     } catch (error) {
       console.error(error);
@@ -314,6 +341,9 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
     // update the tree
     const node = ExplorerTreeNodeFactory(newScene);
 
+    if (!parent.children) {
+      return; // this should never happen
+    }
     parent.children.push(node);
 
     if (parent.$folded) {

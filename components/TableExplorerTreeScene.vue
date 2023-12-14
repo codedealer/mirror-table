@@ -10,7 +10,7 @@ const props = defineProps<{
   tree: Tree
 }>();
 
-const { item: scene } = useExplorerItem<Scene>(ref(props.node.id));
+const { item: scene } = useExplorerItem<Scene>(props.node);
 </script>
 
 <template>
@@ -39,11 +39,8 @@ const { item: scene } = useExplorerItem<Scene>(ref(props.node.id));
     </va-button>
 
     <div v-if="scene" class="drive-node__actions">
-      <va-button
-        preset="plain"
-        color="primary-dark"
-        size="medium"
-        icon="more_vert"
+      <TableExplorerTreeSceneContextMenu
+        :node="node"
       />
     </div>
   </div>

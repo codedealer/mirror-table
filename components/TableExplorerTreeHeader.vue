@@ -40,6 +40,7 @@ const tableExplorerStore = useTableExplorerStore();
       <div class="drive-directory-tree-header__actions">
         <TableExplorerTreeCategoryContextMenu
           :node="tableExplorerStore.rootNode"
+          :path="[]"
         />
       </div>
     </div>

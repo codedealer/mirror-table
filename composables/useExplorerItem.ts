@@ -1,11 +1,11 @@
-import type { MaybeRef } from 'vue';
-import type { Category, Scene } from '~/models/types';
+import type { Category, Scene, TreeNode } from '~/models/types';
 
 export const useExplorerItem =
   <T extends Scene | Category>(
-    id: MaybeRef<string>,
+    node: TreeNode,
   ) => {
-    const idRef = ref(id);
+    const nodeRef = shallowRef(node);
+    const idRef = computed(() => nodeRef.value.id);
 
     const tableExplorerStore = useTableExplorerStore();
 
