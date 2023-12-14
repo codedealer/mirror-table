@@ -19,28 +19,6 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     return rootNode.value.children ?? [];
   });
 
-  /**
-   * Get a node by its path:
-   * path represents an array of indexes in a multidimensional array _nodes
-   * @param path
-   */
-  const getNodeByPath = (path: string[]) => {
-    let node: DriveTreeNode | undefined;
-
-    for (const index of path) {
-      if (!node) {
-        node = nodes.value[Number.parseInt(index)];
-      } else {
-        if (!Array.isArray(node.children)) {
-          return;
-        }
-        node = node.children[Number.parseInt(index)];
-      }
-    }
-
-    return node;
-  };
-
   const driveStore = useDriveStore();
   const userStore = useUserStore();
 
@@ -258,7 +236,6 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     loadChildren,
     toggleFold,
     createChild,
-    getNodeByPath,
     removeFile,
     setNodeLoading,
     setNodeLabel,

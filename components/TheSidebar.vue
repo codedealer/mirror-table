@@ -1,5 +1,11 @@
 <script setup lang="ts">
+import { DynamicPanelContentTypes } from '~/models/types';
 
+const dynamicPanelStore = useDynamicPanelStore();
+
+const openExplorer = () => {
+  dynamicPanelStore.open(DynamicPanelModelTypes.LEFT, DynamicPanelContentTypes.EXPLORER);
+};
 </script>
 
 <template>
@@ -19,10 +25,10 @@
       </va-sidebar-item-content>
     </va-sidebar-item>
     <va-divider />
-    <va-sidebar-item @click="console.log('registered')">
+    <va-sidebar-item @click="openExplorer">
       <va-sidebar-item-content>
         <div class="toolbar-button">
-          <va-icon name="map" size="large" color="primary" />
+          <va-icon name="filter" size="large" color="primary" />
 
           <span class="toolbar-button__content">Scenes</span>
         </div>

@@ -23,6 +23,7 @@ const { sideBarMinimized } = toRefs(rightPanelStore);
             icon="chevron_right"
             size="large"
             preset="plain"
+            color="primary-dark"
             @click="sideBarMinimized = true"
           />
         </va-sidebar-item-content>
@@ -39,6 +40,7 @@ const { sideBarMinimized } = toRefs(rightPanelStore);
         icon="chevron_left"
         size="large"
         preset="plain"
+        color="primary-dark"
         @click="sideBarMinimized = false"
       />
     </div>

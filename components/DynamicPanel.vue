@@ -1,15 +1,31 @@
 <script setup lang="ts">
 import { useCssVar } from '@vueuse/core';
 import { useDynamicPanelStore } from '~/stores/dynamic-panel-store';
-import type { DynamicPanelModelType } from '~/models/types';
+import type { DynamicPanelContentType, DynamicPanelModelType } from '~/models/types';
 import { useRightPanelStore } from '~/stores/right-panel-store';
+import { DynamicPanelContentTypes } from '~/models/types';
+import { TableExplorer } from '#components';
 
 const props = defineProps<{
   name: DynamicPanelModelType
 }>();
 
 const store = useDynamicPanelStore();
-const { models } = toRefs(store);
+const { models, contents } = toRefs(store);
+
+const availableComponents: Record<DynamicPanelContentType, unknown> = {
+  [DynamicPanelContentTypes.EXPLORER]: TableExplorer,
+};
+
+const content = computed(() => {
+  const name = contents.value[props.name];
+
+  if (!name) {
+    return null;
+  }
+
+  return availableComponents[name];
+});
 
 const classes = computed(() => {
   return {
@@ -56,14 +72,21 @@ if (props.name === DynamicPanelModelTypes.RIGHT) {
     :class="classes"
     class="dynamic-panel"
   >
-    <VaSidebarItem>
-      <VaSidebarItemContent>
-        <VaIcon name="error" />
-        <VaSidebarItemTitle>
-          Hello WORLDDDDD
-        </VaSidebarItemTitle>
-      </VaSidebarItemContent>
-    </VaSidebarItem>
+    <div class="dynamic-panel__header">
+      <va-button
+        preset="plain"
+        color="primary-dark"
+        class="dynamic-panel__close"
+        @click="store.close(name)"
+      >
+        <va-icon name="close" size="large" />
+      </va-button>
+    </div>
+    <va-scroll-container vertical>
+      <div class="dynamic-panel__content">
+        <component :is="content" />
+      </div>
+    </va-scroll-container>
   </va-sidebar>
 </template>
 

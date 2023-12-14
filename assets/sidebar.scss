@@ -62,4 +62,16 @@
   position: absolute;
   top: 0;
   bottom: 0;
+  overflow: hidden;
+}
+
+.dynamic-panel__content,
+.dynamic-panel__header{
+  padding: 0.5rem;
+}
+
+.dynamic-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }

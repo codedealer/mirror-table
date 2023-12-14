@@ -1,12 +1,37 @@
-import type { DynamicPanelModelType } from '~/models/types';
+import type { DynamicPanelContentType, DynamicPanelModelType } from '~/models/types';
 
 export const useDynamicPanelStore = defineStore('dynamic-panel', () => {
   const models = ref<Record<DynamicPanelModelType, boolean>>({
-    right: false,
-    left: false,
+    [DynamicPanelModelTypes.LEFT]: false,
+    [DynamicPanelModelTypes.RIGHT]: false,
   });
+
+  const contents = ref<Record<DynamicPanelModelType, DynamicPanelContentType | null>>({
+    [DynamicPanelModelTypes.LEFT]: null,
+    [DynamicPanelModelTypes.RIGHT]: null,
+  });
+
+  const close = (model: DynamicPanelModelType) => {
+    models.value[model] = false;
+    contents.value[model] = null;
+  };
+
+  const open = (model: DynamicPanelModelType, content: DynamicPanelContentType) => {
+    // if it's already open, close it
+    if (models.value[model] && contents.value[model] === content) {
+      close(model);
+      return;
+    }
+
+    models.value[model] = true;
+    contents.value[model] = content;
+  };
+
   return {
     models,
+    contents,
+    open,
+    close,
   };
 });
 

@@ -1,50 +1,31 @@
 <script setup lang="ts">
-import type { DriveTreeNode } from '~/models/types';
-import { generateSelectOptions } from '~/models/AssetProperties';
+import type { Category, TreeNode } from '~/models/types';
+import { useExplorerItem } from '#imports';
 
 const props = defineProps<{
-  node: DriveTreeNode
+  node: TreeNode
   path?: string[]
-  header?: boolean
 }>();
 
-const tableStore = useTableStore();
-const driveTreeStore = useDriveTreeStore();
+const MAX_DEPTH = 3;
 
-const { file } = useDriveFile(ref(props.node.id));
+const { item: category } = useExplorerItem<Category>(ref(props.node.id));
 
-const permissions = computed(() => ({
-  canAddChildren: (
-    driveTreeStore.isRootFolder
-      ? tableStore.permissions.isOwner
-      : file.value?.capabilities?.canAddChildren
-  ),
-  canDelete: (
-    props.header
-      ? false
-      : file.value?.capabilities?.canDelete
-  ),
-}));
-
-const trashFolder = () => {
-  driveTreeStore.removeFile(props.node);
-};
-
-const createChildFolder = () => {
-  const driveTreeModalStore = useDriveTreeModalStore();
-
-  driveTreeModalStore.show('New folder', DriveMimeTypes.FOLDER, props.node, props.path);
-};
-
-const createAsset = () => {
-  const driveTreeModalStore = useDriveTreeModalStore();
-
-  driveTreeModalStore.show(
-    'New asset',
-    DriveMimeTypes.MARKDOWN,
+const createCategory = () => {
+  const tableExplorerModalStore = useTableExplorerModalStore();
+  tableExplorerModalStore.show(
+    'category',
+    'Create new category',
     props.node,
-    props.path,
-    generateSelectOptions(),
+  );
+};
+
+const createScene = () => {
+  const tableExplorerModalStore = useTableExplorerModalStore();
+  tableExplorerModalStore.show(
+    'scene',
+    'Create new scene',
+    props.node,
   );
 };
 </script>
@@ -61,9 +42,9 @@ const createAsset = () => {
   >
     <va-list class="drive-node__context-menu">
       <va-list-item
-        v-show="permissions.canAddChildren"
+        v-if="path && path.length < MAX_DEPTH"
         href="#"
-        @click="createChildFolder"
+        @click="createCategory"
       >
         <va-list-item-section icon>
           <va-icon
@@ -74,34 +55,32 @@ const createAsset = () => {
         </va-list-item-section>
         <va-list-item-section>
           <va-list-item-label caption>
-            Create new folder
+            Create new category
           </va-list-item-label>
         </va-list-item-section>
       </va-list-item>
 
       <va-list-item
-        v-if="permissions.canAddChildren"
         href="#"
-        @click="createAsset"
+        @click="createScene"
       >
         <va-list-item-section icon>
           <va-icon
-            name="post_add"
+            name="add_photo_alternate"
             color="primary"
             size="small"
           />
         </va-list-item-section>
         <va-list-item-section>
           <va-list-item-label caption>
-            Create new asset
+            Create new scene
           </va-list-item-label>
         </va-list-item-section>
       </va-list-item>
 
       <va-list-item
-        v-if="permissions.canDelete"
+        v-if="category?.deletable"
         href="#"
-        @click="trashFolder"
       >
         <va-list-item-section icon>
           <va-icon
@@ -112,7 +91,7 @@ const createAsset = () => {
         </va-list-item-section>
         <va-list-item-section>
           <va-list-item-label caption>
-            Delete folder
+            Delete category
           </va-list-item-label>
         </va-list-item-section>
       </va-list-item>

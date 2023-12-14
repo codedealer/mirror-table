@@ -152,3 +152,21 @@
     }
   }
 }
+
+.explorer-tree-container {
+  margin: 0 -0.5rem;
+}
+
+.explorer-skeleton-header {
+  display: flex;
+    align-items: center;
+  gap: 1rem;
+}
+.explorer-skeleton-content {
+  > div {
+    margin-bottom: 1rem;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}

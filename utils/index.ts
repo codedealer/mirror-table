@@ -1,3 +1,5 @@
+import type { TreeNode } from '~/models/types';
+
 export const expiryFromSeconds = (seconds: number | string): number => {
   const lifetime = Number(seconds);
   if (Number.isNaN(lifetime)) {
@@ -54,3 +56,26 @@ export const nameValidationsRules = [
   (v: string) => /^[^\\/:*?"<>|]{0,100}$/.test(v) || 'No special symbols allowed',
   (v: string) => v.length > 0 || 'Fill out the field',
 ];
+
+/**
+ * Get a node by its path:
+ * path represents an array of indexes in a multidimensional array _nodes
+ * @param nodes
+ * @param path
+ */
+export const getNodeByPath = (nodes: TreeNode[], path: string[]) => {
+  let node: TreeNode | undefined;
+
+  for (const index of path) {
+    if (!node) {
+      node = nodes[Number.parseInt(index)];
+    } else {
+      if (!Array.isArray(node.children)) {
+        return;
+      }
+      node = node.children[Number.parseInt(index)];
+    }
+  }
+
+  return node;
+};

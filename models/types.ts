@@ -183,15 +183,20 @@ export interface DriveAsset extends DriveFile {
 
 export type DriveImage = DriveFile & Required<Pick<gapi.client.drive.File, 'imageMediaMetadata'>>;
 
-export interface DriveTreeNode {
+export interface TreeNode {
   $folded: boolean
-  id: string // coincides with DriveFile.id
+  id: string
   label: string
-  icon?: string
   isFolder: boolean
   loaded: boolean
   loading: boolean
   disabled: boolean
+  icon?: string
+  children?: TreeNode[]
+}
+
+export interface DriveTreeNode extends TreeNode {
+  id: string // coincides with DriveFile.id
   /* data?: { id: string } */
   children?: DriveTreeNode[]
 }
@@ -235,6 +240,12 @@ export const DynamicPanelModelTypes = {
 } as const;
 
 export type DynamicPanelModelType = typeof DynamicPanelModelTypes[keyof typeof DynamicPanelModelTypes];
+
+export const DynamicPanelContentTypes = {
+  EXPLORER: 'explorer',
+} as const;
+
+export type DynamicPanelContentType = typeof DynamicPanelContentTypes[keyof typeof DynamicPanelContentTypes];
 
 // FIRESTORE TYPES
 
@@ -313,6 +324,10 @@ export interface Scene {
   deleted: boolean
   slug: string
 }
+
+export const isScene = (obj: unknown): obj is Scene => {
+  return isObject(obj) && 'id' in obj && 'tableId' in obj && 'categoryId' in obj && 'title' in obj && 'owner' in obj && 'thumbnail' in obj && 'createdAt' in obj && 'archived' in obj && 'deletable' in obj && 'deleted' in obj && 'slug' in obj;
+};
 
 /**
  * DEPRECATED: needs to be replaced with CategoryOrder
