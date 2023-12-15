@@ -5,7 +5,7 @@ import type { Category, TreeNode } from '~/models/types';
 const props = defineProps<{
   node: TreeNode
   index: number
-  path: string[]
+  path: number[]
   tree: Tree
 }>();
 

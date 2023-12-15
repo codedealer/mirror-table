@@ -117,7 +117,11 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
   };
 
   watchEffect(() => {
-    if (!tableStore.table || !tableStore.permissions.isOwner) {
+    if (
+      !tableStore.table ||
+      !tableStore.permissions.isOwner ||
+      rootNode.value
+    ) {
       return;
     }
 
@@ -272,8 +276,9 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
    * @param title new title for a scene
    * @param parent the node that initiated the save (can be category or scene)
    * @param id this is the same as parent.id
+   * @param path indexes in nodes array that lead to the parent node
    */
-  const saveScene = async (title: string, parent: TreeNode, id?: string) => {
+  const saveScene = async (title: string, parent: TreeNode, id?: string, path?: number[]) => {
     if (!tableStore.table || (!id && !parent.children)) {
       return;
     }
@@ -282,22 +287,40 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
       ? doc($db, 'tables', tableStore.table.id, 'scenes', id)
       : doc(collection($db, 'tables', tableStore.table.id, 'scenes'));
 
-    const scene: WithFieldValue<Scene> = {
-      id: sceneRef.id,
-      tableId: tableStore.table.id,
-      categoryId: parent.id,
-      title,
-      owner: tableStore.table.owner,
-      thumbnail: null,
-      createdAt: serverTimestamp(),
-      archived: false,
-      deletable: true,
-      deleted: false,
-      slug: '',
-    };
-
     try {
       if (!id) {
+        if (!path) {
+          throw new Error('Path is required when creating a new scene');
+        }
+
+        const categoryPath = [tableStore.table.rootCategoryId];
+
+        for (let i = 0; i < path.length; i++) {
+          const p = path.slice(0, i + 1);
+          const node = getNodeByPath(nodes.value, p);
+          if (!node) {
+            throw new Error(`Node not found at path ${p.join(', ')}`);
+          }
+
+          categoryPath.push(node.id);
+        }
+
+        const scene: WithFieldValue<Scene> = {
+          id: sceneRef.id,
+          tableId: tableStore.table.id,
+          categoryId: parent.id,
+          path: categoryPath,
+          title,
+          owner: tableStore.table.owner,
+          thumbnail: null,
+          createdAt: serverTimestamp(),
+          archived: false,
+          deletable: true,
+          deleted: false,
+          slug: '',
+          settings: {},
+        };
+
         await setDoc(sceneRef, scene);
       } else {
         await updateDoc(sceneRef, {

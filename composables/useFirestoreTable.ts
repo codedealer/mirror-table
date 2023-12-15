@@ -1,5 +1,5 @@
-import type { WithFieldValue } from '@firebase/firestore';
-import { collection, doc, serverTimestamp, writeBatch } from '@firebase/firestore';
+import type { UpdateData, WithFieldValue } from '@firebase/firestore';
+import { collection, doc, serverTimestamp, updateDoc, writeBatch } from '@firebase/firestore';
 import type { Category, DriveFile, Scene, Table, TableCard, TableSession } from '~/models/types';
 import { idToSlug } from '~/utils';
 
@@ -21,8 +21,13 @@ export const useFirestoreTable = () => {
     const defaultSceneRef = doc(collection($db, 'tables', tableRef.id, 'scenes'));
     const rootCategoryRef = doc(collection($db, 'tables', tableRef.id, 'categories'));
 
+    const scenePath = [rootCategoryRef.id];
+    const ownerPresence = TableSessionPresenceFactory(
+      defaultSceneRef.id,
+      scenePath,
+    );
     const session: TableSession = {
-      [userStore.user.uid]: defaultSceneRef.id,
+      [userStore.user.uid]: ownerPresence,
     };
 
     const tableData: WithFieldValue<Table> = {
@@ -77,6 +82,7 @@ export const useFirestoreTable = () => {
       id: defaultSceneRef.id,
       tableId: tableRef.id,
       categoryId: rootCategoryRef.id,
+      path: scenePath,
       title: 'Default Scene',
       owner: userStore.user.uid,
       thumbnail: null,
@@ -85,11 +91,24 @@ export const useFirestoreTable = () => {
       deletable: false,
       deleted: false,
       slug: idToSlug(defaultSceneRef.id),
+      settings: {},
     };
 
     batch.set(defaultSceneRef, scene);
 
     await batch.commit();
+  };
+
+  const updateSessionPresence = async (tableId: string, partialSession: TableSession) => {
+    const tableRef = doc($db, 'tables', tableId);
+
+    // create update object: prepend each key in partialSession with 'session.'
+    const update: UpdateData<Table> = {};
+    Object.entries(partialSession).forEach(([key, value]) => {
+      update[`session.${key}`] = value;
+    });
+
+    await updateDoc(tableRef, update);
   };
 
   const remove = (): never => {
@@ -99,6 +118,7 @@ export const useFirestoreTable = () => {
 
   return {
     create,
+    updateSessionPresence,
     remove,
   };
 };

@@ -4,7 +4,7 @@ import { useExplorerItem } from '#imports';
 
 const props = defineProps<{
   node: TreeNode
-  path?: string[]
+  path?: number[]
 }>();
 
 const MAX_DEPTH = 3;
@@ -39,6 +39,9 @@ const createScene = () => {
     'scene',
     'Create new scene',
     props.node,
+    undefined,
+    undefined,
+    props.path ?? [],
   );
 };
 

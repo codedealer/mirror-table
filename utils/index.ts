@@ -59,21 +59,21 @@ export const nameValidationsRules = [
 
 /**
  * Get a node by its path:
- * path represents an array of indexes in a multidimensional array _nodes
+ * path represents an array of indexes in a multidimensional array nodes
  * @param nodes
  * @param path
  */
-export const getNodeByPath = (nodes: TreeNode[], path: string[]) => {
+export const getNodeByPath = (nodes: TreeNode[], path: number[]) => {
   let node: TreeNode | undefined;
 
   for (const index of path) {
     if (!node) {
-      node = nodes[Number.parseInt(index)];
+      node = nodes[index];
     } else {
       if (!Array.isArray(node.children)) {
         return;
       }
-      node = node.children[Number.parseInt(index)];
+      node = node.children[index];
     }
   }
 

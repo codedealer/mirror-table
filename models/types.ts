@@ -269,12 +269,19 @@ export interface TableCard {
   deleted: boolean
 }
 
+export interface TableSessionPresence {
+  sceneId: string
+  path: string[]
+  displayName: string
+  groupId: string | null
+  color: string
+}
 /**
  * Session object for a table.
- * Property is a user id, value is a scene id to which the user is assigned.
+ * Property is a user id
  */
 export interface TableSession {
-  [x: string]: string
+  [x: string]: TableSessionPresence
 }
 
 /**
@@ -315,6 +322,7 @@ export interface Scene {
   id: string
   tableId: string
   categoryId: string
+  path: string[]
   title: string
   owner: string
   thumbnail: DriveFile | string | null
@@ -323,6 +331,9 @@ export interface Scene {
   deletable: boolean
   deleted: boolean
   slug: string
+  settings: {
+    [x: string]: unknown
+  }
 }
 
 export const isScene = (obj: unknown): obj is Scene => {

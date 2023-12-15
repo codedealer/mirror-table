@@ -6,23 +6,42 @@ import { useExplorerItem } from '~/composables/useExplorerItem';
 const props = defineProps<{
   node: TreeNode
   index: number
-  path: string[]
+  path: number[]
   tree: Tree
 }>();
 
 const { item: scene } = useExplorerItem<Scene>(props.node);
+
+const sceneStore = useSceneStore();
+
+const isActive = computed(() => {
+  return sceneStore.scene?.id === scene.value?.id;
+});
+
+const handleSelect = () => {
+  const tableStore = useTableStore();
+  if (isActive.value || !tableStore.table || !scene.value || !tableStore.sessionId) {
+    return;
+  }
+
+  tableStore.setActiveScene(tableStore.sessionId, scene.value.id, scene.value.path);
+};
 </script>
 
 <template>
-  <div class="drive-node drive-node__file">
+  <div
+    :class="{ 'drive-node__active': isActive }"
+    class="drive-node drive-node__file"
+  >
     <va-button
-      color="text-primary"
+      :color="isActive ? 'primary' : 'text-primary'"
       hover-behavior="opacity"
       class="drive-node__label"
       :hover-opacity="1"
       :loading="node.loading"
       :disabled="node.loading || !scene"
       preset="plain"
+      @click="handleSelect"
     >
       <div class="drive-node__icon">
         <va-icon
