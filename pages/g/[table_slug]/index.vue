@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useTitle } from '@vueuse/core';
 import { TableModes } from '~/models/types';
+import TheScene from '~/components/TheScene.vue';
 
 useSeoMeta({
   title: 'Table Session',
@@ -29,6 +30,7 @@ onMounted(() => {
 
   watchEffect(() => {
     if (tableStore.mode === TableModes.INVALID) {
+      tableStore.tableSlug = '';
       return navigateTo('/dashboard');
     }
   });
@@ -36,7 +38,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="scene-container" />
+  <div class="scene-container">
+    <TheScene />
+  </div>
 </template>
 
 <style scoped lang="scss">
