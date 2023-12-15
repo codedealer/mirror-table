@@ -58,7 +58,7 @@ const deleteScene = () => {
       </va-list-item>
 
       <va-list-item
-        v-if="scene?.deletable"
+        :disabled="!scene?.deletable"
         href="#"
         @click="deleteScene"
       >
@@ -71,7 +71,7 @@ const deleteScene = () => {
         </va-list-item-section>
         <va-list-item-section>
           <va-list-item-label caption>
-            Delete Scene
+            {{ scene?.deletable ? 'Delete scene' : 'Default scene' }}
           </va-list-item-label>
         </va-list-item-section>
       </va-list-item>
