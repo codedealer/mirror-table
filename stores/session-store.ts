@@ -1,8 +1,8 @@
 import { LOCAL_GROUP_ID_PREFIX, LOCAL_NAME_PREFIX } from '~/models/TableSessionPresence';
+import type { SessionGroup } from '~/models/types';
 
 export const useSessionStore = defineStore('session', () => {
   const tableStore = useTableStore();
-  const { sessionId } = toRefs(tableStore);
 
   const ownSession = computed(() => {
     if (
@@ -26,6 +26,28 @@ export const useSessionStore = defineStore('session', () => {
 
   const privateSessions = computed(() => {
     return viewerSessions.value.filter(session => session.groupId?.startsWith(LOCAL_GROUP_ID_PREFIX));
+  });
+
+  const sessionGroups = computed(() => {
+    const groups: SessionGroup[] = [];
+
+    viewerSessions.value.forEach((session) => {
+      const group = groups.find(
+        g => g.groupId === session.groupId,
+      );
+      if (!group) {
+        groups.push({
+          groupId: session.groupId,
+          groupLabel: session.groupLabel,
+          color: session.color,
+          sceneId: session.sceneId,
+          path: session.path,
+          enabled: session.enabled,
+        });
+      }
+    });
+
+    return groups;
   });
 
   const emptyTable = computed(() => {
@@ -63,6 +85,7 @@ export const useSessionStore = defineStore('session', () => {
       sceneStore.scene.path,
       newPrivateSessionName,
       newPrivateSessionGroupId,
+      newPrivateSessionName,
     );
 
     try {
@@ -82,10 +105,10 @@ export const useSessionStore = defineStore('session', () => {
   };
 
   return {
-    ownSessionId: sessionId,
     ownSession,
     viewerSessions,
     privateSessions,
+    sessionGroups,
     emptyTable,
     createPrivateSession,
   };

@@ -1,8 +1,24 @@
 <script setup lang="ts">
 const sessionStore = useSessionStore();
 
-const onPrivateSessionCreate = () => {
-  sessionStore.createPrivateSession();
+const { confirm } = useModal();
+
+const onPrivateSessionCreate = async () => {
+  if (sessionStore.privateSessions.length > 0) {
+    const confirmed = await confirm({
+      title: 'Private session already exists',
+      message: 'One private session can be used on multiple devices, you only need another one if you\'re planning on showing different scenes on different devices/screens. Do you want to create another private session?',
+      okText: 'Create',
+      cancelText: 'Cancel',
+      size: 'small',
+    });
+
+    if (!confirmed) {
+      return;
+    }
+  }
+
+  await sessionStore.createPrivateSession();
 };
 </script>
 
@@ -32,6 +48,7 @@ const onPrivateSessionCreate = () => {
               size="small"
               color="primary-dark"
               icon="add_to_queue"
+              @click="onPrivateSessionCreate"
             />
           </div>
         </va-popover>
@@ -72,6 +89,8 @@ const onPrivateSessionCreate = () => {
         </div>
       </va-card-content>
     </va-card>
+
+    <SessionExplorerList v-else />
   </div>
 </template>
 

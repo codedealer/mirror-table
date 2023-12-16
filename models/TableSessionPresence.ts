@@ -4,6 +4,7 @@ const COLORS = [
   '#f44336',
   '#e91e63',
   '#9c27b0',
+  '#2DE8FA', // this is the first local color
   '#673ab7',
   '#3f51b5',
   '#2196f3',
@@ -31,6 +32,7 @@ export const TableSessionPresenceFactory = (
   path: string[],
   displayName?: string,
   groupId?: string, // if undefined, assumed it is the owner who has no group
+  groupLabel?: string,
 ): TableSessionPresence => {
   if (!sceneId || path.length < 1 || !sessionId) {
     throw new Error('Invalid TableSessionPresence');
@@ -43,6 +45,7 @@ export const TableSessionPresenceFactory = (
     path,
     displayName: displayName ?? '',
     groupId: groupId ?? null,
+    groupLabel: groupLabel ?? '',
     color: '',
   };
 

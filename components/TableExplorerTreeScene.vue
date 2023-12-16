@@ -13,9 +13,16 @@ const props = defineProps<{
 const { item: scene } = useExplorerItem<Scene>(props.node);
 
 const sceneStore = useSceneStore();
+const sessionStore = useSessionStore();
 
 const isActive = computed(() => {
   return sceneStore.scene?.id === scene.value?.id;
+});
+
+const sessionGroupsHere = computed(() => {
+  return sessionStore.sessionGroups.filter(group =>
+    group.sceneId === scene.value?.id,
+  );
 });
 
 const handleSelect = () => {
@@ -51,8 +58,14 @@ const handleSelect = () => {
         />
       </div>
       <div
-        class="drive-node__name"
+        class="drive-node__name flex"
       >
+        <SessionGroupIcon
+          v-for="group in sessionGroupsHere"
+          :key="group.groupId"
+          :group="group"
+        />
+
         {{ scene?.title ?? '[ NO DATA ]' }}
       </div>
     </va-button>

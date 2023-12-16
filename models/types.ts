@@ -283,21 +283,25 @@ export interface TableCard {
   deleted: boolean
 }
 
-export interface TableSessionPresence {
-  sessionId: string
-  enabled: boolean
+export interface SessionGroup {
+  groupId: string | null
+  groupLabel?: string
+  color: string
   sceneId: string
   path: string[]
+  enabled: boolean
+}
+
+export interface TableSessionPresence extends SessionGroup {
+  sessionId: string
   displayName: string
-  groupId: string | null
-  color: string
 }
 /**
  * Session object for a table.
  * Property is a user id
  */
 export interface TableSession {
-  [x: string]: TableSessionPresence
+  [sessionId: string]: TableSessionPresence
 }
 
 /**
