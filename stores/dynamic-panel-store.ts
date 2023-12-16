@@ -16,9 +16,16 @@ export const useDynamicPanelStore = defineStore('dynamic-panel', () => {
     contents.value[model] = null;
   };
 
-  const open = (model: DynamicPanelModelType, content: DynamicPanelContentType) => {
-    // if it's already open, close it
+  const open = (
+    model: DynamicPanelModelType,
+    content: DynamicPanelContentType,
+    keepOpen = false,
+  ) => {
     if (models.value[model] && contents.value[model] === content) {
+      if (keepOpen) {
+        return;
+      }
+
       close(model);
       return;
     }

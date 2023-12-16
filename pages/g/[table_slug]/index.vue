@@ -40,6 +40,8 @@ onMounted(() => {
 <template>
   <div class="scene-container">
     <TheScene />
+
+    <HoverPanel />
   </div>
 </template>
 

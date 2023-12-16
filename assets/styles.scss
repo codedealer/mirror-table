@@ -5,6 +5,7 @@
 @import './tree.scss';
 @import './windows.scss';
 @import './scene.scss';
+@import './hover-panel.scss';
 
 body {
   --va-button-font-weight: 400;
@@ -21,6 +22,12 @@ p {
 }
 .mb {
   margin-bottom: 1rem;
+}
+.mb-2 {
+  margin-bottom: 2rem;
+}
+.mb-3 {
+  margin-bottom: 3rem;
 }
 header {
   margin-bottom: 2rem;
@@ -73,6 +80,16 @@ header {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.flex {
+  display: flex;
+  align-items: center;
+}
+
+.centered {
+  display: grid;
+  place-items: center;
 }
 
 /* fix for buttons in popover */

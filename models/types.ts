@@ -243,9 +243,23 @@ export type DynamicPanelModelType = typeof DynamicPanelModelTypes[keyof typeof D
 
 export const DynamicPanelContentTypes = {
   EXPLORER: 'explorer',
+  SESSIONS: 'sessions',
 } as const;
 
 export type DynamicPanelContentType = typeof DynamicPanelContentTypes[keyof typeof DynamicPanelContentTypes];
+
+export const HoverPanelContentTypes = {
+  SESSION_CONTROL: 'session-control',
+} as const;
+
+export type HoverPanelContentType = typeof HoverPanelContentTypes[keyof typeof HoverPanelContentTypes];
+
+export const HoverPanelModes = {
+  AUTO: 'hover',
+  MANUAL: 'manual',
+} as const;
+
+export type HoverPanelMode = typeof HoverPanelModes[keyof typeof HoverPanelModes];
 
 // FIRESTORE TYPES
 

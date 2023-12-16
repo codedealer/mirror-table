@@ -1,0 +1,31 @@
+.hover-panel {
+  --va-card-padding: 0.325rem;
+  --va-divider-margin: 0;
+  --va-card-box-shadow: 0px 0px 20px 11px #00000053;
+  display: flex;
+  align-items: stretch;
+}
+
+.interaction-area {
+  --top-offset: 2rem;
+  --trigger-area-height: 5rem;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(
+      -50%,
+      calc(
+        var(--translate, 1) * (-100% - var(--top-offset) + var(--trigger-area-height))
+      )
+  );
+  z-index: 1000;
+  padding: var(--top-offset) 0.5rem var(--trigger-area-height);
+  transition-property: transform, padding;
+  transition-duration: 0.3s;
+  transition-timing-function: ease-in-out;
+  pointer-events: auto;
+
+  &.active {
+    padding-bottom: 0;
+  }
+}
