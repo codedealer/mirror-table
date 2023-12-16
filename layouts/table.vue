@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const userStore = useUserStore();
+const layoutStore = useLayoutStore();
 
 watchEffect(() => {
   if (!userStore.isLoggedIn) {
@@ -14,12 +15,14 @@ watchEffect(() => {
       <slot />
     </div>
     <div class="main-grid__left">
-      <TheSidebar />
+      <TheSidebar
+        v-if="layoutStore.toolbarEnabled"
+      />
 
       <DynamicPanel name="left" />
     </div>
     <div class="main-grid__right">
-      <TheRightPanel />
+      <TheRightPanel v-if="layoutStore.rightPanelEnabled" />
 
       <DynamicPanel name="right" />
     </div>

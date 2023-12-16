@@ -128,6 +128,11 @@ export const useSessionStore = defineStore('session', () => {
 
   const launchPrivateSession = (presence: TableSessionPresence) => {
     tableStore.sessionOverride = presence.sessionId;
+
+    const notificationStore = useNotificationStore();
+    notificationStore.success(
+      `Launched private session: ${presence.groupLabel ?? presence.groupId}`,
+    );
   };
 
   return {
