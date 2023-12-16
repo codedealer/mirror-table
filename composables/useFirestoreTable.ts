@@ -23,6 +23,7 @@ export const useFirestoreTable = () => {
 
     const scenePath = [rootCategoryRef.id];
     const ownerPresence = TableSessionPresenceFactory(
+      userStore.user.uid,
       defaultSceneRef.id,
       scenePath,
     );

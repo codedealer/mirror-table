@@ -284,6 +284,8 @@ export interface TableCard {
 }
 
 export interface TableSessionPresence {
+  sessionId: string
+  enabled: boolean
   sceneId: string
   path: string[]
   displayName: string

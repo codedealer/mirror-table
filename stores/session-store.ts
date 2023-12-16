@@ -1,3 +1,5 @@
+import { LOCAL_GROUP_ID_PREFIX, LOCAL_NAME_PREFIX } from '~/models/TableSessionPresence';
+
 export const useSessionStore = defineStore('session', () => {
   const tableStore = useTableStore();
   const { sessionId } = toRefs(tableStore);
@@ -19,18 +21,73 @@ export const useSessionStore = defineStore('session', () => {
       return [];
     }
 
-    return (({ [tableStore.sessionId]: _, ...viewers }) => Object.entries(viewers).map(([k, v]) => ({ [k]: v })))(tableStore.table.session);
+    return (({ [tableStore.sessionId]: _, ...viewers }) => Object.values(viewers))(tableStore.table.session);
+  });
+
+  const privateSessions = computed(() => {
+    return viewerSessions.value.filter(session => session.groupId?.startsWith(LOCAL_GROUP_ID_PREFIX));
   });
 
   const emptyTable = computed(() => {
     return viewerSessions.value.length === 0;
   });
 
+  const createPrivateSession = async () => {
+    const sceneStore = useSceneStore();
+    if (!sceneStore.scene || !tableStore.table) {
+      return;
+    }
+
+    const privateSessionNames = privateSessions.value.map(session => session.displayName);
+    // generate a new name by taking the largest number in names of the form "Presentation #" and adding 1
+    const newPrivateSessionName = `${LOCAL_NAME_PREFIX} ${Math.max(0, ...privateSessionNames.map((name) => {
+      const match = name.match(/Presentation (\d+)/);
+      if (match) {
+        return Number(match[1]);
+      }
+      return 0;
+    })) + 1}`;
+    // generate a new group id by taking the largest number in group ids of the form "local#"
+    const privateSessionGroupIds = privateSessions.value.map(session => session.groupId);
+    const newPrivateSessionGroupId = `${LOCAL_GROUP_ID_PREFIX}${Math.max(0, ...privateSessionGroupIds.map((groupId) => {
+      const match = groupId!.match(/local(\d+)/);
+      if (match) {
+        return Number(match[1]);
+      }
+      return 0;
+    })) + 1}`;
+
+    const newPrivateSessionPresence = TableSessionPresenceFactory(
+      newPrivateSessionGroupId,
+      sceneStore.scene.id,
+      sceneStore.scene.path,
+      newPrivateSessionName,
+      newPrivateSessionGroupId,
+    );
+
+    try {
+      await tableStore.updateSessionPresence(
+        tableStore.table.id,
+        {
+          [newPrivateSessionGroupId]: newPrivateSessionPresence,
+        },
+      );
+    } catch (e) {
+      console.error(e);
+      console.log(newPrivateSessionPresence);
+
+      const notificationStore = useNotificationStore();
+      notificationStore.error(`Failed to create private session: ${newPrivateSessionName}`);
+    }
+  };
+
   return {
     ownSessionId: sessionId,
     ownSession,
     viewerSessions,
+    privateSessions,
     emptyTable,
+    createPrivateSession,
   };
 });
 

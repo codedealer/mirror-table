@@ -22,17 +22,23 @@ const pickColor = (str: string) => {
   return COLORS[index];
 };
 
+export const LOCAL_GROUP_ID_PREFIX = 'local' as const;
+export const LOCAL_NAME_PREFIX = 'Presentation' as const;
+
 export const TableSessionPresenceFactory = (
+  sessionId: string,
   sceneId: string,
   path: string[],
   displayName?: string,
   groupId?: string, // if undefined, assumed it is the owner who has no group
 ): TableSessionPresence => {
-  if (!sceneId || path.length < 1) {
+  if (!sceneId || path.length < 1 || !sessionId) {
     throw new Error('Invalid TableSessionPresence');
   }
 
   const presence: TableSessionPresence = {
+    sessionId,
+    enabled: true,
     sceneId,
     path,
     displayName: displayName ?? '',

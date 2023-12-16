@@ -1,5 +1,9 @@
 <script setup lang="ts">
 const sessionStore = useSessionStore();
+
+const onPrivateSessionCreate = () => {
+  sessionStore.createPrivateSession();
+};
 </script>
 
 <template>
@@ -53,7 +57,7 @@ const sessionStore = useSessionStore();
           Each client connecting to a table needs to have a session. A session controls which scene the viewer is currently watching.
         </p>
         <p class="va-paragraph">
-          Private sessions are a primary way to present a table. private session does not have to be on the same device, just on the same account. However, a private session launched on the same device has certain performance advantages.
+          Private sessions are a primary way to present a table. Private session does not have to be on the same device, just on the same account. However, a private session launched on the same device has certain performance advantages.
         </p>
 
         <div class="tc">
@@ -61,6 +65,7 @@ const sessionStore = useSessionStore();
             icon="add_to_queue"
             color="primary-dark"
             size="medium"
+            @click="onPrivateSessionCreate"
           >
             Add private session
           </va-button>
