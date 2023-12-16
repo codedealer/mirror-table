@@ -7,7 +7,7 @@ const hoverPanelStore = useHoverPanelStore();
 let tries = 0;
 
 watchEffect(() => {
-  if (!sessionStore.ownSession?.sessionId || !sessionStore.emptyTable || tries > 0) {
+  if (!sessionStore.activeSessionId || !sessionStore.emptyTable || tries > 0) {
     return;
   }
 

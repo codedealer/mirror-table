@@ -1,9 +1,12 @@
 import { LOCAL_GROUP_ID_PREFIX, LOCAL_NAME_PREFIX } from '~/models/TableSessionPresence';
-import type { SessionGroup } from '~/models/types';
+import type { SessionGroup, TableSessionPresence } from '~/models/types';
 
 export const useSessionStore = defineStore('session', () => {
   const tableStore = useTableStore();
 
+  /**
+   * This is the true session (table owner or an invited viewer)
+   */
   const ownSession = computed(() => {
     if (
       !tableStore.table ||
@@ -14,6 +17,25 @@ export const useSessionStore = defineStore('session', () => {
     }
 
     return tableStore.table.session[tableStore.sessionId];
+  });
+
+  const activeSessionId = computed(() => {
+    return tableStore.sessionOverride ?? tableStore.sessionId;
+  });
+
+  /**
+   * This is the session that is currently being viewed (possibly in presentation mode)
+   */
+  const activeSession = computed(() => {
+    if (
+      !tableStore.table ||
+      !activeSessionId.value ||
+      !Object.hasOwn(tableStore.table.session, activeSessionId.value)
+    ) {
+      return undefined;
+    }
+
+    return tableStore.table.session[activeSessionId.value];
   });
 
   const viewerSessions = computed(() => {
@@ -104,13 +126,20 @@ export const useSessionStore = defineStore('session', () => {
     }
   };
 
+  const launchPrivateSession = (presence: TableSessionPresence) => {
+    tableStore.sessionOverride = presence.sessionId;
+  };
+
   return {
     ownSession,
+    activeSessionId,
+    activeSession,
     viewerSessions,
     privateSessions,
     sessionGroups,
     emptyTable,
     createPrivateSession,
+    launchPrivateSession,
   };
 });
 

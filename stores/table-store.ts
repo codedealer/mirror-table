@@ -8,6 +8,7 @@ export const useTableStore = defineStore('table', () => {
   const { $db } = useNuxtApp();
 
   const tableSlug = ref('');
+  const sessionOverride = ref<string | null>(null);
 
   const userStore = useUserStore();
 
@@ -66,7 +67,7 @@ export const useTableStore = defineStore('table', () => {
     }
 
     if (permissions.value.isOwner) {
-      return TableModes.OWN;
+      return sessionOverride.value ? TableModes.PRESENTATION : TableModes.OWN;
     } else if (permissions.value.isEditor) {
       return TableModes.EDIT;
     }
@@ -75,7 +76,7 @@ export const useTableStore = defineStore('table', () => {
   });
 
   const sessionId = computed(() => {
-    if (!mode.value || !userStore.user?.uid) {
+    if (!userStore.user?.uid) {
       return undefined;
     }
 
@@ -127,6 +128,7 @@ export const useTableStore = defineStore('table', () => {
     permissions,
     mode,
     sessionId,
+    sessionOverride,
     create,
     updateSessionPresence,
     setActiveScene,

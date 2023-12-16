@@ -57,6 +57,17 @@
     .va-button__content {
       display: contents;
     }
+
+    .drive-node__hover-bar {
+      opacity: 0;
+      transition: opacity .3s ease-in-out;
+    }
+
+    &:hover {
+      .drive-node__hover-bar {
+        opacity: 1;
+      }
+    }
   }
   .drive-node__label {
     flex-grow: 1;

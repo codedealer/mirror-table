@@ -6,19 +6,14 @@ export const useSceneStore = defineStore('scene', () => {
   const { $db } = useNuxtApp();
 
   const tableStore = useTableStore();
-  const userStore = useUserStore();
+  const sessionStore = useSessionStore();
 
   const sceneDocRef = computed(() => {
-    if (!tableStore.table || !userStore.user || !tableStore.sessionId) {
+    if (!tableStore.table || !sessionStore.activeSession) {
       return undefined;
     }
 
-    const session = tableStore.table.session;
-    if (!(tableStore.sessionId in session)) {
-      return undefined;
-    }
-
-    const sceneId = session[tableStore.sessionId].sceneId;
+    const sceneId = sessionStore.activeSession.sceneId;
     const sceneRef = doc($db, 'tables', tableStore.table.id, 'scenes', sceneId)
       .withConverter(firestoreDataConverter<Scene>());
 
