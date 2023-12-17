@@ -1,6 +1,7 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
-import { collection, query, where } from '@firebase/firestore';
+import type { WithFieldValue } from '@firebase/firestore';
+import { collection, deleteField, query, where } from '@firebase/firestore';
 import type { Scene, Table, TableMode, TablePermissions, TableSession } from '~/models/types';
 import { TableModes } from '~/models/types';
 
@@ -143,6 +144,17 @@ export const useTableStore = defineStore('table', () => {
     await setActiveScene(sessionIds, scene);
   };
 
+  const removeViewer = async (sessionId: string) => {
+    if (!table.value) {
+      return;
+    }
+
+    const session: WithFieldValue<TableSession> = {};
+    session[sessionId] = deleteField();
+
+    await updateSessionPresence(table.value.id, session);
+  };
+
   return {
     tableSlug,
     table,
@@ -155,6 +167,7 @@ export const useTableStore = defineStore('table', () => {
     setActiveScene,
     moveGroupToScene,
     moveAllViewersToScene,
+    removeViewer,
     remove,
   };
 });

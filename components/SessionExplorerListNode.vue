@@ -6,6 +6,12 @@ defineProps<{
 }>();
 
 const sessionStore = useSessionStore();
+
+const removeSession = (presence: TableSessionPresence) => {
+  const tableStore = useTableStore();
+
+  tableStore.removeViewer(presence.sessionId);
+};
 </script>
 
 <template>
@@ -31,7 +37,17 @@ const sessionStore = useSessionStore();
     </va-button>
 
     <div class="drive-node__actions">
-      <div class="drive-node__hover-bar" />
+      <div class="drive-node__hover-bar">
+        <va-button
+          title="Delete Session"
+          preset="plain"
+          color="danger"
+          icon="delete"
+          size="small"
+          round
+          @click="removeSession(presence)"
+        />
+      </div>
     </div>
   </div>
 </template>

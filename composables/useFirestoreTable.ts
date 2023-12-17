@@ -100,7 +100,10 @@ export const useFirestoreTable = () => {
     await batch.commit();
   };
 
-  const updateSessionPresence = async (tableId: string, partialSession: TableSession) => {
+  const updateSessionPresence = async (
+    tableId: string,
+    partialSession: WithFieldValue<TableSession>,
+  ) => {
     const tableRef = doc($db, 'tables', tableId);
 
     // create update object: prepend each key in partialSession with 'session.'
