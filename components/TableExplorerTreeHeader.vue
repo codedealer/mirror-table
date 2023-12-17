@@ -22,10 +22,10 @@ const tableExplorerStore = useTableExplorerStore();
           >
             <div class="drive-node__icon">
               <va-icon
-                name=""
+                name="refresh"
                 color="primary"
                 size="medium"
-                class="drive-node__icon root-icon"
+                class="drive-node__icon"
               />
             </div>
           </va-button>
