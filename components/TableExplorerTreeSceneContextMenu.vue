@@ -10,11 +10,17 @@ const { item: scene } = useExplorerItem<Scene>(toRef(() => props.node));
 
 const { notHere: movableGroups, here } = useSessionGroupsHere(scene);
 
+const sceneStore = useSceneStore();
+
+const isActive = computed(() => {
+  return sceneStore.scene?.id === scene.value?.id;
+});
+
 const isDeletable = computed(() => {
   if (!scene.value) {
     return false;
   }
-  return scene.value.deletable && here.value.length === 0;
+  return scene.value.deletable && here.value.length === 0 && !isActive.value;
 });
 
 const DeleteSceneLabel = computed(() => {
@@ -26,7 +32,7 @@ const DeleteSceneLabel = computed(() => {
     return 'Default scene';
   }
 
-  return here.value.length === 0 ? 'Delete scene' : 'Scene in use';
+  return (here.value.length === 0 && !isActive.value) ? 'Delete scene' : 'Scene in use';
 });
 
 const moveGroup = (groupId: string) => {
@@ -54,8 +60,17 @@ const editScene = () => {
 };
 
 const deleteScene = () => {
-  const notificationStore = useNotificationStore();
-  notificationStore.error('This needs revisiting to check that we don\'t delete the scene with viewers in it.');
+  if (!scene.value) {
+    return;
+  }
+
+  if (!isDeletable.value) {
+    const notificationStore = useNotificationStore();
+    notificationStore.error('Cannot delete scene with viewers in it');
+  }
+
+  const tableExplorerStore = useTableExplorerStore();
+  tableExplorerStore.trashScene(scene.value, true);
 };
 </script>
 

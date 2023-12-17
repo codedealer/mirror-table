@@ -38,6 +38,15 @@ const handleSelect = () => {
 
   tableStore.setActiveScene(tableStore.sessionId, scene.value);
 };
+
+const undoDeleteScene = () => {
+  if (!scene.value) {
+    return;
+  }
+
+  const tableExplorerStore = useTableExplorerStore();
+  tableExplorerStore.trashScene(scene.value, false);
+};
 </script>
 
 <template>
@@ -51,7 +60,7 @@ const handleSelect = () => {
       class="drive-node__label"
       :hover-opacity="1"
       :loading="node.loading"
-      :disabled="node.loading || !scene"
+      :disabled="node.loading || !scene || scene.deleted"
       preset="plain"
       @click="handleSelect"
     >
@@ -64,6 +73,7 @@ const handleSelect = () => {
       </div>
       <div
         class="drive-node__name flex"
+        :class="scene?.deleted ? 'drive-node__name--trashed' : ''"
       >
         <SessionGroupIcon
           v-for="group in sessionGroupsHere"
@@ -78,7 +88,24 @@ const handleSelect = () => {
     </va-button>
 
     <div v-if="scene" class="drive-node__actions">
-      <div class="drive-node__hover-bar">
+      <va-popover
+        message="Undo"
+        stick-to-edges
+      >
+        <va-button
+          v-show="scene.deleted"
+          preset="plain"
+          color="primary-dark"
+          size="medium"
+          icon="replay"
+          @click.stop="undoDeleteScene"
+        />
+      </va-popover>
+
+      <div
+        v-show="!scene.deleted"
+        class="drive-node__hover-bar"
+      >
         <va-button
           title="Move all viewers here"
           preset="plain"
@@ -91,6 +118,7 @@ const handleSelect = () => {
       </div>
 
       <TableExplorerTreeSceneContextMenu
+        v-show="!scene.deleted"
         :node="node"
       />
     </div>

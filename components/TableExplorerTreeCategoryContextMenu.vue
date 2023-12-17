@@ -13,6 +13,12 @@ const { item: category } = useExplorerItem<Category>(toRef(() => props.node));
 
 const { here } = useSessionGroupsHere(category);
 
+const sceneStore = useSceneStore();
+
+const isActive = computed(() => {
+  return sceneStore.scene?.path.includes(category.value?.id ?? '') ?? false;
+});
+
 const isEditable = computed(() => {
   if (!category.value) {
     return false;
@@ -27,7 +33,7 @@ const isEditable = computed(() => {
 });
 
 const isDeletable = computed(() => {
-  if (!category.value) {
+  if (!category.value || isActive.value) {
     return false;
   }
 
@@ -43,7 +49,7 @@ const DeleteCategoryLabel = computed(() => {
     return 'Default category';
   }
 
-  return here.value.length === 0 ? 'Delete category' : 'Category in use';
+  return (here.value.length === 0 && !isActive.value) ? 'Delete category' : 'Category in use';
 });
 
 const createCategory = () => {
@@ -82,9 +88,32 @@ const editCategory = () => {
   );
 };
 
-const deleteCategory = () => {
-  const notificationStore = useNotificationStore();
-  notificationStore.error('Not implemented yet');
+const { confirm } = useModal();
+
+const deleteCategory = async () => {
+  if (!category.value || !isDeletable.value) {
+    return;
+  }
+
+  const result = await confirm({
+    title: 'Delete category',
+    size: 'small',
+    message: 'Are you sure you want to delete this category?',
+    okText: 'Delete',
+    cancelText: 'Cancel',
+  });
+
+  if (!result) {
+    return;
+  }
+
+  const tableExplorerStore = useTableExplorerStore();
+
+  tableExplorerStore.setNodeLoading(props.node, true);
+
+  await tableExplorerStore.trashCategory(category.value!, true);
+
+  tableExplorerStore.setNodeLoading(props.node, false);
 };
 </script>
 

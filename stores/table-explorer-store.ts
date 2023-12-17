@@ -11,7 +11,7 @@ import {
   orderBy,
   query, serverTimestamp, setDoc,
   updateDoc,
-  where,
+  where, writeBatch,
 } from '@firebase/firestore';
 import type { Category, Scene, TreeNode } from '~/models/types';
 
@@ -374,18 +374,101 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
     }
   };
 
+  const trashScene = async (scene: Scene, value: boolean) => {
+    if (!scenesRef.value) {
+      throw new Error('Loading scene when firestore is not ready');
+    }
+
+    const docRef = doc(scenesRef.value, scene.id);
+
+    try {
+      await updateDoc(docRef, {
+        deleted: value,
+      });
+    } catch (e) {
+      console.error(e);
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+      return;
+    }
+
+    if (scene.id in scenes.value) {
+      scenes.value[scene.id].deleted = value;
+    }
+  };
+
+  const trashCategory = async (category: Category, value: boolean) => {
+    if (!categoriesRef.value || !scenesRef.value) {
+      throw new Error('Loading category when firestore is not ready');
+    }
+
+    const docRef = doc(categoriesRef.value, category.id);
+
+    try {
+      await updateDoc(docRef, {
+        deleted: value,
+      });
+    } catch (e) {
+      console.error(e);
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+      return;
+    }
+
+    if (category.id in categories.value) {
+      categories.value[category.id].deleted = value;
+    }
+
+    // find all scenes that have category.id in path array and trash them in a batch
+    const scenesQuery = query<Scene, WithFieldValue<Scene>>(
+      scenesRef.value,
+      where('path', 'array-contains', category.id),
+      where('deleted', '==', !value),
+    );
+
+    const snapshot = await getDocs(scenesQuery);
+
+    const batch = writeBatch($db);
+    snapshot.docs.forEach((doc) => {
+      const ref = doc.ref;
+      batch.update(ref, {
+        deleted: value,
+      });
+    });
+
+    try {
+      await batch.commit();
+    } catch (e) {
+      console.error(e);
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+      return;
+    }
+
+    // update the cache
+    snapshot.docs.forEach((doc) => {
+      const scene = doc.data();
+      if (scene.id in scenes.value) {
+        scenes.value[scene.id].deleted = value;
+      }
+    });
+  };
+
   return {
     isReady,
     categories,
     scenes,
     rootNode,
     nodes,
+    setNodeLoading,
     loadChildren,
     toggleCategory,
     loadCategory,
     saveCategory,
     loadScene,
     saveScene,
+    trashScene,
+    trashCategory,
   };
 });
 

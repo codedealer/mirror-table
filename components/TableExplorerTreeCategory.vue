@@ -14,6 +14,20 @@ const tableExplorerStore = useTableExplorerStore();
 const { item: category } = useExplorerItem<Category>(toRef(() => props.node));
 
 const { here: sessionGroupsHere } = useSessionGroupsHere(category);
+
+const undoDeleteCategory = async () => {
+  if (!category.value) {
+    return;
+  }
+
+  const tableExplorerStore = useTableExplorerStore();
+
+  tableExplorerStore.setNodeLoading(props.node, true);
+
+  await tableExplorerStore.trashCategory(category.value, false);
+
+  tableExplorerStore.setNodeLoading(props.node, false);
+};
 </script>
 
 <template>
@@ -25,6 +39,7 @@ const { here: sessionGroupsHere } = useSessionGroupsHere(category);
       hover-behavior="opacity"
       class="drive-node__label"
       :hover-opacity="1"
+      :disabled="!category || node.loading || category.deleted"
       preset="plain"
       @click="tableExplorerStore.toggleCategory(node)"
     >
@@ -38,6 +53,7 @@ const { here: sessionGroupsHere } = useSessionGroupsHere(category);
       </div>
       <div
         class="drive-node__name flex"
+        :class="category?.deleted ? 'drive-node__name--deleted' : ''"
       >
         <SessionGroupIcon
           v-for="group in sessionGroupsHere"
@@ -53,7 +69,22 @@ const { here: sessionGroupsHere } = useSessionGroupsHere(category);
     </va-button>
 
     <div v-if="category" class="drive-node__actions">
+      <va-popover
+        message="Undo"
+        stick-to-edges
+      >
+        <va-button
+          v-show="category.deleted"
+          preset="plain"
+          color="primary-dark"
+          size="medium"
+          icon="replay"
+          @click.stop="undoDeleteCategory"
+        />
+      </va-popover>
+
       <TableExplorerTreeCategoryContextMenu
+        v-if="!category.deleted"
         :node="node"
         :path="path"
       />
