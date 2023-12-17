@@ -1,11 +1,42 @@
 <script setup lang="ts">
 import type { Scene, TreeNode } from '~/models/types';
+import { useSessionGroupsHere } from '~/composables/useSessionGroupsHere';
 
 const props = defineProps<{
   node: TreeNode
 }>();
 
-const { item: scene } = useExplorerItem<Scene>(props.node);
+const { item: scene } = useExplorerItem<Scene>(toRef(() => props.node));
+
+const { notHere: movableGroups, here } = useSessionGroupsHere(scene);
+
+const isDeletable = computed(() => {
+  if (!scene.value) {
+    return false;
+  }
+  return scene.value.deletable && here.value.length === 0;
+});
+
+const DeleteSceneLabel = computed(() => {
+  if (!scene.value) {
+    return 'Not available';
+  }
+
+  if (!scene.value.deletable) {
+    return 'Default scene';
+  }
+
+  return here.value.length === 0 ? 'Delete scene' : 'Scene in use';
+});
+
+const moveGroup = (groupId: string) => {
+  const tableStore = useTableStore();
+  if (!scene.value || !tableStore.table || !tableStore.sessionId) {
+    return;
+  }
+
+  tableStore.moveGroupToScene(groupId, scene.value);
+};
 
 const editScene = () => {
   if (!scene.value) {
@@ -40,6 +71,24 @@ const deleteScene = () => {
   >
     <va-list class="drive-node__context-menu">
       <va-list-item
+        v-for="group in movableGroups"
+        :key="group.groupId!"
+        href="#"
+        @click="moveGroup(group.groupId!)"
+      >
+        <va-list-item-section icon>
+          <SessionGroupIcon
+            :group="group"
+          />
+        </va-list-item-section>
+        <va-list-item-section>
+          <va-list-item-label caption>
+            {{ group.groupLabel ?? group.groupId }}
+          </va-list-item-label>
+        </va-list-item-section>
+      </va-list-item>
+
+      <va-list-item
         href="#"
         @click="editScene"
       >
@@ -58,7 +107,7 @@ const deleteScene = () => {
       </va-list-item>
 
       <va-list-item
-        :disabled="!scene?.deletable"
+        :disabled="!isDeletable"
         href="#"
         @click="deleteScene"
       >
@@ -71,7 +120,7 @@ const deleteScene = () => {
         </va-list-item-section>
         <va-list-item-section>
           <va-list-item-label caption>
-            {{ scene?.deletable ? 'Delete scene' : 'Default scene' }}
+            {{ DeleteSceneLabel }}
           </va-list-item-label>
         </va-list-item-section>
       </va-list-item>

@@ -2,9 +2,8 @@ import type { Category, Scene, TreeNode } from '~/models/types';
 
 export const useExplorerItem =
   <T extends Scene | Category>(
-    node: TreeNode,
+    nodeRef: Ref<TreeNode>,
   ) => {
-    const nodeRef = shallowRef(node);
     const idRef = computed(() => nodeRef.value.id);
 
     const tableExplorerStore = useTableExplorerStore();

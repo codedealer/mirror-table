@@ -9,7 +9,7 @@ const props = defineProps<{
 
 const MAX_DEPTH = 3;
 
-const { item: category } = useExplorerItem<Category>(props.node);
+const { item: category } = useExplorerItem<Category>(toRef(() => props.node));
 
 const isEditable = computed(() => {
   if (!category.value) {

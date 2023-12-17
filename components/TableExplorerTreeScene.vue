@@ -2,6 +2,7 @@
 import type { Tree } from 'he-tree-vue';
 import type { Scene, TreeNode } from '~/models/types';
 import { useExplorerItem } from '~/composables/useExplorerItem';
+import { useSessionGroupsHere } from '~/composables/useSessionGroupsHere';
 
 const props = defineProps<{
   node: TreeNode
@@ -10,20 +11,24 @@ const props = defineProps<{
   tree: Tree
 }>();
 
-const { item: scene } = useExplorerItem<Scene>(props.node);
+const { item: scene } = useExplorerItem<Scene>(toRef(() => props.node));
 
 const sceneStore = useSceneStore();
-const sessionStore = useSessionStore();
 
 const isActive = computed(() => {
   return sceneStore.scene?.id === scene.value?.id;
 });
 
-const sessionGroupsHere = computed(() => {
-  return sessionStore.sessionGroups.filter(group =>
-    group.sceneId === scene.value?.id,
-  );
-});
+const { here: sessionGroupsHere } = useSessionGroupsHere(scene);
+
+const moveAllViewersHere = () => {
+  if (!scene.value) {
+    return;
+  }
+
+  const tableStore = useTableStore();
+  tableStore.moveAllViewersToScene(scene.value);
+};
 
 const handleSelect = () => {
   const tableStore = useTableStore();
@@ -31,7 +36,7 @@ const handleSelect = () => {
     return;
   }
 
-  tableStore.setActiveScene(tableStore.sessionId, scene.value.id, scene.value.path);
+  tableStore.setActiveScene(tableStore.sessionId, scene.value);
 };
 </script>
 
@@ -62,15 +67,29 @@ const handleSelect = () => {
       >
         <SessionGroupIcon
           v-for="group in sessionGroupsHere"
-          :key="group.groupId"
+          :key="group.groupId!"
           :group="group"
         />
 
-        {{ scene?.title ?? '[ NO DATA ]' }}
+        <div class="text-overflow">
+          {{ scene?.title ?? '[ NO DATA ]' }}
+        </div>
       </div>
     </va-button>
 
     <div v-if="scene" class="drive-node__actions">
+      <div class="drive-node__hover-bar">
+        <va-button
+          title="Move all viewers here"
+          preset="plain"
+          color="primary"
+          icon="system_update_alt"
+          size="small"
+          round
+          @click="moveAllViewersHere"
+        />
+      </div>
+
       <TableExplorerTreeSceneContextMenu
         :node="node"
       />

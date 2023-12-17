@@ -11,7 +11,7 @@ const props = defineProps<{
 
 const tableExplorerStore = useTableExplorerStore();
 
-const { item: category } = useExplorerItem<Category>(props.node);
+const { item: category } = useExplorerItem<Category>(toRef(() => props.node));
 </script>
 
 <template>

@@ -1,7 +1,7 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 import { collection, query, where } from '@firebase/firestore';
-import type { Table, TableMode, TablePermissions, TableSession } from '~/models/types';
+import type { Scene, Table, TableMode, TablePermissions, TableSession } from '~/models/types';
 import { TableModes } from '~/models/types';
 
 export const useTableStore = defineStore('table', () => {
@@ -91,10 +91,9 @@ export const useTableStore = defineStore('table', () => {
 
   const setActiveScene = async (
     sessionIds: string[] | string,
-    sceneId: string,
-    path: string[],
+    scene: Scene,
   ) => {
-    if (!table.value || !sceneId) {
+    if (!table.value || !scene) {
       return;
     }
 
@@ -107,8 +106,8 @@ export const useTableStore = defineStore('table', () => {
       }
 
       const presence = structuredClone(toRaw(table.value!.session[id]));
-      presence.sceneId = sceneId;
-      presence.path = path;
+      presence.sceneId = scene.id;
+      presence.path = scene.path;
 
       session[id] = presence;
     });
@@ -118,8 +117,30 @@ export const useTableStore = defineStore('table', () => {
     } catch (e) {
       console.error(e);
       const notificationStore = useNotificationStore();
-      notificationStore.error(`Failed to set active scene: ${sceneId}`);
+      notificationStore.error(`Failed to set active scene: ${scene.id}`);
     }
+  };
+
+  const moveGroupToScene = async (
+    groupId: string,
+    scene: Scene,
+  ) => {
+    const sessionStore = useSessionStore();
+    const sessionIds = sessionStore
+      .findSessionsByGroupId(groupId)
+      .map(s => s.sessionId);
+
+    await setActiveScene(sessionIds, scene);
+  };
+
+  const moveAllViewersToScene = async (
+    scene: Scene,
+  ) => {
+    const sessionStore = useSessionStore();
+    const sessionIds = sessionStore
+      .viewerSessions.map(s => s.sessionId);
+
+    await setActiveScene(sessionIds, scene);
   };
 
   return {
@@ -132,6 +153,8 @@ export const useTableStore = defineStore('table', () => {
     create,
     updateSessionPresence,
     setActiveScene,
+    moveGroupToScene,
+    moveAllViewersToScene,
     remove,
   };
 });
