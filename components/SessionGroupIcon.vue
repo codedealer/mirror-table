@@ -20,7 +20,7 @@ watchEffect(() => {
 <template>
   <div class="session-group-icon">
     <va-popover
-      :message="group.groupLabel ?? group.groupId"
+      :message="group.groupLabel ?? group.groupId!"
       placement="bottom"
       stick-to-edges
     >
