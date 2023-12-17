@@ -3,7 +3,7 @@ import DriveDirectoryTree from '~/components/DriveDirectoryTree.vue';
 
 const userStore = useUserStore();
 const rightPanelStore = useRightPanelStore();
-const { sideBarMinimized } = toRefs(rightPanelStore);
+const { sideBarMinimized } = storeToRefs(rightPanelStore);
 </script>
 
 <template>

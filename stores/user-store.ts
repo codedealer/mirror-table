@@ -16,7 +16,7 @@ export const useUserStore = defineStore('user', () => {
   });
 
   const googleAuthStore = useGoogleAuthStore();
-  const { authorizationInfo } = toRefs(googleAuthStore);
+  const { authorizationInfo } = storeToRefs(googleAuthStore);
 
   // true if there is a user token stored in the system
   // indicates that the user was logged in at some point (primarily for ssr)

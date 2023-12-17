@@ -39,7 +39,7 @@ const submit = async () => {
 
 const userStore = useUserStore();
 const googleStore = useGoogleAuthStore();
-const { isAuthenticated } = toRefs(userStore);
+const { isAuthenticated } = storeToRefs(userStore);
 
 const openPicker = async () => {
   const { buildPicker } = usePicker();

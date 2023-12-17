@@ -22,8 +22,8 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
   const driveStore = useDriveStore();
   const userStore = useUserStore();
 
-  const { isReady } = toRefs(driveStore);
-  const { profile } = toRefs(userStore);
+  const { isReady } = storeToRefs(driveStore);
+  const { profile } = storeToRefs(userStore);
 
   const isRootFolder = computed(() => {
     if (!rootNode.value || !profile.value) {

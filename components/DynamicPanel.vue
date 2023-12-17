@@ -11,7 +11,7 @@ const props = defineProps<{
 }>();
 
 const store = useDynamicPanelStore();
-const { models, contents } = toRefs(store);
+const { models, contents } = storeToRefs(store);
 
 const availableComponents: Record<DynamicPanelContentType, unknown> = {
   [DynamicPanelContentTypes.EXPLORER]: TableExplorer,
@@ -44,7 +44,7 @@ const layoutStore = useLayoutStore();
 if (props.name === DynamicPanelModelTypes.RIGHT) {
   const rightPanelStore = useRightPanelStore();
 
-  const { sideBarMinimized } = toRefs(rightPanelStore);
+  const { sideBarMinimized } = storeToRefs(rightPanelStore);
 
   watchEffect(() => {
     if (layoutStore.toolbarEnabled) {

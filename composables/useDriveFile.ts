@@ -14,7 +14,7 @@ export const useDriveFile = <T extends DriveAsset | DriveFile | DriveImage>
     },
   ) => {
   const driveStore = useDriveStore();
-  const { isReady } = toRefs(driveStore);
+  const { isReady } = storeToRefs(driveStore);
 
   const file = ref<T>();
   const error = shallowRef<unknown>(null);

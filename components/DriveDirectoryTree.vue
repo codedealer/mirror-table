@@ -8,7 +8,7 @@ const Tree = NakedTree.mixPlugins([
 
 const driveTreeStore = useDriveTreeStore();
 
-const { nodes } = toRefs(driveTreeStore);
+const { nodes } = storeToRefs(driveTreeStore);
 </script>
 
 <template>

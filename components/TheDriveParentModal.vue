@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const config = useRuntimeConfig();
 const driveModalStore = useDriveFolderModalStore();
-const { parentFolderModalModel } = toRefs(driveModalStore);
+const { parentFolderModalModel } = storeToRefs(driveModalStore);
 
 const onOk = () => {
   driveModalStore.resolve(config.public.parentFolder);
