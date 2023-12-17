@@ -4,6 +4,7 @@ import type { SessionGroup } from '~/models/types';
 
 const props = defineProps<{
   group: SessionGroup
+  alt?: boolean
 }>();
 
 const color = useCssVar('--icon-color');
@@ -27,6 +28,7 @@ watchEffect(() => {
       <i
         :style="{ '--icon-color': color }"
         class="session-group-icon__icon"
+        :class="{ 'session-group-icon__icon--alt': alt }"
       />
     </va-popover>
   </div>
@@ -36,6 +38,12 @@ watchEffect(() => {
 .session-group-icon {
   display: inline-grid;
   place-items: center;
+
+  &:first-child {
+    .session-group-icon__icon {
+      margin-left: 0;
+    }
+  }
 }
 .session-group-icon__icon {
   display: block;
@@ -45,5 +53,10 @@ watchEffect(() => {
   background-color: var(--icon-color, red);
   box-sizing: border-box;
   margin: 5px;
+
+  &--alt {
+    background-color: transparent;
+    border: 1px solid var(--icon-color, red);
+  }
 }
 </style>
