@@ -11,6 +11,8 @@ const MAX_DEPTH = 3;
 
 const { item: category } = useExplorerItem<Category>(toRef(() => props.node));
 
+const { here } = useSessionGroupsHere(category);
+
 const isEditable = computed(() => {
   if (!category.value) {
     return false;
@@ -22,6 +24,26 @@ const isEditable = computed(() => {
   }
 
   return tableStore.table.rootCategoryId !== category.value.id;
+});
+
+const isDeletable = computed(() => {
+  if (!category.value) {
+    return false;
+  }
+
+  return category.value.deletable && here.value.length === 0;
+});
+
+const DeleteCategoryLabel = computed(() => {
+  if (!category.value) {
+    return 'Not available';
+  }
+
+  if (!category.value.deletable) {
+    return 'Default category';
+  }
+
+  return here.value.length === 0 ? 'Delete category' : 'Category in use';
 });
 
 const createCategory = () => {
@@ -135,6 +157,7 @@ const deleteCategory = () => {
 
       <va-list-item
         v-if="category?.deletable"
+        :disabled="!isDeletable"
         href="#"
         @click="deleteCategory"
       >
@@ -147,7 +170,7 @@ const deleteCategory = () => {
         </va-list-item-section>
         <va-list-item-section>
           <va-list-item-label caption>
-            Delete category
+            {{ DeleteCategoryLabel }}
           </va-list-item-label>
         </va-list-item-section>
       </va-list-item>

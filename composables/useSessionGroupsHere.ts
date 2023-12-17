@@ -13,7 +13,11 @@ export const useSessionGroupsHere =
           g => positive ? g.sceneId === item.id : g.sceneId !== item.id,
         );
       } else {
-        return [];
+        return sessionStore.sessionGroups.filter(
+          g => positive
+            ? g.path.includes(item.id)
+            : !g.path.includes(item.id),
+        );
       }
     };
 

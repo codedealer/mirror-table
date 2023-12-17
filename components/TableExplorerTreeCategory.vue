@@ -12,6 +12,8 @@ const props = defineProps<{
 const tableExplorerStore = useTableExplorerStore();
 
 const { item: category } = useExplorerItem<Category>(toRef(() => props.node));
+
+const { here: sessionGroupsHere } = useSessionGroupsHere(category);
 </script>
 
 <template>
@@ -35,9 +37,18 @@ const { item: category } = useExplorerItem<Category>(toRef(() => props.node));
         />
       </div>
       <div
-        class="drive-node__name"
+        class="drive-node__name flex"
       >
-        {{ category?.title ?? '[ NO DATA ]' }}
+        <SessionGroupIcon
+          v-for="group in sessionGroupsHere"
+          :key="group.groupId!"
+          :group="group"
+          alt
+        />
+
+        <div class="text-overflow">
+          {{ category?.title ?? '[ NO DATA ]' }}
+        </div>
       </div>
     </va-button>
 
