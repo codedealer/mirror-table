@@ -60,12 +60,14 @@
 
     .drive-node__hover-bar {
       opacity: 0;
+      display: none;
       transition: opacity .3s ease-in-out;
     }
 
     &:hover {
       .drive-node__hover-bar {
         opacity: 1;
+        display: flex;
       }
     }
   }
@@ -74,6 +76,7 @@
     display: flex;
     align-items: center;
     gap: var(--drive-node-gap);
+    overflow: clip;
   }
   .drive-node__name {
     white-space: nowrap;
