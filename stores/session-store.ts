@@ -135,6 +135,10 @@ export const useSessionStore = defineStore('session', () => {
     );
   };
 
+  const findSessionsByGroupId = (groupId: string) => {
+    return viewerSessions.value.filter(session => session.groupId === groupId);
+  };
+
   return {
     ownSession,
     activeSessionId,
@@ -145,6 +149,7 @@ export const useSessionStore = defineStore('session', () => {
     emptyTable,
     createPrivateSession,
     launchPrivateSession,
+    findSessionsByGroupId,
   };
 });
 

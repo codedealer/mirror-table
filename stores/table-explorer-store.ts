@@ -214,7 +214,7 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
         });
 
         // update the node
-        const { item } = useExplorerItem(parent);
+        const { item } = useExplorerItem(toRef(() => parent));
 
         if (!item.value) {
           throw new Error('Category not found after update');
@@ -328,7 +328,7 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
         });
 
         // update the node
-        const { item } = useExplorerItem(parent);
+        const { item } = useExplorerItem(toRef(() => parent));
 
         if (!item.value) {
           throw new Error('Scene not found after update');
