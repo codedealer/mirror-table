@@ -11,7 +11,7 @@ const windowContent = computed(() =>
 );
 
 const { file } = useDriveFile<DriveAsset>(
-  ref(props.window.id),
+  toRef(() => props.window.id),
   {
     appPropertiesType: AppPropertiesTypes.ASSET,
   },

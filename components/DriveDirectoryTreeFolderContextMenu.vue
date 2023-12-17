@@ -11,7 +11,7 @@ const props = defineProps<{
 const tableStore = useTableStore();
 const driveTreeStore = useDriveTreeStore();
 
-const { file } = useDriveFile(ref(props.node.id));
+const { file } = useDriveFile(toRef(() => props.node.id));
 
 const permissions = computed(() => ({
   canAddChildren: (

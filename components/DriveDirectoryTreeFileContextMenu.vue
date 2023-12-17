@@ -6,7 +6,7 @@ const props = defineProps<{
   path: string[]
 }>();
 
-const { file } = useDriveFile(ref(props.node.id));
+const { file } = useDriveFile(toRef(() => props.node.id));
 
 const permissions = computed(() => ({
   canDelete: (

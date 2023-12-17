@@ -1,4 +1,3 @@
-import type { MaybeRef } from 'vue';
 import type { AppPropertiesType, DriveAsset, DriveFile, DriveImage } from '~/models/types';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
@@ -9,7 +8,7 @@ export interface DriveFileOptions {
 
 export const useDriveFile = <T extends DriveAsset | DriveFile | DriveImage>
   (
-    id: MaybeRef<string>,
+    idRef: Ref<string>,
     options: DriveFileOptions = {
       activelyLoad: false,
     },
@@ -20,7 +19,6 @@ export const useDriveFile = <T extends DriveAsset | DriveFile | DriveImage>
   const file = ref<T>();
   const error = shallowRef<unknown>(null);
   const isLoading = ref(false);
-  const idRef = ref(id);
 
   const driveFileStore = useDriveFileStore();
 

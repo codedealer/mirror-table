@@ -11,7 +11,7 @@ const windowContent = computed(() =>
   props.window.content as ModalWindowContentMarkdown,
 );
 
-const { file } = useDriveFile(ref(props.window.id));
+const { file } = useDriveFile(toRef(() => props.window.id));
 
 const permissions = computed(() => ({
   canEdit: file.value?.capabilities?.canEdit,
