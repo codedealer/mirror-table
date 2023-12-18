@@ -1,4 +1,5 @@
 import type { Timestamp } from '@firebase/firestore-types';
+import type Konva from 'konva';
 
 export interface AuthorizationInfo {
   accessToken: string
@@ -260,6 +261,12 @@ export const HoverPanelModes = {
 } as const;
 
 export type HoverPanelMode = typeof HoverPanelModes[keyof typeof HoverPanelModes];
+
+// CANVAS TYPES
+export interface IKonvaComponent<T> {
+  getNode: () => T
+  getStage: () => Konva.Stage
+}
 
 // FIRESTORE TYPES
 

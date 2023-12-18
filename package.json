@@ -37,6 +37,7 @@
     "firebase-admin": "^11.11.1",
     "google-auth-library": "^9.2.0",
     "he-tree-vue": "3",
+    "konva": "^9.2.3",
     "markdown-it": "^13.0.2",
     "markdown-it-abbr": "^1.0.4",
     "markdown-it-anchor": "^8.6.7",
@@ -45,6 +46,7 @@
     "markdown-it-sup": "^1.0.0",
     "markdown-it-task-lists": "^2.1.1",
     "pinia": "^2.1.7",
+    "vue-konva": "^3.0.2",
     "vuestic-ui": "^1.8.5"
   },
   "lint-staged": {
