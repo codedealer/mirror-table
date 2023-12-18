@@ -299,13 +299,18 @@ export interface SessionGroup {
   enabled: boolean
 }
 
+/**
+ * Each presence represents a client connected to a table.
+ * Each presence belongs to a single session group, a group can have many presences.
+ * In this structure, a group is flattened to a presence entity.
+ */
 export interface TableSessionPresence extends SessionGroup {
   sessionId: string
   displayName: string
 }
 /**
  * Session object for a table.
- * Property is a user id
+ * Property is a user id or an auto-generated local session id.
  */
 export interface TableSession {
   [sessionId: string]: TableSessionPresence
