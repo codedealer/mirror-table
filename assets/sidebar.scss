@@ -21,6 +21,7 @@
         }
       }
     }
+
     .empty {
       img {
         opacity: 0.5;
@@ -57,6 +58,7 @@
     --va-sidebar-item-active-border-size: 0;
     max-width: max(100%, 350px);
   }
+
   .profile-item {
     /*background-color: var(--va-background-secondary);*/
   }
@@ -75,20 +77,23 @@
   z-index: 1;
 }
 
-.dynamic-panel {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  overflow: hidden;
-}
+.va-sidebar {
+  &.dynamic-panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    overflow: hidden;
+  }
 
-.dynamic-panel__content,
-.dynamic-panel__header{
-  padding: 0.5rem;
-}
+  .dynamic-panel__content,
+  .dynamic-panel__header {
+    padding: 0.5rem;
+  }
 
-.dynamic-panel__header {
+  .dynamic-panel__header {
     display: flex;
     align-items: center;
     justify-content: flex-end;
+  }
+
 }
