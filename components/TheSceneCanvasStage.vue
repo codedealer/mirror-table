@@ -30,37 +30,19 @@ const onNodeTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
   }
 };
 
-const dragOnWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
-  // drag the stage in the direction of scrolling
-
-};
-
 onKeyDown(' ', (e) => {
   e.preventDefault();
+  if (!canvasStageStore.stage || canvasStageStore._stage.draggable) {
+    return;
+  }
+
   canvasStageStore.applyConfig({ draggable: true });
-}, { dedupe: true });
+}, { dedupe: false });
 
 onKeyUp(' ', (e) => {
   e.preventDefault();
   canvasStageStore.applyConfig({ draggable: false });
 });
-
-function generateNode () {
-  return {
-    id: Math.random().toString(),
-    x: 3000 * Math.random(),
-    y: 3000 * Math.random(),
-    radius: 50,
-    fill: 'red',
-    stroke: 'black',
-  };
-}
-
-const circles = ref<Konva.Circle[]>([]);
-
-for (let i = 0; i < 100; i++) {
-  circles.value.push(generateNode());
-}
 </script>
 
 <template>
@@ -70,11 +52,8 @@ for (let i = 0; i < 100; i++) {
     :config="canvasStageStore._stage"
     @dragend="onNodeTransformEnd"
     @transformend="onNodeTransformEnd"
-    @wheel="dragOnWheel"
   >
-    <v-layer>
-      <v-circle v-for="circle in circles" :config="circle" :key="circle.id" />
-    </v-layer>
+    <v-layer />
   </v-stage>
 </template>
 

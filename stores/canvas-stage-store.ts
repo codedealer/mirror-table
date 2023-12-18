@@ -15,6 +15,10 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     draggable: false,
   });
 
+  const fieldWidth = ref(3000);
+  const fieldHeight = ref(3000);
+  const fieldPadding = ref(500);
+
   const applyConfig = (config: Partial<Konva.StageConfig>) => {
     Object.assign(_stage.value, config);
   };
@@ -23,6 +27,9 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     _stageNode,
     _stage,
     stage,
+    fieldWidth,
+    fieldHeight,
+    fieldPadding,
     applyConfig,
   };
 });

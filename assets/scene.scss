@@ -29,8 +29,6 @@
 
 .canvas-container__field {
   &.scroll-enabled {
-    width: 3000px;
-    height: 3000px;
     overflow: hidden;
   }
 }
