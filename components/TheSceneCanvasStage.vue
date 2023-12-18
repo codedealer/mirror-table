@@ -30,6 +30,16 @@ const onNodeTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
   }
 };
 
+const startStageDrag = () => {
+  console.log('startStageDrag');
+  canvasStageStore.applyConfig({ draggable: true });
+};
+
+const stopStageDrag = () => {
+  console.log('stopStageDrag');
+  canvasStageStore.applyConfig({ draggable: false });
+};
+
 onKeyDown(' ', (e) => {
   e.preventDefault();
   canvasStageStore.applyConfig({ draggable: true });
@@ -57,6 +67,8 @@ const configCircle = ref({
     :config="canvasStageStore._stage"
     @dragend="onNodeTransformEnd"
     @transformend="onNodeTransformEnd"
+    @scroll="startStageDrag"
+    @scrollend="stopStageDrag"
   >
     <v-layer>
       <v-circle :config="configCircle" />
