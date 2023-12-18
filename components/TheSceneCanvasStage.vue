@@ -30,14 +30,9 @@ const onNodeTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
   }
 };
 
-const startStageDrag = () => {
-  console.log('startStageDrag');
-  canvasStageStore.applyConfig({ draggable: true });
-};
+const dragOnWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
+  // drag the stage in the direction of scrolling
 
-const stopStageDrag = () => {
-  console.log('stopStageDrag');
-  canvasStageStore.applyConfig({ draggable: false });
 };
 
 onKeyDown(' ', (e) => {
@@ -50,14 +45,22 @@ onKeyUp(' ', (e) => {
   canvasStageStore.applyConfig({ draggable: false });
 });
 
-const configCircle = ref({
-  x: 100,
-  y: 100,
-  radius: 50,
-  fill: 'red',
-  stroke: 'black',
-  strokeWidth: 4,
-});
+function generateNode () {
+  return {
+    id: Math.random().toString(),
+    x: 3000 * Math.random(),
+    y: 3000 * Math.random(),
+    radius: 50,
+    fill: 'red',
+    stroke: 'black',
+  };
+}
+
+const circles = ref<Konva.Circle[]>([]);
+
+for (let i = 0; i < 100; i++) {
+  circles.value.push(generateNode());
+}
 </script>
 
 <template>
@@ -67,11 +70,10 @@ const configCircle = ref({
     :config="canvasStageStore._stage"
     @dragend="onNodeTransformEnd"
     @transformend="onNodeTransformEnd"
-    @scroll="startStageDrag"
-    @scrollend="stopStageDrag"
+    @wheel="dragOnWheel"
   >
     <v-layer>
-      <v-circle :config="configCircle" />
+      <v-circle v-for="circle in circles" :config="circle" :key="circle.id" />
     </v-layer>
   </v-stage>
 </template>
