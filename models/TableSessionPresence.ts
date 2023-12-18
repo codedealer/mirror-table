@@ -1,10 +1,10 @@
 import type { TableSessionPresence } from '~/models/types';
 
 const COLORS = [
-  '#f44336',
+  '#2DE8FA', // this is the first local color
   '#e91e63',
   '#9c27b0',
-  '#2DE8FA', // this is the first local color
+  '#f44336',
   '#673ab7',
   '#3f51b5',
   '#2196f3',
