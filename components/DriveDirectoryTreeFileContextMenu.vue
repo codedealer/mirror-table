@@ -3,7 +3,7 @@ import type { DriveTreeNode } from '~/models/types';
 
 const props = defineProps<{
   node: DriveTreeNode
-  path: string[]
+  path: number[]
 }>();
 
 const { file } = useDriveFile(toRef(() => props.node.id));

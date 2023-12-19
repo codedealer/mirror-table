@@ -6,7 +6,7 @@ import { WindowFactory } from '~/models/Window';
 const props = defineProps<{
   node: DriveTreeNode
   index: number
-  path: string[]
+  path: number[]
   tree: Tree
 }>();
 
@@ -74,13 +74,10 @@ const undoTrashFolder = () => {
       preset="plain"
       @click="toggleFile"
     >
-      <div class="drive-node__icon">
-        <va-icon
-          name="article"
-          size="large"
-          color="primary"
-        />
-      </div>
+      <DriveDirectoryTreeFileIcon
+        :node="node"
+        :file="file"
+      />
       <div
         class="drive-node__name"
         :class="file?.trashed ? 'drive-node__name--trashed' : ''"
