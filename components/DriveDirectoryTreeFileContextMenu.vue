@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DriveTreeNode } from '~/models/types';
+import { useDriveFileContextActions } from '~/composables/useDriveFileContextActions';
 
 const props = defineProps<{
   node: DriveTreeNode
@@ -8,17 +9,7 @@ const props = defineProps<{
 
 const { file } = useDriveFile(toRef(() => props.node.id));
 
-const permissions = computed(() => ({
-  canDelete: (
-    file.value?.capabilities?.canDelete
-  ),
-}));
-
-const trashFile = () => {
-  const driveTreeStore = useDriveTreeStore();
-
-  driveTreeStore.removeFile(props.node);
-};
+const { actions } = useDriveFileContextActions(file, toRef(() => props.node));
 </script>
 
 <template>
@@ -33,20 +24,23 @@ const trashFile = () => {
   >
     <va-list class="drive-node__context-menu">
       <va-list-item
-        v-show="permissions.canDelete"
+        v-for="action in actions"
+        :key="action.label"
+        :disabled="action.disabled"
         href="#"
-        @click="trashFile"
+        @click="action.action"
       >
         <va-list-item-section icon>
           <va-icon
-            name="delete"
-            color="danger"
+            v-if="action.icon"
+            :name="action.icon.name"
+            :color="action.icon?.color ?? 'primary-dark'"
             size="small"
           />
         </va-list-item-section>
         <va-list-item-section>
           <va-list-item-label caption>
-            Delete file
+            {{ action.label }}
           </va-list-item-label>
         </va-list-item-section>
       </va-list-item>

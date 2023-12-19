@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import type { DriveAsset, DriveFile, DriveTreeNode } from '~/models/types';
-import { AssetPropertiesKinds } from '~/models/types';
+import type { DriveFile, DriveTreeNode } from '~/models/types';
+import { AssetPropertiesKinds, isDriveAsset } from '~/models/types';
 
 const props = defineProps<{
   node: DriveTreeNode
   file?: DriveFile
 }>();
 
-const { file, error } = useDriveFile<DriveAsset>(toRef(() => props.node.id), {
-  appPropertiesType: AppPropertiesTypes.ASSET,
-});
+const { file, error } = useDriveFile(toRef(() => props.node.id));
 
 const iconName = computed(() => {
-  if (!file.value) {
+  if (!file.value || !isDriveAsset(file.value)) {
     return 'article';
   }
 

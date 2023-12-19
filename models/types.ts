@@ -182,7 +182,20 @@ export interface DriveAsset extends DriveFile {
   appProperties: AssetProperties
 }
 
+export const isDriveAsset = (file: DriveFile): file is DriveAsset => {
+  return isAssetProperties(file.appProperties);
+};
+
 export type DriveImage = DriveFile & Required<Pick<gapi.client.drive.File, 'imageMediaMetadata'>>;
+
+export interface DriveFileContextAction {
+  label: string
+  icon?: { name: string; color?: string }
+  action: (...args: unknown[]) => PromiseLike<void> | void
+  disabled: boolean
+  pinned: boolean
+  alwaysVisible: boolean
+}
 
 export interface TreeNode {
   $folded: boolean

@@ -198,8 +198,6 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
   };
 
   const removeFile = async (node: DriveTreeNode, restore = false) => {
-    let success = false;
-
     try {
       setNodeLoading(node, true);
 
@@ -211,16 +209,12 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
       }
 
       node.disabled = !restore;
-
-      success = true;
     } catch (e) {
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
     } finally {
       setNodeLoading(node, false);
     }
-
-    return success;
   };
 
   const setNodeLabel = (node: DriveTreeNode, label: string) => {
