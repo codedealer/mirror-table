@@ -9,7 +9,10 @@
 
 body {
   --va-button-font-weight: 400;
-  overflow-x: hidden;
+  --status-bar-height: 32px;
+  --window-z-index: 100;
+  --dynamic-panel-z-index: 200;
+  overflow-x: clip;
 }
 .va-h1 {
   margin-bottom: 3rem;

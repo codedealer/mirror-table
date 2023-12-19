@@ -83,6 +83,7 @@
     top: 0;
     bottom: 0;
     overflow: hidden;
+    z-index: var(--dynamic-panel-z-index);
   }
 
   .dynamic-panel__content,

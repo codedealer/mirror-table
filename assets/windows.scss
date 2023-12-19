@@ -5,6 +5,7 @@
 
 .main-grid__status {
   overflow: hidden;
+  height: var(--status-bar-height);
 }
 .window-manager {
   --window-manager-gap: 6px;
@@ -101,6 +102,7 @@
   position: fixed;
   top: 0;
   left: 0;
+  z-index: var(--window-z-index);
   resize: both;
   overflow: hidden; /*auto;*/
   border: 1px solid var(--window-border-color);
@@ -112,10 +114,10 @@
     transform 0.2s ease-in-out;
 
   &.window-container--top {
-    z-index: 2;
+    z-index: calc(var(--window-z-index) + 1);
 
     .asset-modal__title {
-      background-color: color-mix(in oklab, var(--va-background-primary) 100%, var(--va-secondary-dark) 35%);
+      background-color: var(--window-tab-background-active);
     }
   }
 
