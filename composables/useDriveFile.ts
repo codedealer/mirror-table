@@ -51,6 +51,11 @@ export const useDriveFile = <T extends DriveAsset | DriveFile | DriveImage>
     if (!Object.hasOwn(driveFileStore.files, idRef.value)) {
       if (options.activelyLoad) {
         await loadFile(idRef.value);
+
+        if (error.value) {
+          file.value = undefined;
+          return;
+        }
       } else {
         error.value = null;
         file.value = undefined;
