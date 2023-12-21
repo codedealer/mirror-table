@@ -39,18 +39,23 @@ export const useDriveFile = <T extends DriveAsset | DriveFile | DriveImage>
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  watchEffect(async () => {
-    if (!isReady.value || !idRef.value) {
+  watch([isReady, idRef], async ([isReadyValue, idRefValue]) => {
+    if (!isReadyValue || !idRefValue) {
       error.value = null;
       file.value = undefined;
       isLoading.value = false;
+
       return;
     }
 
-    if (!Object.hasOwn(driveFileStore.files, idRef.value)) {
+    if (isLoading.value) {
+      console.warn(`File ${idRefValue} is already loading`);
+      return;
+    }
+
+    if (!Object.hasOwn(driveFileStore.files, idRefValue)) {
       if (options.activelyLoad) {
-        await loadFile(idRef.value);
+        await loadFile(idRefValue);
 
         if (error.value) {
           file.value = undefined;
@@ -63,18 +68,25 @@ export const useDriveFile = <T extends DriveAsset | DriveFile | DriveImage>
       }
     }
 
-    const driveFile = driveFileStore.files[idRef.value];
+    const driveFile = driveFileStore.files[idRefValue];
+
+    if (!driveFile) {
+      throw new Error(`File ${idRefValue} was expected but not found`);
+    }
 
     if (
       options.appPropertiesType &&
       driveFile.appProperties?.type !== options.appPropertiesType
     ) {
-      error.value = new Error(`File ${idRef.value} is not of type ${options.appPropertiesType}`);
+      error.value = new Error(`File ${idRefValue} is not of type ${options.appPropertiesType}`);
       file.value = undefined;
       return;
     }
 
     file.value = driveFile as T;
+    error.value = null;
+  }, {
+    immediate: true,
   });
 
   const label = computed(() => {
