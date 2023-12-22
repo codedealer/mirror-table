@@ -9,7 +9,7 @@ export const PreviewPropertiesFactory = (
     try {
       const deserializedObj = JSON.parse(objOrString) as Record<string, unknown>;
 
-      // take values of the keys in the deserialized object that are contained in deserializedPropertyDictionary and put then in obj
+      // take values of the keys in the deserialized object that are contained in deserializedPropertyDictionary and put them in obj
       obj = Object.fromEntries(
         Object.entries(deserializedObj).filter(
           ([key]) => key in deserializedPropertyDictionary)
@@ -20,6 +20,8 @@ export const PreviewPropertiesFactory = (
 
       obj.nativeHeight = Number(obj.nativeHeight);
       obj.nativeWidth = Number(obj.nativeWidth);
+      obj.scaleX = Number(obj.scaleX);
+      obj.scaleY = Number(obj.scaleY);
     } catch (e) {
       console.error(e);
       throw new Error('Invalid JSON object');
@@ -40,17 +42,9 @@ export const PreviewPropertiesFactory = (
     id: obj.id,
     nativeWidth: obj.nativeWidth as number,
     nativeHeight: obj.nativeHeight as number,
+    scaleX: Number.isSafeInteger(obj.scaleX) ? obj.scaleX as number : 1,
+    scaleY: Number.isSafeInteger(obj.scaleY) ? obj.scaleY as number : 1,
   };
-
-  if ('width' in obj && 'height' in obj) {
-    // make sure that width and height are numbers higher than 0
-    const width = Number(obj.width);
-    const height = Number(obj.height);
-    if (width > 0 && height > 0) {
-      previewObject.width = width;
-      previewObject.height = height;
-    }
-  }
 
   if ('rotation' in obj) {
     const rotation = Number(obj.rotation);

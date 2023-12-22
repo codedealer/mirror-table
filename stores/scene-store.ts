@@ -74,10 +74,9 @@ export const useSceneStore = defineStore('scene', () => {
       _type: 'canvas-object',
       id: docRef.id,
       type: 'asset',
-      assetId: asset.id,
-      label: {
-        title: asset.appProperties.title,
-        showTitle: asset.appProperties.showTitle,
+      asset: {
+        id: asset.id,
+        preview: asset.appProperties.preview,
       },
       container: {
         name: 'element-container',

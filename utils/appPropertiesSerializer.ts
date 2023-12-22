@@ -8,6 +8,8 @@ export const serializedPropertyDictionary: Record<string, string> = {
   rotation: 'r',
   width: 'w',
   height: 'h',
+  scaleX: 's',
+  scaleY: 't',
 };
 
 export const deserializedPropertyDictionary: Record<string, string> = Object.fromEntries(

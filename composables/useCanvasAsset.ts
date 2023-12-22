@@ -22,7 +22,7 @@ export const useCanvasAsset = (
   } = useDriveFile<DriveAsset>(
     toRef(() => {
       return isSceneElementCanvasObjectAsset(element.value)
-        ? element.value.assetId
+        ? element.value.asset.id
         : '';
     }), {
       activelyLoad: true,

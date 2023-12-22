@@ -142,9 +142,9 @@ export interface PreviewProperties {
   id: string // drive file id of an image
   nativeWidth: number
   nativeHeight: number
+  scaleX: number
+  scaleY: number
   rotation?: number
-  width?: number
-  height?: number
 }
 
 export interface AssetProperties extends AppProperties {
@@ -211,7 +211,6 @@ export interface TreeNode {
 
 export interface DriveTreeNode extends TreeNode {
   id: string // coincides with DriveFile.id
-  /* data?: { id: string } */
   children?: DriveTreeNode[]
 }
 
@@ -445,10 +444,9 @@ export const isSceneElementCanvasObject = (
 
 export interface SceneElementCanvasObjectAsset extends SceneElementCanvasObject {
   type: 'asset'
-  assetId: string
-  label: {
-    showTitle: boolean
-    title: string
+  asset: {
+    id: string
+    preview: PreviewProperties
   }
   image?: Konva.ImageConfig
 }
