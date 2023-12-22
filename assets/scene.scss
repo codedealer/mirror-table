@@ -24,6 +24,12 @@
     width: 100%;
     height: calc(100vh - var(--status-bar-height));
     overflow: auto;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 }
 
