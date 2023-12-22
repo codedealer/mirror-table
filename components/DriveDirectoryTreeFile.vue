@@ -32,7 +32,7 @@ const toggleFile = async () => {
   // open file
   try {
     const driveFileStore = useDriveFileStore();
-    const blob = await driveFileStore.downloadMedia(props.node.id);
+    const blob = await driveFileStore.downloadMedia(props.node.id, false, false);
 
     // assuming the file is a markdown file for now
     // create a new window

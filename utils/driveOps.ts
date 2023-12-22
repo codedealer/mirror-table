@@ -104,7 +104,10 @@ export const getFile = async <T extends gapi.client.drive.File>(id: string, mask
   return response.result as T;
 };
 
-export const downloadMedia = async (id: string) => {
+export const downloadMedia = async <B extends boolean>(
+  id: string,
+  toBlob: B,
+): Promise<B extends true ? Blob : string> => {
   const driveStore = useDriveStore();
   const client = await driveStore.getClient();
 
@@ -116,6 +119,18 @@ export const downloadMedia = async (id: string) => {
     fileId: id,
     alt: 'media',
   });
+
+  if (!response.body || !response.headers) {
+    return response.body;
+  }
+
+  if (toBlob) {
+    return new Blob([
+      new Uint8Array(response.body.length).map((_, i) => response.body.charCodeAt(i)),
+    ], {
+      type: response.headers['X-Goog-Safety-Content-Type'],
+    });
+  }
 
   return response.body;
 };

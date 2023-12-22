@@ -1,8 +1,8 @@
 import type Konva from 'konva';
-import type { IKonvaComponent } from '~/models/types';
+import type { KonvaComponent } from '~/models/types';
 
 export const useCanvasStageStore = defineStore('canvas-stage', () => {
-  const _stageNode = ref<IKonvaComponent<Konva.Node> | null>(null);
+  const _stageNode = ref<KonvaComponent<Konva.Node> | null>(null);
   const stage = computed(() => _stageNode.value?.getStage());
   const _stage = ref<Partial<Konva.StageConfig>>({
     x: 0,

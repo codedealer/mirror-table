@@ -45,7 +45,12 @@ const repositionStage = () => {
 
 repositionStage();
 
-useEventListener(canvasContainer, 'scroll', repositionStage);
+useEventListener(
+  canvasContainer,
+  'scroll',
+  repositionStage,
+  { passive: true },
+);
 </script>
 
 <template>

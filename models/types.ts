@@ -276,9 +276,41 @@ export const HoverPanelModes = {
 export type HoverPanelMode = typeof HoverPanelModes[keyof typeof HoverPanelModes];
 
 // CANVAS TYPES
-export interface IKonvaComponent<T> {
+
+export interface KonvaComponent<T> {
   getNode: () => T
   getStage: () => Konva.Stage
+}
+
+export const CanvasLayerTypes = {
+  STATIC: 'cached',
+  DYNAMIC: 'dynamic',
+} as const;
+
+export type CanvasLayerType = typeof CanvasLayerTypes[keyof typeof CanvasLayerTypes];
+
+interface ElementContainerConfig extends Konva.NodeConfig {
+  name: 'element-container'
+}
+
+export const SelectionGroups = {
+  BACKGROUND: 'background',
+  ELEMENT: 'element',
+  HIDDEN: 'hidden',
+  SCREEN: 'screen',
+} as const;
+
+export type SelectionGroup = typeof SelectionGroups[keyof typeof SelectionGroups];
+
+export interface CanvasElementState {
+  name?: string
+  selectable: boolean
+  selected: boolean
+}
+
+export interface CanvasElementStateLoadable extends CanvasElementState {
+  loading: boolean
+  loaded: boolean
 }
 
 // FIRESTORE TYPES
@@ -385,13 +417,52 @@ export const isScene = (obj: unknown): obj is Scene => {
   return isObject(obj) && 'id' in obj && 'tableId' in obj && 'categoryId' in obj && 'title' in obj && 'owner' in obj && 'thumbnail' in obj && 'createdAt' in obj && 'archived' in obj && 'deletable' in obj && 'deleted' in obj && 'slug' in obj;
 };
 
-/**
- * DEPRECATED: needs to be replaced with CategoryOrder
- * Document that holds the sort map for a scene. Stored under user entity.
- */
-export interface TableScenesSortMap {
-  tableId: string
-  map: string[]
+export interface SceneElement {
+  _type: 'screen' | 'canvas-object'
+  id: string
+  enabled: boolean
+  defaultRank: number
+}
+
+export type Stateful<T extends SceneElement, U extends CanvasElementState> = {
+  [K in keyof T]: T[K]
+} & {
+  _state: U
+};
+
+export interface SceneElementCanvasObject extends SceneElement {
+  _type: 'canvas-object'
+  type: string
+  selectionGroup: SelectionGroup
+  container: ElementContainerConfig
+}
+
+export const isSceneElementCanvasObject = (
+  obj: SceneElement,
+): obj is SceneElementCanvasObject => {
+  return obj._type === 'canvas-object';
+};
+
+export interface SceneElementCanvasObjectAsset extends SceneElementCanvasObject {
+  type: 'asset'
+  assetId: string
+  label: {
+    showTitle: boolean
+    title: string
+  }
+  image?: Konva.ImageConfig
+}
+
+export const isSceneElementCanvasObjectAsset = (
+  obj: SceneElementCanvasObject,
+): obj is SceneElementCanvasObjectAsset => {
+  return obj.type === 'asset';
+};
+
+export interface SceneElementScreen extends SceneElement {
+  _type: 'screen'
+  file: string
+  thumbnail: DriveImage | string | null
 }
 
 export interface TablePermissions {

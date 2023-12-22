@@ -146,21 +146,29 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   };
 
   // TODO: needs a request registry of its own
-  const downloadMedia = async (fileId: string) => {
+  const downloadMedia = async <B extends boolean>(
+    fileId: string,
+    ignoreFile: boolean,
+    toBlob: B,
+  ): Promise<B extends true ? Blob : string> => {
     const file = _files.value[fileId];
-    if (!file) {
+    if (!file && !ignoreFile) {
       throw new Error('File not found');
     }
-    if (file.mimeType === DriveMimeTypes.FOLDER) {
+    if (file && file.mimeType === DriveMimeTypes.FOLDER) {
       throw new Error('Cannot download folder');
     }
 
     try {
-      file.loading = true;
+      if (file) {
+        file.loading = true;
+      }
 
-      return await loadMedia(fileId);
+      return await loadMedia(fileId, toBlob);
     } finally {
-      file.loading = false;
+      if (file) {
+        file.loading = false;
+      }
     }
   };
 

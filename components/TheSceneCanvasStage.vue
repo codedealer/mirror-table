@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type Konva from 'konva';
 import { onKeyDown, onKeyUp } from '@vueuse/core';
-import type { IKonvaComponent } from '~/models/types';
+import type { KonvaComponent } from '~/models/types';
 
-const stage = ref<IKonvaComponent<Konva.Node> | null>(null);
+const stage = ref<KonvaComponent<Konva.Node> | null>(null);
 
 const canvasStageStore = useCanvasStageStore();
+const canvasElementsStore = useCanvasElementsStore();
 
 onMounted(() => {
   canvasStageStore._stageNode = stage.value;
@@ -53,7 +54,13 @@ onKeyUp(' ', (e) => {
     @dragend="onNodeTransformEnd"
     @transformend="onNodeTransformEnd"
   >
-    <v-layer />
+    <v-layer>
+      <TheSceneCanvasAsset
+        v-for="asset in canvasElementsStore.canvasStatefulElementsRegistry"
+        :key="asset.id"
+        :element="asset"
+      />
+    </v-layer>
   </v-stage>
 </template>
 
