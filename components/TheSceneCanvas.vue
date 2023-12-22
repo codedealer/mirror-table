@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { useEventListener, useResizeObserver } from '@vueuse/core';
+import { onKeyDown, onKeyUp, useEventListener, useResizeObserver } from '@vueuse/core';
 import TheSceneCanvasStage from '~/components/TheSceneCanvasStage.vue';
+import { isEditableElement } from '~/utils';
 
 const canvasContainer = ref<HTMLDivElement | null>(null);
 const canvasField = ref<HTMLDivElement | null>(null);
@@ -37,13 +38,15 @@ const repositionStage = () => {
 
   canvasStageStore.stage.container().style.transform = `translate(${dx}px, ${dy}px)`;
 
-  canvasStageStore.applyConfig({
-    x: -dx,
-    y: -dy,
-  });
+  canvasStageStore._scroll = {
+    x: dx,
+    y: dy,
+  };
 };
 
-repositionStage();
+onMounted(() => {
+  repositionStage();
+});
 
 useEventListener(
   canvasContainer,
@@ -51,6 +54,30 @@ useEventListener(
   repositionStage,
   { passive: true },
 );
+
+onKeyDown(' ', (e) => {
+  if (e.target && isEditableElement(e.target)) {
+    return;
+  }
+
+  e.preventDefault();
+  if (!canvasStageStore.stage || canvasStageStore._stage.draggable) {
+    return;
+  }
+
+  canvasStageStore.applyConfig({ draggable: true });
+}, {
+  dedupe: false,
+});
+
+onKeyUp(' ', (e) => {
+  if (e.target && isEditableElement(e.target)) {
+    return;
+  }
+
+  e.preventDefault();
+  canvasStageStore.applyConfig({ draggable: false });
+});
 </script>
 
 <template>

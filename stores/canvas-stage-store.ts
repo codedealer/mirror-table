@@ -15,9 +15,20 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     draggable: false,
   });
 
+  const _offset = ref({ x: 0, y: 0 });
+  const _scroll = ref({ x: 0, y: 0 });
+
   const fieldWidth = ref(3000);
   const fieldHeight = ref(3000);
   const fieldPadding = ref(500);
+
+  const stageConfig = computed(() => {
+    return {
+      ..._stage.value,
+      x: _offset.value.x - _scroll.value.x,
+      y: _offset.value.y - _scroll.value.y,
+    };
+  });
 
   const applyConfig = (config: Partial<Konva.StageConfig>) => {
     Object.assign(_stage.value, config);
@@ -26,10 +37,13 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
   return {
     _stageNode,
     _stage,
+    _offset,
+    _scroll,
     stage,
     fieldWidth,
     fieldHeight,
     fieldPadding,
+    stageConfig,
     applyConfig,
   };
 });

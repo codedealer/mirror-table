@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type Konva from 'konva';
-import { onKeyDown, onKeyUp } from '@vueuse/core';
 import type { KonvaComponent } from '~/models/types';
 
 const stage = ref<KonvaComponent<Konva.Node> | null>(null);
@@ -17,40 +16,29 @@ const onNodeTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
   const id = node.id();
 
   const transforms = {
-    x: node.x(),
-    y: node.y(),
     scaleX: node.scaleX(),
     scaleY: node.scaleY(),
     rotation: node.rotation(),
   };
 
   if (id === '_stage') {
+    canvasStageStore._offset = {
+      x: node.x() + canvasStageStore._scroll.x,
+      y: node.y() + canvasStageStore._scroll.y,
+    };
+
     canvasStageStore.applyConfig(transforms);
   } else {
     throw new Error('not implemented');
   }
 };
-
-onKeyDown(' ', (e) => {
-  e.preventDefault();
-  if (!canvasStageStore.stage || canvasStageStore._stage.draggable) {
-    return;
-  }
-
-  canvasStageStore.applyConfig({ draggable: true });
-}, { dedupe: false });
-
-onKeyUp(' ', (e) => {
-  e.preventDefault();
-  canvasStageStore.applyConfig({ draggable: false });
-});
 </script>
 
 <template>
   <v-stage
     id="_stage"
     ref="stage"
-    :config="canvasStageStore._stage"
+    :config="canvasStageStore.stageConfig"
     @dragend="onNodeTransformEnd"
     @transformend="onNodeTransformEnd"
   >

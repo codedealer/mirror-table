@@ -57,6 +57,16 @@ export const nameValidationsRules = [
   (v: string) => v.length > 0 || 'Fill out the field',
 ];
 
+export const isEditableElement = (target: EventTarget) => {
+  return (
+    (
+      'nodeName' in target &&
+      ['INPUT', 'TEXTAREA'].includes(target.nodeName as string)
+    ) ||
+    ('isContentEditable' in target && target.isContentEditable)
+  );
+};
+
 /**
  * Get a node by its path:
  * path represents an array of indexes in a multidimensional array nodes
