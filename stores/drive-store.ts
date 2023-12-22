@@ -10,12 +10,25 @@ export const useDriveStore = defineStore('drive', () => {
     () => libLoaded.value && !!client.value && !!googleStore.client,
   );
 
+  const tokenRequest = ref<Promise<AuthorizationInfo> | null>(null);
+
   const augmentWithTokenAndGet = async (client: typeof gapi.client) => {
     if (!googleStore.client) {
       throw new Error('Google Auth Client not initialized when accessing Google Drive API');
     }
 
-    const authInfo = await googleStore.client.requestToken();
+    let authInfo: AuthorizationInfo;
+    try {
+      if (tokenRequest.value) {
+        console.warn('Requesting auth token while another request is in progress');
+        authInfo = await tokenRequest.value;
+      } else {
+        tokenRequest.value = googleStore.client.requestToken();
+        authInfo = await tokenRequest.value;
+      }
+    } finally {
+      tokenRequest.value = null;
+    }
 
     client.setToken({
       access_token: authInfo.accessToken,
