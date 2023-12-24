@@ -13,7 +13,8 @@ const windowContent = computed(() =>
 const { file } = useDriveFile<DriveAsset>(
   toRef(() => props.window.id),
   {
-    appPropertiesType: AppPropertiesTypes.ASSET,
+    strategy: DataRetrievalStrategies.OPTIMISTIC_CACHE,
+    predicate: isDriveAsset,
   },
 );
 
@@ -23,7 +24,7 @@ const {
   error: imageError,
   previewDimensions,
 } = usePreviewImage(file, {
-  activelyLoad: true,
+  strategy: DataRetrievalStrategies.SOURCE,
   previewDimensionsConstraints: {
     width: 400,
     height: 400,

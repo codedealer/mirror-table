@@ -17,7 +17,8 @@ const windowContent = computed(() =>
 const { file, label } = useDriveFile<DriveAsset>(
   toRef(() => props.window.id),
   {
-    appPropertiesType: AppPropertiesTypes.ASSET,
+    predicate: isDriveAsset,
+    strategy: DataRetrievalStrategies.OPTIMISTIC_CACHE,
   },
 );
 
@@ -27,7 +28,7 @@ const {
   isLoading: imageLoading,
   error: imageError,
 } = usePreviewImage(file, {
-  activelyLoad: true,
+  strategy: DataRetrievalStrategies.SOURCE,
 });
 
 const isLoading = computed(() => (

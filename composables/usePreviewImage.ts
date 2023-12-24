@@ -1,8 +1,8 @@
 import type { Ref } from 'vue';
-import type { DriveAsset, DriveImage } from '~/models/types';
+import type { DataRetrievalStrategy, DriveAsset, DriveImage } from '~/models/types';
 
 export interface PreviewImageOptions {
-  activelyLoad?: boolean
+  strategy?: DataRetrievalStrategy
   previewDimensionsConstraints?: {
     width: number
     height: number
@@ -12,7 +12,7 @@ export interface PreviewImageOptions {
 export const usePreviewImage = (
   asset: Ref<DriveAsset | undefined>,
   options: PreviewImageOptions = {
-    activelyLoad: true,
+    strategy: DataRetrievalStrategies.SOURCE,
     previewDimensionsConstraints: {
       width: 300,
       height: 300,
@@ -22,7 +22,7 @@ export const usePreviewImage = (
   const imageFileId = ref('');
 
   const { file, isLoading, error } = useDriveFile<DriveImage>(imageFileId, {
-    activelyLoad: options.activelyLoad ?? true,
+    strategy: options.strategy ?? DataRetrievalStrategies.SOURCE,
   });
 
   watchEffect(() => {

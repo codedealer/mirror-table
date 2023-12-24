@@ -1,92 +1,63 @@
-import type { AppPropertiesType, DriveAsset, DriveFile, DriveImage } from '~/models/types';
-import { extractErrorMessage } from '~/utils/extractErrorMessage';
+import type { Ref } from 'vue';
+import type { DataRetrievalStrategy, DriveFile } from '~/models/types';
 
-export interface DriveFileOptions {
-  activelyLoad?: boolean
-  appPropertiesType?: AppPropertiesType
+export interface DriveFileOptions<T extends DriveFile> {
+  strategy: DataRetrievalStrategy
+  predicate?: (obj: DriveFile) => obj is T
 }
 
-export const useDriveFile = <T extends DriveAsset | DriveFile | DriveImage>
+export const useDriveFile = <T extends DriveFile>
   (
     idRef: Ref<string>,
-    options: DriveFileOptions = {
-      activelyLoad: false,
+    options: DriveFileOptions<T> = {
+      strategy: DataRetrievalStrategies.OPTIMISTIC_CACHE,
     },
   ) => {
   const driveStore = useDriveStore();
   const { isReady } = storeToRefs(driveStore);
+  const driveFileStore = useDriveFileStore();
+  const { files } = storeToRefs(driveFileStore);
 
   const file = ref<T>();
   const error = shallowRef<unknown>(null);
-  const isLoading = ref(false);
-
-  const driveFileStore = useDriveFileStore();
-
-  const loadFile = async (id: string) => {
-    error.value = null;
-    isLoading.value = true;
-
-    try {
-      void await driveFileStore.getFile(id);
-    } catch (e) {
-      file.value = undefined;
-      error.value = e;
-
-      const notificationStore = useNotificationStore();
-      notificationStore.error(extractErrorMessage(e));
-    } finally {
-      isLoading.value = false;
-    }
-  };
 
   watch([isReady, idRef], async ([isReadyValue, idRefValue]) => {
-    if (!isReadyValue || !idRefValue) {
+    if (!isReadyValue) {
+      return;
+    }
+
+    if (!idRefValue) {
+      file.value = undefined;
       error.value = null;
+      return;
+    }
+
+    try {
+      // make sure the file is in the registry
+      await driveFileStore.getFile(idRefValue, options.strategy);
+    } catch (e) {
+      error.value = e;
       file.value = undefined;
-      isLoading.value = false;
-
-      return;
     }
+  }, { immediate: true });
 
-    if (isLoading.value) {
-      console.warn(`File ${idRefValue} is already loading`);
-      return;
-    }
-
-    if (!Object.hasOwn(driveFileStore.files, idRefValue)) {
-      if (options.activelyLoad) {
-        await loadFile(idRefValue);
-
-        if (error.value) {
-          file.value = undefined;
-          return;
-        }
-      } else {
-        error.value = null;
-        file.value = undefined;
-        return;
-      }
-    }
-
-    const driveFile = driveFileStore.files[idRefValue];
-
+  watch(() => files.value[idRef.value], (driveFile) => {
     if (!driveFile) {
-      throw new Error(`File ${idRefValue} was expected but not found`);
+      file.value = undefined;
+      return;
     }
 
-    if (
-      options.appPropertiesType &&
-      driveFile.appProperties?.type !== options.appPropertiesType
-    ) {
-      error.value = new Error(`File ${idRefValue} is not of type ${options.appPropertiesType}`);
+    if (options.predicate && !options.predicate(driveFile)) {
       file.value = undefined;
+      error.value = new Error(`File ${idRef.value} is not of enforced type`);
       return;
     }
 
     file.value = driveFile as T;
-    error.value = null;
-  }, {
-    immediate: true,
+  }, { immediate: true });
+
+  const isLoading = computed(() => {
+    return file.value?.loading ?? false;
   });
 
   const label = computed(() => {

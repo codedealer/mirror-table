@@ -5,7 +5,7 @@ const showModal = ref(false);
 const title = ref('');
 const fileId = ref('');
 const { file, error, isLoading } = useDriveFile(fileId, {
-  activelyLoad: true,
+  strategy: DataRetrievalStrategies.SOURCE,
 });
 const isBusy = ref(false);
 
