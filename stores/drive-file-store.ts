@@ -86,8 +86,6 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     let idsToLoad: string[] = [];
     let result: DriveFile[] = [];
 
-    console.log(`Getting files: ${ids.join(', ')}`);
-
     if (strategy !== DataRetrievalStrategies.SOURCE) {
       // search the cache first
       const cachedFiles = ids.map(retrieveFileFromCache);
@@ -112,6 +110,11 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       return result;
     }
 
+    console.log(`Preparing to load files: ${idsToLoad.join(', ')}`);
+
+    const driveStore = useDriveStore();
+    const client = await driveStore.getClient();
+
     // check if there are any pending requests
     const pendingIds = idsToLoad.filter(id => fileRequestRegistry.has(id));
     if (pendingIds.length) {
@@ -129,10 +132,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       return result;
     }
 
-    const driveStore = useDriveStore();
-    const client = await driveStore.getClient();
-
-    console.log(`Loading files: ${idsToLoad.join(', ')}`);
+    console.log(`Loading files: ${unfulfilledIds.join(', ')}`);
 
     const batch = client.newBatch();
     const pendingRequests: FileRequest[] = [];
