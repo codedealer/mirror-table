@@ -1,5 +1,13 @@
-import type { DriveFile, DriveFileRaw, DriveFileUpdateReturnType, DriveInvalidPermissionsError } from '~/models/types';
+import type {
+  DriveFile,
+  DriveFileRaw,
+  DriveFileUpdateReturnType,
+  DriveInvalidPermissionsError,
+  RawMediaObject,
+} from '~/models/types';
 import { updateFieldMask } from '~/models/types';
+
+type FileResponse = gapi.client.Response<gapi.client.drive.File>;
 
 export const folderExists = async (id: string) => {
   if (!id) {
@@ -104,10 +112,61 @@ export const getFile = async <T extends gapi.client.drive.File>(id: string, mask
   return response.result as T;
 };
 
-export const downloadMedia = async <B extends boolean>(
+export const generateFileRequest = (client: typeof gapi.client, id: string, mask: string = fieldMask) => {
+  if (!id) {
+    throw new Error('File ID is empty');
+  }
+
+  return client.drive.files.get({
+    fileId: id,
+    fields: mask,
+  });
+};
+
+export const generateMediaRequest = (client: typeof gapi.client, id: string) => {
+  if (!id) {
+    throw new Error('File ID is empty');
+  }
+
+  return client.drive.files.get({
+    fileId: id,
+    alt: 'media',
+  });
+};
+
+export const parseMediaResponse = (file: DriveFile, response: FileResponse): RawMediaObject | undefined => {
+  if (!file.md5Checksum) {
+    console.error(`File ${file.id} is missing checksum`);
+    return undefined;
+  }
+
+  if (!response.headers) {
+    console.error(`File ${file.id} is missing response headers`);
+    console.log(response);
+    return undefined;
+  }
+
+  if (!response.headers['X-Goog-Safety-Content-Type'] && !file.mimeType) {
+    console.error(`File ${file.id} mime type cannot be determined`);
+    return undefined;
+  }
+
+  return {
+    id: file.id,
+    name: file.name,
+    mimeType: file.mimeType,
+    googleContentType: response.headers['X-Goog-Safety-Content-Type'],
+    size: file.size,
+    md5Checksum: file.md5Checksum,
+    version: file.version,
+    loadedAt: Date.now(),
+    data: response.body,
+  };
+};
+
+export const downloadMedia = async (
   id: string,
-  toBlob: B,
-): Promise<B extends true ? Blob : string> => {
+) => {
   const driveStore = useDriveStore();
   const client = await driveStore.getClient();
 
@@ -120,19 +179,18 @@ export const downloadMedia = async <B extends boolean>(
     alt: 'media',
   });
 
-  if (!response.body || !response.headers) {
-    return response.body;
-  }
+  return response;
+};
 
-  if (toBlob) {
-    return new Blob([
-      new Uint8Array(response.body.length).map((_, i) => response.body.charCodeAt(i)),
-    ], {
-      type: response.headers['X-Goog-Safety-Content-Type'],
-    });
+export const convertToBlob = (obj: RawMediaObject) => {
+  if (!obj.mimeType && !obj.googleContentType) {
+    throw new Error('Mime type is cannot be determined');
   }
-
-  return response.body;
+  return new Blob([
+    new Uint8Array(obj.data.length).map((_, i) => obj.data.charCodeAt(i)),
+  ], {
+    type: obj.mimeType ?? obj.googleContentType,
+  });
 };
 
 export const listFiles = async (folderId: string) => {

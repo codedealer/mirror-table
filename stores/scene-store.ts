@@ -7,6 +7,7 @@ export const useSceneStore = defineStore('scene', () => {
 
   const tableStore = useTableStore();
   const sessionStore = useSessionStore();
+  const driveStore = useDriveStore();
 
   const sceneDocRef = computed(() => {
     if (!tableStore.table || !sessionStore.activeSession) {
@@ -23,7 +24,8 @@ export const useSceneStore = defineStore('scene', () => {
   const scene = useFirestore(sceneDocRef, undefined);
 
   const sceneElementsRef = computed(() => {
-    if (!tableStore.table || !scene.value) {
+    // we need to wait for drive api to load scene elements
+    if (!tableStore.table || !scene.value || !driveStore.isReady) {
       return undefined;
     }
 

@@ -2,27 +2,69 @@
 import type { ComputedRef } from 'vue';
 import type Konva from 'konva';
 import type {
-  CanvasElementStateLoadable,
+  CanvasElementStateAsset,
   SceneElementCanvasObjectAsset,
   Stateful,
 } from '~/models/types';
 
-import { useCanvasAsset } from '~/composables/useCanvasAsset';
-
 const props = defineProps<{
-  element: Stateful<SceneElementCanvasObjectAsset, CanvasElementStateLoadable>
+  element: Stateful<SceneElementCanvasObjectAsset, CanvasElementStateAsset>
 }>();
 
-const { error, asset, image } = useCanvasAsset(toRef(() => props.element));
-
 const imageConfig: ComputedRef<Konva.ImageConfig | null> = computed(() => {
-  if (!image.value) {
+  if (!props.element._state.imageElement) {
     return null;
   }
 
   return {
-    image: image.value,
+    image: props.element._state.imageElement,
   };
+});
+
+const canvasElementsStore = useCanvasElementsStore();
+
+const updateState = (partialState: Partial<CanvasElementStateAsset>) => {
+  canvasElementsStore.updateElementState<CanvasElementStateAsset>(
+    props.element.id,
+    partialState,
+  );
+};
+
+onMounted(async () => {
+  const driveFileStore = useDriveFileStore();
+
+  updateState({
+    loading: true,
+  });
+
+  try {
+    const mediaObject = await driveFileStore.downloadMedia(props.element.asset.preview.id);
+    if (!mediaObject) {
+      throw new Error(`Failed to download media for asset ${props.element.asset.preview.id}`);
+    }
+
+    const blob = convertToBlob(mediaObject);
+    const src = URL.createObjectURL(blob);
+    const image = new Image();
+    image.src = src;
+
+    updateState({
+      imageElement: image,
+      loaded: true,
+    });
+  } catch (e) {
+    console.error(e);
+    const notificationStore = useNotificationStore();
+    notificationStore.error(extractErrorMessage(e));
+
+    updateState({
+      error: true,
+    });
+  } finally {
+    updateState({
+      loading: false,
+    });
+  }
 });
 
 const circleConfig = ref({

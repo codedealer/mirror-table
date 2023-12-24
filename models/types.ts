@@ -178,6 +178,10 @@ export interface DriveFile extends Omit<DriveFileRaw, 'appProperties'> {
   loading: boolean
 }
 
+export const isDriveFile = (obj: unknown): obj is DriveFile => {
+  return isObject(obj) && 'id' in obj && 'trashed' in obj && 'name' in obj && 'ownedByMe' in obj && 'originalFilename' in obj && 'loading' in obj;
+};
+
 export interface DriveAsset extends DriveFile {
   appProperties: AssetProperties
 }
@@ -274,6 +278,33 @@ export const HoverPanelModes = {
 
 export type HoverPanelMode = typeof HoverPanelModes[keyof typeof HoverPanelModes];
 
+export const DataRetrievalStrategies = {
+  // only search the local cache, undefined if not found
+  OPTIMISTIC_CACHE: 'cache-optimistic',
+  // only search the local cache, throw if not found
+  CACHE_ONLY: 'cache',
+  // search the local cache, then the remote database
+  LAZY: 'lazy',
+  // search the local cache if it's relatively fresh (currently not supported)
+  RECENT: 'recent',
+  // ignore cache
+  SOURCE: 'source',
+} as const;
+
+export type DataRetrievalStrategy = typeof DataRetrievalStrategies[keyof typeof DataRetrievalStrategies];
+
+export interface RawMediaObject {
+  id: string
+  name?: string
+  mimeType?: string
+  googleContentType?: string
+  size?: string
+  md5Checksum: string
+  version?: string
+  loadedAt: number
+  data: string
+}
+
 // CANVAS TYPES
 
 export interface KonvaComponent<T> {
@@ -305,12 +336,22 @@ export interface CanvasElementState {
   name?: string
   selectable: boolean
   selected: boolean
+  error?: unknown
 }
 
 export interface CanvasElementStateLoadable extends CanvasElementState {
   loading: boolean
   loaded: boolean
 }
+
+export interface CanvasElementStateAsset extends CanvasElementStateLoadable {
+  _type: 'asset'
+  imageElement?: HTMLImageElement
+}
+
+export const isCanvasElementStateAsset = (obj: CanvasElementState): obj is CanvasElementStateAsset => {
+  return '_type' in obj && obj._type === 'asset';
+};
 
 // FIRESTORE TYPES
 
@@ -455,6 +496,14 @@ export const isSceneElementCanvasObjectAsset = (
   obj: SceneElementCanvasObject,
 ): obj is SceneElementCanvasObjectAsset => {
   return obj.type === 'asset';
+};
+
+export const isStateful = <T extends SceneElementCanvasObject, U extends CanvasElementState>(
+  obj: Stateful<SceneElementCanvasObject, CanvasElementState>,
+  elementPredicate: (element: SceneElementCanvasObject) => element is T,
+  statePredicate: (state: CanvasElementState) => state is U,
+): obj is Stateful<T, U> => {
+  return statePredicate(obj._state) && elementPredicate(obj);
 };
 
 export interface SceneElementScreen extends SceneElement {

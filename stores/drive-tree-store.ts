@@ -49,7 +49,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
       const driveFileStore = useDriveFileStore();
 
-      node.children = buildNodes(await driveFileStore.getFiles(node.id));
+      node.children = buildNodes(await driveFileStore.listFilesInFolder(node.id));
 
       node.loaded = true;
       success = true;

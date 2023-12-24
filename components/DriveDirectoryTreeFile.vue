@@ -32,14 +32,17 @@ const toggleFile = async () => {
   // open file
   try {
     const driveFileStore = useDriveFileStore();
-    const blob = await driveFileStore.downloadMedia(props.node.id, false, false);
+    const media = await driveFileStore.downloadMedia(props.node.id);
+    if (!media) {
+      throw new Error('Could not download file');
+    }
 
     // assuming the file is a markdown file for now
     // create a new window
     const windowContent: ModalWindowContentMarkdown = {
       type: 'markdown',
       editing: false,
-      data: blob,
+      data: media.data,
     };
 
     const window = WindowFactory(

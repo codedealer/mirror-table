@@ -1,11 +1,14 @@
 import type { ComputedRef } from 'vue';
 import { watchArray } from '@vueuse/core';
 import type {
-  CanvasElementState, CanvasElementStateLoadable,
-  SceneElementCanvasObject, Stateful,
+  CanvasElementState,
+  CanvasElementStateAsset,
+  SceneElementCanvasObject,
+  Stateful,
 } from '~/models/types';
 import {
   isSceneElementCanvasObject,
+  isSceneElementCanvasObjectAsset,
 } from '~/models/types';
 
 export const useCanvasElementsStore = defineStore('canvas-elements', () => {
@@ -25,7 +28,13 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
 
   watchArray(canvasElements, (_, __, added, removed) => {
     added.forEach((element) => {
-      const loadableState: CanvasElementStateLoadable = {
+      // assuming all elements are assets for now
+      if (!isSceneElementCanvasObjectAsset(element)) {
+        return;
+      }
+
+      const loadableState: CanvasElementStateAsset = {
+        _type: 'asset',
         selectable: true,
         selected: false,
         loading: false,
@@ -43,7 +52,7 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     });
   });
 
-  const updateElementState = (elementId: string, state: Partial<CanvasElementState>) => {
+  const updateElementState = <T extends CanvasElementState>(elementId: string, state: Partial<T>) => {
     const element = canvasStatefulElementsRegistry.value[elementId];
 
     if (!element) {
