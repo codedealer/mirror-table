@@ -1,5 +1,6 @@
 import type { Timestamp } from '@firebase/firestore-types';
 import type Konva from 'konva';
+import type { DBSchema } from 'idb';
 
 export interface AuthorizationInfo {
   accessToken: string
@@ -176,6 +177,7 @@ export type DriveFileRaw = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | '
 export interface DriveFile extends Omit<DriveFileRaw, 'appProperties'> {
   appProperties?: AppProperties
   loading: boolean
+  loadedAt: number
 }
 
 export const isDriveFile = (obj: unknown): obj is DriveFile => {
@@ -303,6 +305,17 @@ export interface RawMediaObject {
   version?: string
   loadedAt: number
   data: string
+}
+
+export interface CacheSchema extends DBSchema {
+  files: {
+    key: string
+    value: DriveFile
+  }
+  media: {
+    key: string
+    value: RawMediaObject
+  }
 }
 
 // CANVAS TYPES

@@ -5,9 +5,16 @@ export const useDriveStore = defineStore('drive', () => {
   const { isLoading, isReady: libLoaded, client } = useDrive();
 
   const googleStore = useGoogleAuthStore();
+  const cacheStore = useCacheStore();
 
-  const isReady = computed(
-    () => libLoaded.value && !!client.value && !!googleStore.client,
+  void cacheStore.open();
+
+  const isReady = computed(() => (
+    libLoaded.value &&
+    !!client.value &&
+    !!googleStore.client &&
+    (cacheStore.isPersistenceSupported ? !!cacheStore.db : true)
+  ),
   );
 
   const tokenRequest = ref<Promise<AuthorizationInfo> | null>(null);

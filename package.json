@@ -37,6 +37,7 @@
     "firebase-admin": "^11.11.1",
     "google-auth-library": "^9.2.0",
     "he-tree-vue": "3",
+    "idb": "^8.0.0",
     "konva": "^9.2.3",
     "markdown-it": "^13.0.2",
     "markdown-it-abbr": "^1.0.4",

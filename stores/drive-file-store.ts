@@ -1,68 +1,50 @@
 import type {
   AppProperties,
   DataRetrievalStrategy,
-  DriveAsset,
   DriveFile,
   DriveFileRaw,
-  DriveFileUpdateReturnType, RawMediaObject,
+  DriveFileUpdateReturnType,
+  RawMediaObject,
 } from '~/models/types';
-import {
-  DataRetrievalStrategies, isDriveFile, updateFieldMask,
-} from '~/models/types';
+import { DataRetrievalStrategies, isDriveFile, updateFieldMask } from '~/models/types';
 import {
   generateFileRequest,
   generateMediaRequest,
   getFile as loadFile,
   downloadMedia as loadMedia,
-  parseMediaResponse, updateMedia, updateMetadata, uploadMedia,
+  parseMediaResponse,
+  updateMedia,
+  updateMetadata,
+  uploadMedia,
 } from '~/utils/driveOps';
 import { serializeAppProperties } from '~/utils/appPropertiesSerializer';
+import { convertToDriveFile } from '~/models/DriveFile';
+import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
 type FileRequest = gapi.client.Request<gapi.client.drive.File>;
 type FileResponse = gapi.client.Response<gapi.client.drive.File>;
 
 export const useDriveFileStore = defineStore('drive-file', () => {
-  const _files = ref<Record<string, DriveFile>>({});
+  const cacheStore = useCacheStore();
+
   const fileRequestRegistry: Map<string, FileRequest> = new Map();
 
   const files = computed(() => {
-    return _files.value;
+    return cacheStore.files;
   });
 
-  const cacheFile = (file: DriveFile) => {
-    _files.value[file.id] = file;
-  };
-
-  const retrieveFileFromCache = (id: string) => {
-    return id in files.value ? files.value[id] : undefined;
-  };
-
-  const convertToDriveFile = (file: DriveFileRaw) => {
-    const driveFile = file as DriveFile;
-    driveFile.loading = false;
-
-    // convert to DriveAsset if needed
-    if (
-      file.appProperties &&
-      Object.hasOwn(file.appProperties, 'type')
-    ) {
-      if (
-        file.appProperties.type === AppPropertiesTypes.ASSET &&
-        Object.hasOwn(file.appProperties, 'kind')
-      ) {
-        const appProperties = AssetPropertiesFactory(file.appProperties);
-        const asset = {
-          ...driveFile,
-          appProperties,
-        } as unknown as DriveAsset;
-
-        return asset;
-      } else {
-        throw new Error('Not implemented');
-      }
-    } else {
-      return driveFile;
+  const cacheFiles = async (files: DriveFile[]) => {
+    try {
+      await cacheStore.setFiles(files);
+    } catch (e) {
+      console.error(e);
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
     }
+  };
+
+  const cacheFile = async (file: DriveFile) => {
+    await cacheFiles([file]);
   };
 
   const parseResponse = (response: FileResponse[]) => {
@@ -71,10 +53,11 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     response.forEach((res) => {
       if (res.result) {
         const file = convertToDriveFile(res.result as DriveFileRaw);
-        cacheFile(file);
         result.push(file);
       }
     });
+
+    void cacheFiles(result);
 
     return result;
   };
@@ -88,8 +71,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
     if (strategy !== DataRetrievalStrategies.SOURCE) {
       // search the cache first
-      const cachedFiles = ids.map(retrieveFileFromCache);
-      const cachedFilesIds = cachedFiles.map(f => f?.id).filter(id => id);
+      const cachedFiles = await cacheStore.getFiles(ids);
+      const cachedFilesIds = cachedFiles.map(f => f.id);
       const missingFileIds = ids.filter(id => !cachedFilesIds.includes(id));
 
       if (missingFileIds.length === 0 || strategy === DataRetrievalStrategies.OPTIMISTIC_CACHE) {
@@ -173,12 +156,9 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   const listFilesInFolder = async (folderId: string) => {
     const rawResult = await listFiles(folderId);
 
-    const result = rawResult.map((file) => {
-      const f = convertToDriveFile(file);
-      cacheFile(f);
+    const result = rawResult.map(convertToDriveFile);
 
-      return f;
-    });
+    void cacheFiles(result);
 
     return result;
   };
@@ -196,17 +176,23 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   };
 
   const removeFile = async (id: string, restore: boolean = false) => {
-    await deleteFile(id, restore);
-
-    _files.value[id].trashed = !restore;
-  };
-
-  const saveFile = async (fileId: string, blob?: File) => {
-    if (!_files.value[fileId]) {
+    if (!files.value[id]) {
       throw new Error('File not found');
     }
 
-    const file = _files.value[fileId];
+    await deleteFile(id, restore);
+
+    files.value[id].trashed = !restore;
+    void cacheFile(files.value[id]);
+  };
+
+  // this is a bad way of handling this, it needs to be a completely new (clone) file object
+  const saveFile = async (fileId: string, blob?: File) => {
+    if (!files.value[fileId]) {
+      throw new Error('File not found');
+    }
+
+    const file = files.value[fileId];
     if (file.mimeType === DriveMimeTypes.FOLDER) {
       throw new Error('Cannot save folder');
     }
@@ -238,6 +224,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       // update file object with new metadata
       // WARNING: this is a naive merge relying on the fact that update mask only has primitive values
       Object.assign(file, updatedMetadata);
+
+      void cacheFile(file);
     } finally {
       file.loading = false;
     }
@@ -261,7 +249,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
     // we will check cache here later
 
-    const idsToLoad = files.filter(f => f).map(f => f!.id);
+    const idsToLoad = files.filter(f => f).map(f => f.id);
     const pendingIds = idsToLoad.filter(id => mediaRequestRegistry.has(id));
     if (pendingIds.length) {
       console.warn(`Duplicate media requests for files ${pendingIds.join(', ')}`);
