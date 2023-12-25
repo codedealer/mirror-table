@@ -336,21 +336,39 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       throw new Error(`File ${fileId} cannot be downloaded`);
     }
 
+    if (!file.md5Checksum) {
+      throw new Error(`File ${fileId} has no checksum`);
+    }
+
     if (!file.size || Number(file.size) === 0) {
       // cut short and return a faux media object
       console.log(`File ${fileId} appears to be empty`);
-      return {
+      const media: RawMediaObject = {
         id: file.id,
         name: file.name,
         mimeType: file.mimeType,
         size: file.size,
-        md5Checksum: file.md5Checksum!,
+        md5Checksum: file.md5Checksum,
         loadedAt: Date.now(),
         data: '',
       };
+
+      void cacheStore.setMedia([media]);
+      return media;
     }
 
-    // TODO: deal with cache
+    if (mediaStrategy !== DataRetrievalStrategies.SOURCE) {
+      const cachedMedia = await cacheStore.getMedia(fileId, file.md5Checksum);
+      if (cachedMedia) {
+        return cachedMedia;
+      }
+
+      if (mediaStrategy === DataRetrievalStrategies.CACHE_ONLY) {
+        throw new Error(`Media for file ${fileId} not found in cache`);
+      } else if (mediaStrategy === DataRetrievalStrategies.OPTIMISTIC_CACHE) {
+        return;
+      }
+    }
 
     // check the request registry
     let request: Promise<FileResponse>;
@@ -371,7 +389,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     }
 
     const media = parseMediaResponse(file, response);
-    // TODO: deal with cache
+    void (media && cacheStore.setMedia([media]));
 
     return media;
   };

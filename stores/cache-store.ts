@@ -66,12 +66,12 @@ export const useCacheStore = defineStore('cache', () => {
   const getFiles = async (ids: string[]) => {
     const cachedFiles = ids.map(id => _files.value[id]).filter(isDriveFile);
     if (!db.value || cachedFiles.length === ids.length) {
+      console.log('In memory Cache hit');
       return cachedFiles;
     }
 
     const tx = db.value.transaction('files', 'readonly');
     const files = await Promise.all(ids.map(id => tx.store.get(id)));
-    await tx.done;
 
     const result = files.filter(isDriveFile);
 
@@ -79,7 +79,50 @@ export const useCacheStore = defineStore('cache', () => {
       _files.value[file.id] = file;
     });
 
+    console.log('Retrieved files from disk', result.length, '/', ids.length);
+
     return result;
+  };
+
+  const setMedia = async (media: RawMediaObject[]) => {
+    if (media.some(file => !file.id)) {
+      throw new Error('Cannot cache file without ID');
+    }
+
+    if (db.value) {
+      // save the media to the cache
+      const tx = db.value.transaction('media', 'readwrite');
+      await Promise.all(media.map(file => tx.store.put(file)));
+      await tx.done;
+    } else {
+      // fallback to in-memory cache
+      media.forEach((file) => {
+        _media.value[file.id] = file;
+      });
+    }
+  };
+
+  const getMedia = async (id: string, md5Checksum?: string) => {
+    if (!db.value) {
+      const media = _media.value[id];
+      if (media && (!md5Checksum || media.md5Checksum === md5Checksum)) {
+        return media;
+      }
+
+      return;
+    }
+
+    const tx = db.value.transaction('media', 'readonly');
+    const media = await tx.store.get(id);
+
+    if (!media || (md5Checksum && media.md5Checksum !== md5Checksum)) {
+      console.log('Media Cache miss', id);
+      return;
+    }
+
+    console.log('Media Cache hit', id);
+
+    return media;
   };
 
   return {
@@ -90,6 +133,8 @@ export const useCacheStore = defineStore('cache', () => {
     open,
     setFiles,
     getFiles,
+    setMedia,
+    getMedia,
   };
 });
 
