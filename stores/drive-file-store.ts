@@ -6,7 +6,7 @@ import type {
   DriveFileUpdateReturnType,
   RawMediaObject,
 } from '~/models/types';
-import { DataRetrievalStrategies, isDriveFile, updateFieldMask } from '~/models/types';
+import { DataRetrievalStrategies, updateFieldMask } from '~/models/types';
 import {
   generateFileRequest,
   generateMediaRequest,
@@ -75,14 +75,17 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       const cachedFilesIds = cachedFiles.map(f => f.id);
       const missingFileIds = ids.filter(id => !cachedFilesIds.includes(id));
 
-      if (missingFileIds.length === 0 || strategy === DataRetrievalStrategies.OPTIMISTIC_CACHE) {
+      if (
+        missingFileIds.length === 0 ||
+        strategy === DataRetrievalStrategies.OPTIMISTIC_CACHE
+      ) {
         return cachedFiles;
       } else if (strategy === DataRetrievalStrategies.CACHE_ONLY) {
         throw new Error(`Missing files: ${missingFileIds.join(', ')}`);
       }
 
       idsToLoad = missingFileIds;
-      result = cachedFiles.filter(isDriveFile);
+      result = cachedFiles;
     } else {
       idsToLoad = ids;
     }

@@ -1,6 +1,7 @@
 import type { IDBPDatabase } from 'idb';
 import { openDB } from 'idb';
 import type { CacheSchema, DriveFile, RawMediaObject } from '~/models/types';
+import { isDriveFile } from '~/models/types';
 
 export const useCacheStore = defineStore('cache', () => {
   const schemaVersion = computed(() => 1);
@@ -63,7 +64,7 @@ export const useCacheStore = defineStore('cache', () => {
   };
 
   const getFiles = async (ids: string[]) => {
-    const cachedFiles = ids.map(id => _files.value[id]).filter(Boolean);
+    const cachedFiles = ids.map(id => _files.value[id]).filter(isDriveFile);
     if (!db.value || cachedFiles.length === ids.length) {
       return cachedFiles;
     }
@@ -72,7 +73,7 @@ export const useCacheStore = defineStore('cache', () => {
     const files = await Promise.all(ids.map(id => tx.store.get(id)));
     await tx.done;
 
-    const result = files.filter(Boolean) as DriveFile[];
+    const result = files.filter(isDriveFile);
 
     result.forEach((file) => {
       _files.value[file.id] = file;
