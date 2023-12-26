@@ -1,6 +1,6 @@
 import type { IDBPDatabase } from 'idb';
 import { openDB } from 'idb';
-import type { CacheSchema, DriveFile, RawMediaObject } from '~/models/types';
+import type { CacheSchema, DriveFile, GetFilesOptions, RawMediaObject } from '~/models/types';
 import { isDriveFile } from '~/models/types';
 
 export const useCacheStore = defineStore('cache', () => {
@@ -63,9 +63,18 @@ export const useCacheStore = defineStore('cache', () => {
     await tx.done;
   };
 
-  const getFiles = async (ids: string[]) => {
-    const cachedFiles = ids.map(id => _files.value[id]).filter(isDriveFile);
-    if (!db.value || cachedFiles.length === ids.length) {
+  const getFiles = async (
+    ids: string[],
+    options?: GetFilesOptions,
+  ) => {
+    let cachedFiles = ids.map(id => _files.value[id]).filter(isDriveFile);
+
+    if (options?.TTL && options.TTL > 0) {
+      const now = Date.now();
+      cachedFiles = cachedFiles.filter(file => file.loadedAt + options.TTL! > now);
+    }
+
+    if (!db.value || cachedFiles.length === ids.length || options?.skipDisk) {
       console.log('In memory Cache hit');
       return cachedFiles;
     }

@@ -4,24 +4,26 @@ import type Konva from 'konva';
 import type {
   CanvasElementStateAsset,
   SceneElementCanvasObjectAsset,
-  Stateful,
 } from '~/models/types';
+import { isCanvasElementStateAsset } from '~/models/types';
 
 const props = defineProps<{
-  element: Stateful<SceneElementCanvasObjectAsset, CanvasElementStateAsset>
+  element: SceneElementCanvasObjectAsset
 }>();
 
-const imageConfig: ComputedRef<Konva.ImageConfig | null> = computed(() => {
-  if (!props.element._state.imageElement) {
-    return null;
-  }
-
-  return {
-    image: props.element._state.imageElement,
-  };
-});
-
+// create a stateful object
 const canvasElementsStore = useCanvasElementsStore();
+// should this watch the element id?
+const stateObject: CanvasElementStateAsset = {
+  _type: 'asset',
+  id: props.element.id,
+  loading: false,
+  loaded: false,
+  selectable: true,
+  selected: false,
+};
+
+canvasElementsStore.canvasElementsStateRegistry[props.element.id] = stateObject;
 
 const updateState = (partialState: Partial<CanvasElementStateAsset>) => {
   canvasElementsStore.updateElementState<CanvasElementStateAsset>(
@@ -30,42 +32,70 @@ const updateState = (partialState: Partial<CanvasElementStateAsset>) => {
   );
 };
 
-onMounted(async () => {
-  const driveFileStore = useDriveFileStore();
+// TODO: should be a watchEffect
+const state = computed(() => {
+  if (!(props.element.id in canvasElementsStore.canvasElementsStateRegistry)) {
+    return;
+  }
+
+  const state = canvasElementsStore.canvasElementsStateRegistry[props.element.id];
+
+  if (!isCanvasElementStateAsset(state)) {
+    updateState({
+      error: new Error(`Invalid state for asset ${props.element.id}`),
+    });
+    return;
+  }
+
+  updateState({ error: undefined });
+
+  return state;
+});
+
+const imageConfig: ComputedRef<Konva.ImageConfig | null> = computed(() => {
+  if (!state.value || !state.value.imageElement) {
+    return null;
+  }
+
+  return {
+    image: state.value.imageElement,
+  };
+});
+
+const driveFileStore = useDriveFileStore();
+
+updateState({
+  loading: true,
+});
+
+try {
+  const mediaObject = await driveFileStore.downloadMedia(props.element.asset.preview.id);
+  if (!mediaObject) {
+    throw new Error(`Failed to download media for asset ${props.element.asset.preview.id}`);
+  }
+
+  const blob = convertToBlob(mediaObject);
+  const src = URL.createObjectURL(blob);
+  const image = new Image();
+  image.src = src;
 
   updateState({
-    loading: true,
+    imageElement: image,
+    loaded: true,
   });
+} catch (e) {
+  console.error(e);
+  const notificationStore = useNotificationStore();
+  notificationStore.error(extractErrorMessage(e));
 
-  try {
-    const mediaObject = await driveFileStore.downloadMedia(props.element.asset.preview.id);
-    if (!mediaObject) {
-      throw new Error(`Failed to download media for asset ${props.element.asset.preview.id}`);
-    }
-
-    const blob = convertToBlob(mediaObject);
-    const src = URL.createObjectURL(blob);
-    const image = new Image();
-    image.src = src;
-
-    updateState({
-      imageElement: image,
-      loaded: true,
-    });
-  } catch (e) {
-    console.error(e);
-    const notificationStore = useNotificationStore();
-    notificationStore.error(extractErrorMessage(e));
-
-    updateState({
-      error: true,
-    });
-  } finally {
-    updateState({
-      loading: false,
-    });
-  }
-});
+  updateState({
+    error: e,
+  });
+} finally {
+  updateState({
+    loading: false,
+  });
+}
 
 const circleConfig = ref({
   x: 100,

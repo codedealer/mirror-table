@@ -1,6 +1,7 @@
 import { collection, doc, orderBy, query, setDoc, where } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
-import type { DriveAsset, Scene, SceneElement, SceneElementCanvasObjectAsset } from '~/models/types';
+import type { DriveAsset, Scene, SceneElement } from '~/models/types';
+import { SceneElementCanvasObjectAssetFactory } from '~/models/SceneElementCanvasObjectAsset';
 
 export const useSceneStore = defineStore('scene', () => {
   const { $db } = useNuxtApp();
@@ -50,7 +51,7 @@ export const useSceneStore = defineStore('scene', () => {
     return q;
   });
 
-  const sceneElements = useFirestore(sceneElementsQuery, undefined);
+  const sceneElements = useFirestore(sceneElementsQuery, []);
 
   const addElement = async (element: SceneElement) => {
     if (!sceneElementsRef.value) {
@@ -65,37 +66,16 @@ export const useSceneStore = defineStore('scene', () => {
       return;
     }
 
-    if (!asset.appProperties.preview) {
-      const notificationStore = useNotificationStore();
-      notificationStore.error('Asset without preview cannot be added to the scene.');
-      return;
-    }
-
     const docRef = doc(sceneElementsRef.value);
-    const sceneElement: SceneElementCanvasObjectAsset = {
-      _type: 'canvas-object',
-      id: docRef.id,
-      type: 'asset',
-      asset: {
-        id: asset.id,
-        preview: asset.appProperties.preview,
-      },
-      container: {
-        name: 'element-container',
-        x: 0,
-        y: 0,
-        width: asset.appProperties.preview.nativeWidth,
-        height: asset.appProperties.preview.nativeHeight,
-        rotation: asset.appProperties.preview.rotation ?? 0,
-        scaleX: 1,
-        scaleY: 1,
-      },
-      enabled: false,
-      selectionGroup: SelectionGroups.HIDDEN,
-      defaultRank: Date.now(),
-    };
+    const stageStore = useCanvasStageStore();
 
     try {
+      const sceneElement = SceneElementCanvasObjectAssetFactory(
+        docRef.id,
+        asset,
+        stageStore.fitToStage,
+      );
+
       await setDoc(docRef, sceneElement);
     } catch (error) {
       const notificationStore = useNotificationStore();

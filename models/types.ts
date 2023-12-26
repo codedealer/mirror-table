@@ -295,6 +295,11 @@ export const DataRetrievalStrategies = {
 
 export type DataRetrievalStrategy = typeof DataRetrievalStrategies[keyof typeof DataRetrievalStrategies];
 
+export interface GetFilesOptions {
+  TTL?: number
+  skipDisk?: boolean
+}
+
 export interface RawMediaObject {
   id: string
   name?: string
@@ -332,8 +337,13 @@ export const CanvasLayerTypes = {
 
 export type CanvasLayerType = typeof CanvasLayerTypes[keyof typeof CanvasLayerTypes];
 
-interface ElementContainerConfig extends Konva.NodeConfig {
+export interface ElementContainerConfig extends Konva.NodeConfig {
   name: 'element-container'
+  width: number
+  height: number
+  rotation: number
+  scaleX: number
+  scaleY: number
 }
 
 export const SelectionGroups = {
@@ -346,6 +356,7 @@ export const SelectionGroups = {
 export type SelectionGroup = typeof SelectionGroups[keyof typeof SelectionGroups];
 
 export interface CanvasElementState {
+  id: string
   name?: string
   selectable: boolean
   selected: boolean

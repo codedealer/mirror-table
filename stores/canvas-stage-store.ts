@@ -1,5 +1,5 @@
 import type Konva from 'konva';
-import type { KonvaComponent } from '~/models/types';
+import type { ElementContainerConfig, KonvaComponent } from '~/models/types';
 
 export const useCanvasStageStore = defineStore('canvas-stage', () => {
   const _stageNode = ref<KonvaComponent<Konva.Node> | null>(null);
@@ -34,6 +34,44 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     Object.assign(_stage.value, config);
   };
 
+  const fitToStage = (container: ElementContainerConfig) => {
+    if (
+      !stageConfig.value ||
+      !stageConfig.value.width ||
+      !stageConfig.value.height ||
+      container.width <= 0 ||
+      container.height <= 0
+    ) {
+      return container;
+    }
+
+    const realStageWidth = stageConfig.value.width * stageConfig.value.scaleX! - fieldPadding.value * 2;
+    const realStageHeight = stageConfig.value.height * stageConfig.value.scaleY! - fieldPadding.value * 2;
+
+    const stageCenter = {
+      x: -stageConfig.value.x + fieldPadding.value + realStageWidth / 2,
+      y: -stageConfig.value.y + fieldPadding.value + realStageHeight / 2,
+    };
+
+    // place the container in the center of the stage
+    // scale it down if it's too big
+    const scale = Math.min(
+      realStageWidth / container.width,
+      realStageHeight / container.height,
+      1,
+    );
+
+    const scaledContainer = {
+      ...container,
+      scaleX: scale,
+      scaleY: scale,
+      x: stageCenter.x - (container.width * scale) / 2,
+      y: stageCenter.y - (container.height * scale) / 2,
+    } satisfies ElementContainerConfig;
+
+    return scaledContainer;
+  };
+
   return {
     _stageNode,
     _stage,
@@ -45,6 +83,7 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     fieldPadding,
     stageConfig,
     applyConfig,
+    fitToStage,
   };
 });
 

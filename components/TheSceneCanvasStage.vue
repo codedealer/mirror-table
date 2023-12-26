@@ -44,7 +44,7 @@ const onNodeTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
   >
     <v-layer>
       <TheSceneCanvasAsset
-        v-for="asset in canvasElementsStore.canvasStatefulElementsRegistry"
+        v-for="asset in canvasElementsStore.canvasElements"
         :key="asset.id"
         :element="asset"
       />

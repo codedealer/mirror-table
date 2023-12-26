@@ -1,12 +1,13 @@
+import { DataRetrievalStrategies, updateFieldMask } from '~/models/types';
 import type {
   AppProperties,
   DataRetrievalStrategy,
   DriveFile,
   DriveFileRaw,
-  DriveFileUpdateReturnType,
+  DriveFileUpdateReturnType, GetFilesOptions,
   RawMediaObject,
 } from '~/models/types';
-import { DataRetrievalStrategies, updateFieldMask } from '~/models/types';
+
 import {
   generateFileRequest,
   generateMediaRequest,
@@ -64,14 +65,19 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
   const getFiles = async (
     ids: string[],
-    strategy: DataRetrievalStrategy = DataRetrievalStrategies.SOURCE,
+    strategy: DataRetrievalStrategy = DataRetrievalStrategies.RECENT,
   ) => {
     let idsToLoad: string[] = [];
     let result: DriveFile[] = [];
 
     if (strategy !== DataRetrievalStrategies.SOURCE) {
       // search the cache first
-      const cachedFiles = await cacheStore.getFiles(ids);
+      const options: GetFilesOptions = {};
+      if (strategy === DataRetrievalStrategies.RECENT) {
+        options.TTL = 60 * 1000;
+        options.skipDisk = true;
+      }
+      const cachedFiles = await cacheStore.getFiles(ids, options);
       const cachedFilesIds = cachedFiles.map(f => f.id);
       const missingFileIds = ids.filter(id => !cachedFilesIds.includes(id));
 
@@ -324,7 +330,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   const downloadMedia = async (
     fileId: string,
     mediaStrategy: DataRetrievalStrategy = DataRetrievalStrategies.LAZY,
-    fileStrategy: DataRetrievalStrategy = DataRetrievalStrategies.SOURCE,
+    fileStrategy: DataRetrievalStrategy = DataRetrievalStrategies.RECENT,
   ): Promise<RawMediaObject | undefined> => {
     const file = await getFile(fileId, fileStrategy);
 
