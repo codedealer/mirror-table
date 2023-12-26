@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import type { DriveAsset, ModalWindow, ModalWindowContentMarkdown } from '~/models/types';
+import type { DriveAsset, ModalWindow, RawMediaObject } from '~/models/types';
 import { usePreviewImage } from '~/composables/usePreviewImage';
 
 const props = defineProps<{
   window: ModalWindow
+  media?: RawMediaObject
 }>();
-
-const windowContent = computed(() =>
-  props.window.content as ModalWindowContentMarkdown,
-);
 
 const { file } = useDriveFile<DriveAsset>(
   toRef(() => props.window.id),
@@ -24,7 +21,7 @@ const {
   error: imageError,
   previewDimensions,
 } = usePreviewImage(file, {
-  strategy: DataRetrievalStrategies.SOURCE,
+  strategy: DataRetrievalStrategies.RECENT,
   previewDimensionsConstraints: {
     width: 400,
     height: 400,
@@ -50,8 +47,9 @@ const {
     </div>
 
     <WindowContainerMarkdownRenderer
+      v-if="media"
       v-show="!window.content.editing"
-      :source="windowContent.data"
+      :source="media.data"
     />
   </div>
 </template>

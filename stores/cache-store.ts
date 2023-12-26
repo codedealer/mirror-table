@@ -59,7 +59,7 @@ export const useCacheStore = defineStore('cache', () => {
     }
 
     const tx = db.value.transaction('files', 'readwrite');
-    await Promise.all(files.map(file => tx.store.put(file)));
+    await Promise.all(files.map(file => tx.store.put(toRaw(file))));
     await tx.done;
   };
 

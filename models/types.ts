@@ -223,12 +223,12 @@ export interface DriveTreeNode extends TreeNode {
 export interface ModalWindowContent {
   type: string
   editing: boolean
-  data: unknown
+  data?: unknown
 }
 
 export interface ModalWindowContentMarkdown extends ModalWindowContent {
   type: 'markdown'
-  data: string // markdown content
+  data: undefined // markdown content is moved to component
 }
 
 export const ModalWindowStatus = {

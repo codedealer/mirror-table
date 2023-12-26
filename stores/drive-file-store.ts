@@ -211,10 +211,10 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
     const propertiesObject = serializeAppProperties(file.appProperties);
 
+    let updatedMetadata: DriveFileUpdateReturnType;
     try {
       file.loading = true;
 
-      let updatedMetadata: DriveFileUpdateReturnType;
       if (blob) {
         // in this case another request is needed to get the new metadata
         await updateMedia(fileId, blob, propertiesObject);
@@ -229,15 +229,15 @@ export const useDriveFileStore = defineStore('drive-file', () => {
           },
         );
       }
-
-      // update file object with new metadata
-      // WARNING: this is a naive merge relying on the fact that update mask only has primitive values
-      Object.assign(file, updatedMetadata);
-
-      void cacheFile(file);
     } finally {
       file.loading = false;
     }
+
+    // update file object with new metadata
+    // WARNING: this is a naive merge relying on the fact that update mask only has primitive values
+    Object.assign(file, updatedMetadata, { loadedAt: Date.now() });
+
+    void cacheFile(file);
   };
 
   const mediaRequestRegistry: Map<string, Promise<FileResponse>> = new Map();

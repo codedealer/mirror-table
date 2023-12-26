@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useForm } from 'vuestic-ui';
-import type { DriveAsset, ModalWindow, ModalWindowContentMarkdown } from '~/models/types';
+import type { DriveAsset, ModalWindow, RawMediaObject } from '~/models/types';
 import { ModalWindowStatus } from '~/models/types';
 import { nameValidationsRules } from '~/utils';
 import { PreviewPropertiesFactory } from '~/models/PreviewProprerties';
@@ -8,11 +8,8 @@ import { usePreviewImage } from '~/composables/usePreviewImage';
 
 const props = defineProps<{
   window: ModalWindow
+  media?: RawMediaObject
 }>();
-
-const windowContent = computed(() =>
-  props.window.content as ModalWindowContentMarkdown,
-);
 
 const { file, label } = useDriveFile<DriveAsset>(
   toRef(() => props.window.id),
@@ -28,7 +25,7 @@ const {
   isLoading: imageLoading,
   error: imageError,
 } = usePreviewImage(file, {
-  strategy: DataRetrievalStrategies.SOURCE,
+  strategy: DataRetrievalStrategies.RECENT,
 });
 
 const isLoading = computed(() => (
@@ -41,7 +38,7 @@ const body = ref('');
 
 // update the editor when the media is downloaded
 watchEffect(() => {
-  body.value = windowContent.value.data;
+  body.value = props.media?.data ?? '';
 });
 
 const windowStore = useWindowStore();
@@ -137,7 +134,7 @@ const submit = async () => {
     // file needs to be sent only if the body has changed
     let blob: File | undefined;
     // check if the editor is dirty
-    if (body.value !== windowContent.value.data) {
+    if (props.media && body.value !== props.media.data) {
       blob = new File(
         [body.value],
         file.value.name,
@@ -149,9 +146,9 @@ const submit = async () => {
 
     const driveFileStore = useDriveFileStore();
     await driveFileStore.saveFile(file.value.id, blob);
-    if (blob) {
+    /* if (blob) {
       windowContent.value.data = body.value;
-    }
+    } */
 
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
   } catch (e) {
@@ -237,7 +234,7 @@ const submit = async () => {
       </div>
 
       <va-textarea
-        v-if="file?.appProperties.kind !== AssetPropertiesKinds.IMAGE"
+        v-if="media"
         v-model="body"
         name="content"
         class="markdown-editor"

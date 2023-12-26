@@ -16,47 +16,35 @@ const nodeLabel = computed(() => {
   return label.value ?? props.node.label;
 });
 
-const toggleFile = async () => {
+const toggleFile = () => {
   if (!file.value || file.value?.trashed) {
     return;
   }
   const windowStore = useWindowStore();
   // check if file is already open
-  const window = windowStore.windows.find(window => window.id === props.node.id);
+  const existingWindow = windowStore.windows.find(window => window.id === props.node.id);
 
-  if (window) {
-    windowStore.toggle(window);
+  if (existingWindow) {
+    windowStore.toggle(existingWindow);
     return;
   }
 
   // open file
-  try {
-    const driveFileStore = useDriveFileStore();
-    const media = await driveFileStore.downloadMedia(props.node.id);
-    if (!media) {
-      throw new Error('Could not download file');
-    }
+  // assuming the file is a markdown file for now
+  // create a new window
+  const windowContent: ModalWindowContentMarkdown = {
+    type: 'markdown',
+    editing: false,
+    data: undefined,
+  };
 
-    // assuming the file is a markdown file for now
-    // create a new window
-    const windowContent: ModalWindowContentMarkdown = {
-      type: 'markdown',
-      editing: false,
-      data: media.data,
-    };
+  const window = WindowFactory(
+    props.node.id,
+    nodeLabel.value,
+    windowContent,
+  );
 
-    const window = WindowFactory(
-      props.node.id,
-      nodeLabel.value,
-      windowContent,
-    );
-
-    windowStore.add(window);
-  } catch (e) {
-    console.error(e);
-    const notificationStore = useNotificationStore();
-    notificationStore.error(extractErrorMessage(e));
-  }
+  windowStore.add(window);
 };
 
 const undoTrashFolder = () => {
