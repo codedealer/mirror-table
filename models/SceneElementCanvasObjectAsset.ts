@@ -18,6 +18,7 @@ export const SceneElementCanvasObjectAssetFactory = (
       preview: asset.appProperties.preview,
     },
     container: {
+      id,
       name: 'element-container' as const,
       x: 0,
       y: 0,

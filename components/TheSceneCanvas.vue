@@ -7,6 +7,11 @@ const canvasContainer = ref<HTMLDivElement | null>(null);
 const canvasField = ref<HTMLDivElement | null>(null);
 
 const canvasStageStore = useCanvasStageStore();
+const canvasToolStore = useCanvasToolStore();
+
+const selectTool = useSelectTool();
+
+canvasToolStore.setActiveTool(selectTool);
 
 const fieldDimensions = computed(() => {
   if (!canvasField.value) {
@@ -82,7 +87,11 @@ onKeyUp(' ', (e) => {
 
 <template>
   <div ref="canvasContainer" class="canvas-container scroll-enabled">
-    <div class="canvas-toolbar" />
+    <component
+      :is="canvasToolStore.activeTool.component"
+      v-if="canvasToolStore.activeTool"
+      v-once
+    />
 
     <div
       ref="canvasField"

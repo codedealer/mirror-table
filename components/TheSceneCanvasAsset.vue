@@ -2,10 +2,11 @@
 import type { ComputedRef } from 'vue';
 import type Konva from 'konva';
 import type {
-  CanvasElementStateAsset,
+  CanvasElementStateAsset, ElementContainerConfig,
   SceneElementCanvasObjectAsset,
 } from '~/models/types';
 import { isCanvasElementStateAsset } from '~/models/types';
+import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
 
 const props = defineProps<{
   element: SceneElementCanvasObjectAsset
@@ -62,6 +63,17 @@ const imageConfig: ComputedRef<Konva.ImageConfig | null> = computed(() => {
   };
 });
 
+const containerConfig: ComputedRef<ElementContainerConfig> = computed(() => {
+  if (!state.value) {
+    return props.element.container;
+  }
+
+  return {
+    ...props.element.container,
+    draggable: state.value?.selectable && state.value?.selected,
+  };
+});
+
 const driveFileStore = useDriveFileStore();
 
 updateState({
@@ -97,6 +109,16 @@ try {
   });
 }
 
+onUnmounted(() => {
+  if (!state.value || !state.value.imageElement) {
+    return;
+  }
+
+  URL.revokeObjectURL(state.value.imageElement.src);
+
+  canvasElementsStore.deleteState(props.element.id);
+});
+
 const circleConfig = ref({
   x: 100,
   y: 100,
@@ -105,10 +127,16 @@ const circleConfig = ref({
   stroke: 'black',
   strokeWidth: 4,
 });
+
+const { onNodeTransformEnd } = useCanvasTransformEvents();
 </script>
 
 <template>
-  <v-group :config="element.container">
+  <v-group
+    :config="containerConfig"
+    @dragend="onNodeTransformEnd"
+    @transformend="onNodeTransformEnd"
+  >
     <v-circle v-if="!imageConfig" :config="circleConfig" />
     <v-image v-else :config="imageConfig" />
   </v-group>

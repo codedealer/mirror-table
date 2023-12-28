@@ -12,6 +12,8 @@ const sessionStore = useSessionStore();
 const openSessions = () => {
   dynamicPanelStore.open(DynamicPanelModelTypes.LEFT, DynamicPanelContentTypes.SESSIONS);
 };
+
+const canvasToolStore = useCanvasToolStore();
 </script>
 
 <template>
@@ -31,7 +33,9 @@ const openSessions = () => {
         <va-sidebar-item-title>Back to Dashboard</va-sidebar-item-title>
       </va-sidebar-item-content>
     </va-sidebar-item>
+
     <va-divider />
+
     <va-sidebar-item @click="openExplorer">
       <va-sidebar-item-content>
         <div class="toolbar-button">
@@ -40,6 +44,26 @@ const openSessions = () => {
           <span class="toolbar-button__content">Scenes</span>
         </div>
         <va-sidebar-item-title>Scenes</va-sidebar-item-title>
+      </va-sidebar-item-content>
+    </va-sidebar-item>
+
+    <va-divider />
+
+    <va-sidebar-item
+      v-for="tool in canvasToolStore.tools"
+      :key="tool.id"
+      :active="canvasToolStore.activeTool?.id === tool.id"
+      active-color="#fa45ab20"
+      hover-color="primary"
+      @click="canvasToolStore.setActiveTool(tool)"
+    >
+      <va-sidebar-item-content>
+        <div class="toolbar-button">
+          <va-icon :name="tool.icon" size="large" color="primary" />
+
+          <span class="toolbar-button__content">{{ tool.name }}</span>
+        </div>
+        <va-sidebar-item-title>Select</va-sidebar-item-title>
       </va-sidebar-item-content>
     </va-sidebar-item>
   </va-sidebar>

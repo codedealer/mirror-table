@@ -1,6 +1,7 @@
 import type { Timestamp } from '@firebase/firestore-types';
 import type Konva from 'konva';
 import type { DBSchema } from 'idb';
+import type { DefineComponent } from 'vue';
 
 export interface AuthorizationInfo {
   accessToken: string
@@ -338,6 +339,7 @@ export const CanvasLayerTypes = {
 export type CanvasLayerType = typeof CanvasLayerTypes[keyof typeof CanvasLayerTypes];
 
 export interface ElementContainerConfig extends Konva.NodeConfig {
+  id: string
   name: 'element-container'
   width: number
   height: number
@@ -345,6 +347,10 @@ export interface ElementContainerConfig extends Konva.NodeConfig {
   scaleX: number
   scaleY: number
 }
+
+export const isContainerNode = (obj: unknown): obj is Konva.Node => {
+  return isObject(obj) && 'attrs' in obj && isObject(obj.attrs) && 'name' in obj.attrs && obj.attrs.name === 'element-container';
+};
 
 export const SelectionGroups = {
   BACKGROUND: 'background',
@@ -376,6 +382,16 @@ export interface CanvasElementStateAsset extends CanvasElementStateLoadable {
 export const isCanvasElementStateAsset = (obj: CanvasElementState): obj is CanvasElementStateAsset => {
   return '_type' in obj && obj._type === 'asset';
 };
+
+export interface CanvasTool {
+  id: string
+  name: string
+  icon: string
+  disabled: boolean
+  active: boolean
+  events: Map<string, (e: Konva.KonvaEventObject<unknown>) => void>
+  component: DefineComponent<{}, {}, any>
+}
 
 // FIRESTORE TYPES
 

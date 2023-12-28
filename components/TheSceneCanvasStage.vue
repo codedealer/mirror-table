@@ -1,37 +1,22 @@
 <script setup lang="ts">
 import type Konva from 'konva';
 import type { KonvaComponent } from '~/models/types';
+import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
 
 const stage = ref<KonvaComponent<Konva.Node> | null>(null);
+const imageTransformer = ref<KonvaComponent<Konva.Transformer> | null>(null);
+const selectionRect = ref<KonvaComponent<Konva.Rect> | null>(null);
 
 const canvasStageStore = useCanvasStageStore();
 const canvasElementsStore = useCanvasElementsStore();
 
 onMounted(() => {
   canvasStageStore._stageNode = stage.value;
+  canvasStageStore._imageTransformerNode = imageTransformer.value;
+  canvasStageStore._selectionRectNode = selectionRect.value;
 });
 
-const onNodeTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-  const node = e.target as Konva.Node;
-  const id = node.id();
-
-  const transforms = {
-    scaleX: node.scaleX(),
-    scaleY: node.scaleY(),
-    rotation: node.rotation(),
-  };
-
-  if (id === '_stage') {
-    canvasStageStore._offset = {
-      x: node.x() + canvasStageStore._scroll.x,
-      y: node.y() + canvasStageStore._scroll.y,
-    };
-
-    canvasStageStore.applyConfig(transforms);
-  } else {
-    throw new Error('not implemented');
-  }
-};
+const { onNodeTransformEnd, onKonvaEvent } = useCanvasTransformEvents();
 </script>
 
 <template>
@@ -39,6 +24,7 @@ const onNodeTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
     id="_stage"
     ref="stage"
     :config="canvasStageStore.stageConfig"
+    @pointerdown="onKonvaEvent"
     @dragend="onNodeTransformEnd"
     @transformend="onNodeTransformEnd"
   >
@@ -48,6 +34,11 @@ const onNodeTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
         :key="asset.id"
         :element="asset"
       />
+
+      <v-transformer
+        ref="imageTransformer"
+      />
+      <v-rect ref="selectionRect" :config="{ visible: false }" />
     </v-layer>
   </v-stage>
 </template>

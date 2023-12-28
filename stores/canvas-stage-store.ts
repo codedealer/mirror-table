@@ -15,6 +15,16 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     draggable: false,
   });
 
+  const _imageTransformerNode = ref<
+    KonvaComponent<Konva.Transformer> | null
+  >(null);
+  const imageTransformer = computed(() => _imageTransformerNode.value?.getNode());
+
+  const _selectionRectNode = ref<
+    KonvaComponent<Konva.Rect> | null
+  >(null);
+  const selectionRect = computed(() => _selectionRectNode.value?.getNode());
+
   const _offset = ref({ x: 0, y: 0 });
   const _scroll = ref({ x: 0, y: 0 });
 
@@ -75,9 +85,13 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
   return {
     _stageNode,
     _stage,
+    _imageTransformerNode,
+    _selectionRectNode,
     _offset,
     _scroll,
     stage,
+    imageTransformer,
+    selectionRect,
     fieldWidth,
     fieldHeight,
     fieldPadding,
