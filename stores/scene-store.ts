@@ -1,4 +1,4 @@
-import { collection, doc, orderBy, query, setDoc, where } from '@firebase/firestore';
+import { collection, deleteDoc, doc, orderBy, query, setDoc, where } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 import type { DriveAsset, Scene, SceneElement } from '~/models/types';
 import { SceneElementCanvasObjectAssetFactory } from '~/models/SceneElementCanvasObjectAsset';
@@ -88,11 +88,20 @@ export const useSceneStore = defineStore('scene', () => {
     }
   };
 
+  const removeElement = async (element: SceneElement) => {
+    if (!sceneElementsRef.value) {
+      return;
+    }
+
+    await deleteDoc(doc(sceneElementsRef.value, element.id));
+  };
+
   return {
     scene,
     sceneElements,
     addElement,
     addAsset,
+    removeElement,
   };
 });
 

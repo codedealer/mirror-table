@@ -109,6 +109,12 @@
 
     &.layer-element {
       margin-bottom: 1rem;
+
+      &.active {
+        .va-list-item__inner {
+          background-color: color-mix(in oklab, var(--va-primary-dark) 20%, transparent);
+        }
+      }
     }
   }
 }
