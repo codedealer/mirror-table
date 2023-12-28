@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LayerItem, SceneElement } from '~/models/types';
+import type { LayerItem, SceneElement, SceneElementCanvasObjectAsset } from '~/models/types';
 import CanvasLayersElementAsset from '~/components/CanvasLayersElementAsset.vue';
 
 defineProps<{
@@ -11,7 +11,7 @@ defineProps<{
   <div class="ghost-container">
     <CanvasLayersElementAsset
       v-if="isSceneElementCanvasObject(item.item) && isSceneElementCanvasObjectAsset(item.item)"
-      :item="item"
+      :item="item as LayerItem<SceneElementCanvasObjectAsset>"
     />
     <va-list-item v-else>
       <va-list-item-section>
