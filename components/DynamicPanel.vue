@@ -4,7 +4,7 @@ import { useDynamicPanelStore } from '~/stores/dynamic-panel-store';
 import type { DynamicPanelContentType, DynamicPanelModelType } from '~/models/types';
 import { useRightPanelStore } from '~/stores/right-panel-store';
 import { DynamicPanelContentTypes } from '~/models/types';
-import { SessionExplorer, TableExplorer } from '#components';
+import { CanvasLayers, SessionExplorer, TableExplorer } from '#components';
 
 const props = defineProps<{
   name: DynamicPanelModelType
@@ -16,6 +16,7 @@ const { models, contents } = storeToRefs(store);
 const availableComponents: Record<DynamicPanelContentType, unknown> = {
   [DynamicPanelContentTypes.EXPLORER]: TableExplorer,
   [DynamicPanelContentTypes.SESSIONS]: SessionExplorer,
+  [DynamicPanelContentTypes.LAYERS]: CanvasLayers,
 };
 
 const content = computed(() => {

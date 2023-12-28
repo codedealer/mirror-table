@@ -13,6 +13,10 @@ const openSessions = () => {
   dynamicPanelStore.open(DynamicPanelModelTypes.LEFT, DynamicPanelContentTypes.SESSIONS);
 };
 
+const openLayers = () => {
+  dynamicPanelStore.open(DynamicPanelModelTypes.LEFT, DynamicPanelContentTypes.LAYERS);
+};
+
 const canvasToolStore = useCanvasToolStore();
 </script>
 
@@ -47,6 +51,17 @@ const canvasToolStore = useCanvasToolStore();
       </va-sidebar-item-content>
     </va-sidebar-item>
 
+    <va-sidebar-item @click="openLayers">
+      <va-sidebar-item-content>
+        <div class="toolbar-button">
+          <va-icon name="layers" size="large" color="primary" />
+
+          <span class="toolbar-button__content">Layers</span>
+        </div>
+        <va-sidebar-item-title>Layers</va-sidebar-item-title>
+      </va-sidebar-item-content>
+    </va-sidebar-item>
+
     <va-divider />
 
     <va-sidebar-item
@@ -63,9 +78,11 @@ const canvasToolStore = useCanvasToolStore();
 
           <span class="toolbar-button__content">{{ tool.name }}</span>
         </div>
-        <va-sidebar-item-title>Select</va-sidebar-item-title>
+        <va-sidebar-item-title>{{ tool.name }}</va-sidebar-item-title>
       </va-sidebar-item-content>
     </va-sidebar-item>
+
+    <va-spacer />
   </va-sidebar>
 </template>
 

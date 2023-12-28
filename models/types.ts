@@ -362,6 +362,24 @@ export const SelectionGroups = {
 
 export type SelectionGroup = typeof SelectionGroups[keyof typeof SelectionGroups];
 
+export const SelectionGroupNames = {
+  [SelectionGroups.BACKGROUND]: 'Background',
+  [SelectionGroups.ELEMENT]: 'Element',
+  [SelectionGroups.HIDDEN]: 'Hidden',
+  [SelectionGroups.SCREEN]: 'Title Screen',
+} as const;
+
+export type SelectionGroupName = typeof SelectionGroupNames[keyof typeof SelectionGroupNames];
+
+export const SelectionGroupIcons = {
+  [SelectionGroups.BACKGROUND]: 'wallpaper',
+  [SelectionGroups.ELEMENT]: 'token',
+  [SelectionGroups.HIDDEN]: 'visibility_off',
+  [SelectionGroups.SCREEN]: 'dvr',
+} as const;
+
+export type SelectionGroupIcon = typeof SelectionGroupIcons[keyof typeof SelectionGroupIcons];
+
 export interface CanvasElementState {
   id: string
   name?: string
@@ -551,6 +569,17 @@ export interface SceneElementScreen extends SceneElement {
   _type: 'screen'
   file: string
   thumbnail: DriveImage | string | null
+}
+
+export interface LayerGroup {
+  name: SelectionGroupName
+  icon?: string
+}
+
+export interface LayerItem<T extends SceneElement | LayerGroup> {
+  id: string
+  type: T extends SceneElement ? 'element' : 'group'
+  item: T
 }
 
 export interface TablePermissions {

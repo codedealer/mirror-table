@@ -101,5 +101,14 @@
     align-items: center;
     justify-content: flex-end;
   }
+}
 
+.layers-list {
+  .va-list-item {
+    margin-bottom: 0.5rem;
+
+    &.layer-element {
+      margin-bottom: 1rem;
+    }
+  }
 }
