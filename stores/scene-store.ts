@@ -46,7 +46,11 @@ export const useSceneStore = defineStore('scene', () => {
       );
     }
 
-    q = query(q, orderBy('defaultRank', 'asc'));
+    q = query(
+      q,
+      orderBy('selectionGroup', 'asc'),
+      orderBy('defaultRank', 'asc'),
+    );
 
     return q;
   });

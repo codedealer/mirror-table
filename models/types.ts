@@ -264,6 +264,7 @@ export type DynamicPanelModelType = typeof DynamicPanelModelTypes[keyof typeof D
 export const DynamicPanelContentTypes = {
   EXPLORER: 'explorer',
   SESSIONS: 'sessions',
+  LAYERS: 'layers',
 } as const;
 
 export type DynamicPanelContentType = typeof DynamicPanelContentTypes[keyof typeof DynamicPanelContentTypes];
@@ -288,7 +289,7 @@ export const DataRetrievalStrategies = {
   CACHE_ONLY: 'cache',
   // search the local cache, then the remote database
   LAZY: 'lazy',
-  // search the local cache if it's relatively fresh (currently not supported)
+  // search the local cache if it's relatively fresh (currently 60s), then the remote database
   RECENT: 'recent',
   // ignore cache
   SOURCE: 'source',
@@ -353,10 +354,10 @@ export const isContainerNode = (obj: unknown): obj is Konva.Node => {
 };
 
 export const SelectionGroups = {
-  BACKGROUND: 'background',
-  ELEMENT: 'element',
-  HIDDEN: 'hidden',
-  SCREEN: 'screen',
+  BACKGROUND: 0,
+  ELEMENT: 10,
+  HIDDEN: 20,
+  SCREEN: 30,
 } as const;
 
 export type SelectionGroup = typeof SelectionGroups[keyof typeof SelectionGroups];
@@ -501,6 +502,7 @@ export interface SceneElement {
   _type: 'screen' | 'canvas-object'
   id: string
   enabled: boolean
+  selectionGroup: SelectionGroup
   defaultRank: number
 }
 
@@ -513,7 +515,6 @@ export type Stateful<T extends SceneElement, U extends CanvasElementState> = {
 export interface SceneElementCanvasObject extends SceneElement {
   _type: 'canvas-object'
   type: string
-  selectionGroup: SelectionGroup
   container: ElementContainerConfig
 }
 
