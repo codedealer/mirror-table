@@ -80,7 +80,7 @@ const imageSrc = computed(() => {
   if (props.file && props.file.imageMediaMetadata) {
     /*
      compute proper image size depending on the objectFit:
-     - if objectFit is 'cover', we want to take the largest dimension
+     - if objectFit is 'cover', we want to take the smallest dimension
      - if objectFit is 'contain', we want to specify both dimensions and let google drive api do the rest
     */
     let sizeArg = `w${props.width}-h${props.height}`;
@@ -90,7 +90,7 @@ const imageSrc = computed(() => {
         props.file.imageMediaMetadata.height,
       );
 
-      if (imageAspectRatio > 1) {
+      if (imageAspectRatio < 1) {
         sizeArg = `w${props.width}`;
       } else {
         sizeArg = `h${props.height}`;
