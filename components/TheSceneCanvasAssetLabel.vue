@@ -7,7 +7,7 @@ const props = defineProps<{
   element: SceneElementCanvasObjectAsset
 }>();
 
-const { label } = useDriveFile<DriveAsset>(
+const { file, label } = useDriveFile<DriveAsset>(
   toRef(() => props.element.asset.id),
   {
     strategy: DataRetrievalStrategies.LAZY,
@@ -17,6 +17,7 @@ const { label } = useDriveFile<DriveAsset>(
 
 const elementLabel = useCanvasElementAssetLabel(
   toRef(() => props.element),
+  file,
   label,
 );
 

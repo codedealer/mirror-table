@@ -6,7 +6,7 @@ const props = defineProps<{
   item: LayerItem<SceneElementCanvasObjectAsset>
 }>();
 
-const { label, isLoading, error } = useDriveFile<DriveAsset>(
+const { file, label, isLoading, error } = useDriveFile<DriveAsset>(
   toRef(() => props.item.item.asset.id),
   {
     strategy: DataRetrievalStrategies.LAZY,
@@ -34,6 +34,7 @@ const isSelected = computed(() => {
 
 const elementLabel = useCanvasElementAssetLabel(
   toRef(() => props.item.item),
+  file,
   label,
 );
 </script>
