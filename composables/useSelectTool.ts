@@ -15,6 +15,10 @@ export const useSelectTool = () => {
     const clickedOnEmpty = e.target === store.stage;
 
     if (clickedOnEmpty) {
+      if (!elementsStore.selectedElements.length) {
+        return;
+      }
+
       elementsStore.deselectAll();
     } else {
       const container = getElementContainer(e.target as Konva.Shape);
