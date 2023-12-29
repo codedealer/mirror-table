@@ -55,16 +55,6 @@ watchEffect(() => {
 
 const container = ref<KonvaComponent<Konva.Group> | null>(null);
 
-const imageConfig: ComputedRef<Konva.ImageConfig | null> = computed(() => {
-  if (!state.value || !state.value.imageElement) {
-    return null;
-  }
-
-  return {
-    image: state.value.imageElement,
-  };
-});
-
 const containerConfig: ComputedRef<ElementContainerConfig> = computed(() => {
   if (!state.value) {
     return props.element.container;
@@ -73,6 +63,21 @@ const containerConfig: ComputedRef<ElementContainerConfig> = computed(() => {
   return {
     ...props.element.container,
     draggable: state.value?.selectable && state.value?.selected,
+  };
+});
+
+const imageConfig: ComputedRef<Konva.ImageConfig | null> = computed(() => {
+  if (!state.value || !state.value.imageElement) {
+    return null;
+  }
+
+  return {
+    image: state.value.imageElement,
+    width: props.element.asset.preview.nativeWidth,
+    height: props.element.asset.preview.nativeHeight,
+    x: containerConfig.value.width / 2,
+    y: 0,
+    offsetX: props.element.asset.preview.nativeWidth / 2,
   };
 });
 

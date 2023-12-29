@@ -26,9 +26,12 @@ const minWidth = 100;
 const labelText = ref<KonvaComponent<Konva.Text> | null>(null);
 
 const labelTextConfig = computed<Konva.TextConfig>(() => {
+  const scaledWidth = props.element.container.width * props.element.container.scaleX;
+  const offsetMode = scaledWidth <= minWidth;
   return {
-    x: 0,
+    x: offsetMode ? scaledWidth / 2 : 0,
     y: props.element.container.height * props.element.container.scaleY + paddingSize,
+    offsetX: offsetMode ? minWidth / 2 : 0,
     text: elementLabel.value,
     fontSize: 16,
     fontFamily: 'Source Sans Pro, sans-serif',
@@ -46,13 +49,15 @@ const labelTextConfig = computed<Konva.TextConfig>(() => {
   };
 });
 
-const labelWidth = computed(() => {
-  return (labelText.value?.getNode().getTextWidth() ?? 0) + 2 * paddingSize;
-});
+const labelWidth = ref(0);
 
 const labelBackgroundConfig = computed<Konva.RectConfig>(() => {
+  const scaledWidth = props.element.container.width * props.element.container.scaleX;
+  const x = (labelTextConfig.value.width ?? 0) < scaledWidth
+    ? (labelTextConfig.value.width ?? 0) / 2
+    : scaledWidth / 2;
   return {
-    x: (labelTextConfig.value.width ?? 0) / 2,
+    x,
     y: labelTextConfig.value.y,
     offsetX: labelWidth.value / 2,
     width: labelWidth.value,
@@ -71,6 +76,21 @@ const groupConfig = computed<Konva.GroupConfig>(() => {
     scaleX: 1 / props.element.container.scaleX,
     scaleY: 1 / props.element.container.scaleY,
   };
+});
+
+const canvasStageStore = useCanvasStageStore();
+
+watch(labelTextConfig, async () => {
+  await nextTick();
+  labelWidth.value = (labelText.value?.getNode().getTextWidth() ?? 0) + 2 * paddingSize;
+}, { immediate: true });
+
+// because of the reverse scaling, we need to force update the transformer
+watch(groupConfig, async () => {
+  await nextTick();
+  await nextTick();
+  await nextTick();
+  canvasStageStore.imageTransformer?.forceUpdate();
 });
 </script>
 
