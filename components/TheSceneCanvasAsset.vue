@@ -2,7 +2,7 @@
 import type { ComputedRef } from 'vue';
 import type Konva from 'konva';
 import type {
-  CanvasElementStateAsset, ElementContainerConfig,
+  CanvasElementStateAsset, ElementContainerConfig, KonvaComponent,
   SceneElementCanvasObjectAsset,
 } from '~/models/types';
 import { isCanvasElementStateAsset } from '~/models/types';
@@ -14,17 +14,6 @@ const props = defineProps<{
 
 // create a stateful object
 const canvasElementsStore = useCanvasElementsStore();
-// should this watch the element id?
-const stateObject: CanvasElementStateAsset = {
-  _type: 'asset',
-  id: props.element.id,
-  loading: false,
-  loaded: false,
-  selectable: true,
-  selected: false,
-};
-
-canvasElementsStore.canvasElementsStateRegistry[props.element.id] = stateObject;
 
 const updateState = (partialState: Partial<CanvasElementStateAsset>) => {
   canvasElementsStore.updateElementState<CanvasElementStateAsset>(
@@ -33,25 +22,38 @@ const updateState = (partialState: Partial<CanvasElementStateAsset>) => {
   );
 };
 
-// TODO: should be a watchEffect
-const state = computed(() => {
+const state = ref<CanvasElementStateAsset | undefined>();
+watchEffect(() => {
   if (!(props.element.id in canvasElementsStore.canvasElementsStateRegistry)) {
-    return;
+    const stateObject: CanvasElementStateAsset = {
+      _type: 'asset',
+      id: props.element.id,
+      loading: false,
+      loaded: false,
+      selectable: true,
+      selected: false,
+    };
+
+    canvasElementsStore.canvasElementsStateRegistry[props.element.id] = stateObject;
   }
 
-  const state = canvasElementsStore.canvasElementsStateRegistry[props.element.id];
+  const stateObject = canvasElementsStore.canvasElementsStateRegistry[props.element.id];
 
-  if (!isCanvasElementStateAsset(state)) {
+  if (!isCanvasElementStateAsset(stateObject)) {
     updateState({
       error: new Error(`Invalid state for asset ${props.element.id}`),
     });
+    state.value = undefined;
+
     return;
   }
 
   updateState({ error: undefined });
 
-  return state;
+  state.value = stateObject;
 });
+
+const container = ref<KonvaComponent<Konva.Group> | null>(null);
 
 const imageConfig: ComputedRef<Konva.ImageConfig | null> = computed(() => {
   if (!state.value || !state.value.imageElement) {
@@ -133,12 +135,17 @@ const { onNodeTransformEnd } = useCanvasTransformEvents();
 
 <template>
   <v-group
+    ref="container"
     :config="containerConfig"
     @dragend="onNodeTransformEnd"
     @transformend="onNodeTransformEnd"
   >
     <v-circle v-if="!imageConfig" :config="circleConfig" />
     <v-image v-else :config="imageConfig" />
+    <TheSceneCanvasAssetLabel
+      v-if="imageConfig && !state?.error"
+      :element="element"
+    />
   </v-group>
 </template>
 

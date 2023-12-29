@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { DriveAsset, DriveImage, LayerItem, SceneElementCanvasObjectAsset } from '~/models/types';
+import { useCanvasElementAssetLabel } from '~/composables/useCanvasElementAssetLabel';
 
 const props = defineProps<{
   item: LayerItem<SceneElementCanvasObjectAsset>
 }>();
 
-const { file, label, isLoading, error } = useDriveFile<DriveAsset>(
+const { label, isLoading, error } = useDriveFile<DriveAsset>(
   toRef(() => props.item.item.asset.id),
   {
     strategy: DataRetrievalStrategies.LAZY,
@@ -31,13 +32,10 @@ const isSelected = computed(() => {
   return canvasElementsStore.selectedElements.findIndex(e => e.id === props.item.id) !== -1;
 });
 
-const elementLabel = computed(() => {
-  if (props.item.item.asset.kind === AssetPropertiesKinds.COMPLEX) {
-    return label.value;
-  }
-
-  return props.item.item.asset.showTitle ? props.item.item.asset.title : label.value;
-});
+const elementLabel = useCanvasElementAssetLabel(
+  toRef(() => props.item.item),
+  label,
+);
 </script>
 
 <template>
