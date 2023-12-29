@@ -252,6 +252,7 @@ export interface ModalWindow {
 export interface SelectOption {
   text: string
   value: string
+  description?: string
 }
 
 export const DynamicPanelModelTypes = {
@@ -542,12 +543,15 @@ export const isSceneElementCanvasObject = (
   return obj._type === 'canvas-object';
 };
 
+type SceneElementCanvasObjectAssetProperties = Omit<AssetProperties, 'preview'> &
+{
+  id: string
+  preview: PreviewProperties
+};
+
 export interface SceneElementCanvasObjectAsset extends SceneElementCanvasObject {
   type: 'asset'
-  asset: {
-    id: string
-    preview: PreviewProperties
-  }
+  asset: SceneElementCanvasObjectAssetProperties
   image?: Konva.ImageConfig
 }
 

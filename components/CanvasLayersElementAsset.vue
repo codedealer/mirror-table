@@ -30,6 +30,14 @@ const select = () => {
 const isSelected = computed(() => {
   return canvasElementsStore.selectedElements.findIndex(e => e.id === props.item.id) !== -1;
 });
+
+const elementLabel = computed(() => {
+  if (props.item.item.asset.kind === AssetPropertiesKinds.COMPLEX) {
+    return label.value;
+  }
+
+  return props.item.item.asset.showTitle ? props.item.item.asset.title : label.value;
+});
 </script>
 
 <template>
@@ -59,7 +67,7 @@ const isSelected = computed(() => {
         v-show="!error"
         caption
       >
-        {{ file?.appProperties.showTitle ? file?.appProperties.title : label }}
+        {{ elementLabel }}
       </va-list-item-label>
     </va-list-item-section>
     <va-list-item-section icon>

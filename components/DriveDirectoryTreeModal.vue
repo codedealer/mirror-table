@@ -39,6 +39,13 @@ const driveTreeModalStore = useDriveTreeModalStore();
         required
       />
 
+      <div
+        v-if="driveTreeModalStore.fileOptions.length > 1 && driveTreeModalStore.selectedOption?.description"
+        class="asset-options-description"
+      >
+        <p>{{ driveTreeModalStore.selectedOption?.description }}</p>
+      </div>
+
       <div class="vertical-form__actions">
         <va-button
           preset="plain"

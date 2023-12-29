@@ -5,16 +5,19 @@ import { PreviewPropertiesFactory, serializePreviewProperties } from '~/models/P
 export const generateSelectOptions = (): SelectOption[] => {
   return [
     {
-      text: 'Simple file',
+      text: 'Text file',
       value: 'text',
+      description: 'Just a markdown file that can be edited or displayed on a screen',
     },
     {
-      text: 'Image',
+      text: 'Simple image',
       value: 'image',
+      description: 'Independent image with optional caption. Each new image in a scene behaves like a separate entity. Think markers on a map: the image for a marker is the same but they are different entities.',
     },
     {
-      text: 'Rich text with preview',
+      text: 'Asset with preview',
       value: 'complex',
+      description: 'An asset with a preview. Each asset on a scene is linked to this file. E.g. a change of caption in one scene will change it in all scenes.',
     },
   ];
 };
