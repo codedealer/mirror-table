@@ -17,6 +17,18 @@ onMounted(() => {
 });
 
 const { onNodeTransformEnd, onKonvaEvent } = useCanvasTransformEvents();
+
+const imageTransformerConfig = ref<Konva.TransformerConfig>({
+  flipEnabled: false,
+  enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+  boundBoxFunc: (oldBox, newBox) => {
+    // limit resize
+    if (newBox.width < 32 || newBox.height < 32) {
+      return oldBox;
+    }
+    return newBox;
+  },
+});
 </script>
 
 <template>
@@ -37,6 +49,7 @@ const { onNodeTransformEnd, onKonvaEvent } = useCanvasTransformEvents();
 
       <v-transformer
         ref="imageTransformer"
+        :config="imageTransformerConfig"
       />
       <v-rect ref="selectionRect" :config="{ visible: false }" />
     </v-layer>
