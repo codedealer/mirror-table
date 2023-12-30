@@ -15,11 +15,15 @@ const { file, label } = useDriveFile<DriveAsset>(
   },
 );
 
-const elementLabel = useCanvasElementAssetLabel(
+const { label: elementLabel, isVisible } = useCanvasElementAssetLabel(
   toRef(() => props.element),
   file,
   label,
 );
+
+const tableStore = useTableStore();
+
+const isEditable = computed(() => tableStore.permissions.isOwner);
 
 const paddingSize = 10;
 const minWidth = 100;
@@ -36,6 +40,7 @@ const labelTextConfig = computed<Konva.TextConfig>(() => {
     fontSize: 16,
     fontFamily: 'Source Sans Pro, sans-serif',
     fill: 'black',
+    textDecoration: isVisible.value ? 'none' : 'line-through',
     align: 'center',
     verticalAlign: 'middle',
     listening: false,
@@ -96,6 +101,8 @@ watch(groupConfig, async () => {
 
 <template>
   <v-group
+    v-if="elementLabel.length > 0"
+    v-show="isVisible || isEditable"
     :config="groupConfig"
   >
     <v-rect :config="labelBackgroundConfig" />

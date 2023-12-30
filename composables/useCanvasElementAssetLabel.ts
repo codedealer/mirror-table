@@ -17,5 +17,13 @@ export const useCanvasElementAssetLabel = (
     return canvasAsset.value.asset.showTitle ? canvasAsset.value.asset.title : assetLabel.value;
   });
 
-  return label;
+  const isVisible = computed(() => {
+    if (asset.value?.appProperties.kind === AssetPropertiesKinds.COMPLEX) {
+      return asset.value.appProperties.showTitle;
+    }
+
+    return canvasAsset.value.asset.showTitle;
+  });
+
+  return { label, isVisible };
 };

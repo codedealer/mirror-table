@@ -32,7 +32,7 @@ const isSelected = computed(() => {
   return canvasElementsStore.selectedElements.findIndex(e => e.id === props.item.id) !== -1;
 });
 
-const elementLabel = useCanvasElementAssetLabel(
+const { label: elementLabel } = useCanvasElementAssetLabel(
   toRef(() => props.item.item),
   file,
   label,
