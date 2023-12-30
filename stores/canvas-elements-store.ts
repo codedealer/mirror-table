@@ -74,11 +74,9 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
       return;
     }
 
-    const elementClone = structuredClone(toRaw(element));
-
-    Object.assign(elementClone.container, transforms);
-
-    void sceneStore.addElement(elementClone);
+    void sceneStore.updateElement<SceneElementCanvasObject>(elementId, {
+      container: transforms,
+    });
   };
 
   return {

@@ -3,6 +3,10 @@ import type Konva from 'konva';
 import type { DBSchema } from 'idb';
 import type { DefineComponent } from 'vue';
 
+export type NestedPartial<T> = {
+  [K in keyof T]?: T[K] extends object ? NestedPartial<T[K]> : T[K];
+};
+
 export interface AuthorizationInfo {
   accessToken: string
   expiry: number
@@ -195,7 +199,8 @@ export const isDriveAsset = (file: DriveFile): file is DriveAsset => {
 
 export type DriveImage = DriveFile & Required<Pick<gapi.client.drive.File, 'imageMediaMetadata'>>;
 
-export interface DriveFileContextAction {
+export interface ContextAction {
+  id: string
   label: string
   icon?: { name: string; color?: string }
   action: (...args: unknown[]) => PromiseLike<void> | void

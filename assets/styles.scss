@@ -89,6 +89,12 @@ header {
   display: flex;
   align-items: center;
 }
+.gap-05 {
+  gap: .5rem;
+}
+.gap-1 {
+  gap: 1rem;
+}
 
 .centered {
   display: grid;
@@ -106,4 +112,9 @@ header {
 }
 .va-modal__footer {
   gap: 1rem;
+}
+
+/* fix for dropdown button being not aligned with other buttons */
+.va-button-dropdown {
+  display: inline-flex;
 }

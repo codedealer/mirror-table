@@ -26,6 +26,11 @@
   .tree-node{
     position: relative;
     padding: var(--va-tree-node-padding);
+
+    .context-panel__action--hiding {
+      display: none;
+    }
+
     &:before {
       content: '';
       position: absolute;
@@ -43,6 +48,10 @@
       &:before {
         background-color: var(--va-primary);
         opacity: var(--va-tree-node-interactive-bg-opacity);
+      }
+
+      .context-panel__action--hiding {
+        display: inherit;
       }
     }
   }

@@ -24,9 +24,9 @@ export const useCanvasAssetPointerEvents = (
       y: pos.y - canvasStageStore.fieldPadding,
     };
 
-    canvasContextPanelStore.show(pos.x, pos.y);
+    canvasContextPanelStore.show(container.id(), pos.x, pos.y);
   };
-  const onHoverOut = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+  const onHoverOut = () => {
     canvasContextPanelStore.hide();
   };
 

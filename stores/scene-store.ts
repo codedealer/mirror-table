@@ -1,6 +1,6 @@
-import { collection, deleteDoc, doc, orderBy, query, setDoc, where } from '@firebase/firestore';
+import { collection, deleteDoc, doc, orderBy, query, setDoc, updateDoc, where } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
-import type { DriveAsset, Scene, SceneElement } from '~/models/types';
+import type { DriveAsset, NestedPartial, Scene, SceneElement } from '~/models/types';
 import { SceneElementCanvasObjectAssetFactory } from '~/models/SceneElementCanvasObjectAsset';
 
 export const useSceneStore = defineStore('scene', () => {
@@ -88,6 +88,25 @@ export const useSceneStore = defineStore('scene', () => {
     }
   };
 
+  const updateElement = async <T extends SceneElement>(
+    id: string,
+    update: NestedPartial<T>,
+  ) => {
+    if (!sceneElementsRef.value) {
+      return;
+    }
+
+    const data = makeFirestoreUpdateData(update);
+    const docRef = doc(sceneElementsRef.value, id).withConverter(firestoreDataConverter<T>());
+    try {
+      await updateDoc(docRef, data);
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Failed to update scene element.');
+      console.error(e);
+    }
+  };
+
   const removeElement = async (element: SceneElement) => {
     if (!sceneElementsRef.value) {
       return;
@@ -101,6 +120,7 @@ export const useSceneStore = defineStore('scene', () => {
     sceneElements,
     addElement,
     addAsset,
+    updateElement,
     removeElement,
   };
 });

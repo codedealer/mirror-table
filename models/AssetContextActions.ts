@@ -1,21 +1,23 @@
-import type { DriveAsset, DriveFileContextAction, TreeNode } from '~/models/types';
+import type { ContextAction, DriveAsset, TreeNode } from '~/models/types';
 
 export const AssetContextActionsFactory = (file: DriveAsset, node: TreeNode) => {
   const driveTreeStore = useDriveTreeStore();
   const sceneStore = useSceneStore();
 
-  const actions: DriveFileContextAction[] = [];
+  const actions: ContextAction[] = [];
 
   actions.push({
+    id: 'send-to-scene',
     label: 'Send to Scene',
     icon: { name: 'token', color: 'primary' },
     action: () => sceneStore.addAsset(file),
     disabled: !file.capabilities?.canDownload || !file.appProperties.preview,
-    pinned: false,
+    pinned: true,
     alwaysVisible: false,
   });
 
   actions.push({
+    id: 'delete',
     label: 'Delete',
     icon: { name: 'delete', color: 'danger' },
     action: () => driveTreeStore.removeFile(node),

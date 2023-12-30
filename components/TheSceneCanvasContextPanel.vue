@@ -1,7 +1,21 @@
 <script setup lang="ts">
 import { useCanvasContextPanelStore } from '~/stores/canvas-context-panel-store';
+import type { ContextAction } from '~/models/types';
+import ContextPanel from '~/components/ContextPanel.vue';
 
 const store = useCanvasContextPanelStore();
+
+const { elementId } = storeToRefs(store);
+
+const menuOptions = ref<ContextAction[]>([]);
+
+watchEffect(() => {
+  if (!elementId.value) {
+    return;
+  }
+
+  menuOptions.value = CanvasAssetContextActionsFactory(elementId.value);
+});
 
 const styleObject = computed(() => ({
   '--top': store.position.y,
@@ -15,10 +29,10 @@ const styleObject = computed(() => ({
     :style="styleObject"
     class="canvas-context-panel"
   >
-    <va-card-content class="flex">
-      <va-button
-        icon="more_vert"
-        color="primary-dark"
+    <va-card-content>
+      <ContextPanel
+        :actions="menuOptions"
+        preset=""
         size="small"
       />
     </va-card-content>

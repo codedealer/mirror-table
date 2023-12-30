@@ -68,7 +68,7 @@ const labelBackgroundConfig = computed<Konva.RectConfig>(() => {
     width: labelWidth.value,
     height: labelText.value?.getNode().height(),
     fill: 'white',
-    listening: false,
+    listening: true,
     opacity: 0.5,
     scaleX: 1,
     scaleY: 1,

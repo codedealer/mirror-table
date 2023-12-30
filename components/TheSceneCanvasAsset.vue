@@ -77,8 +77,10 @@ const imageConfig: ComputedRef<Konva.ImageConfig | null> = computed(() => {
     width: props.element.asset.preview.nativeWidth,
     height: props.element.asset.preview.nativeHeight,
     x: containerConfig.value.width / 2,
-    y: 0,
+    y: containerConfig.value.height / 2,
     offsetX: props.element.asset.preview.nativeWidth / 2,
+    offsetY: props.element.asset.preview.nativeHeight / 2,
+    opacity: props.element.enabled ? 1 : 0.5,
   };
 });
 

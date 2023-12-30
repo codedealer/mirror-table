@@ -2,6 +2,7 @@
 import type { Tree } from 'he-tree-vue';
 import type { DriveTreeNode, ModalWindowContentMarkdown } from '~/models/types';
 import { WindowFactory } from '~/models/Window';
+import { useDriveFileContextActions } from '~/composables/useDriveFileContextActions';
 
 const props = defineProps<{
   node: DriveTreeNode
@@ -15,6 +16,8 @@ const { file, label } = useDriveFile(toRef(() => props.node.id));
 const nodeLabel = computed(() => {
   return label.value ?? props.node.label;
 });
+
+const { actions } = useDriveFileContextActions(file, toRef(() => props.node));
 
 const toggleFile = () => {
   if (!file.value || file.value?.trashed) {
@@ -92,10 +95,9 @@ const undoTrashFolder = () => {
         />
       </va-popover>
 
-      <DriveDirectoryTreeFileContextMenu
+      <ContextPanel
         v-show="file && !file.trashed"
-        :node="node"
-        :path="path"
+        :actions="actions"
       />
     </div>
   </div>
