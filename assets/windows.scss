@@ -1,6 +1,7 @@
 :root {
   --window-tab-background: var(--va-background-secondary);
-  --window-tab-background-active: color-mix(in oklab, var(--va-background-primary) 100%, var(--va-secondary-dark) 35%);
+  //--window-tab-background-active: color-mix(in oklab, var(--va-background-primary) 100%, var(--va-secondary-dark) 35%);
+  --window-tab-background-active: #004a77;
 }
 
 .main-grid__status {
@@ -44,7 +45,7 @@
   overflow: hidden;
 
   &:hover {
-    background-color: color-mix(in oklab, var(--va-background-secondary), #ffffff33);
+    background-color: color-mix(in oklab, var(--va-background-secondary), #ffffff10);
   }
 
   &.window-tab--active {
