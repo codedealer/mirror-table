@@ -7,6 +7,7 @@ import type {
 } from '~/models/types';
 import { isCanvasElementStateAsset } from '~/models/types';
 import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
+import { useCanvasAssetPointerEvents } from '~/composables/useCanvasAssetPointerEvents';
 
 const props = defineProps<{
   element: SceneElementCanvasObjectAsset
@@ -136,14 +137,19 @@ const circleConfig = ref({
 });
 
 const { onNodeTransformEnd } = useCanvasTransformEvents();
+
+const { onHover, onHoverOut } = useCanvasAssetPointerEvents(state);
 </script>
 
 <template>
   <v-group
     ref="container"
     :config="containerConfig"
+    @dragstart="onHoverOut"
     @dragend="onNodeTransformEnd"
     @transformend="onNodeTransformEnd"
+    @pointerover="onHover"
+    @pointerout="onHoverOut"
   >
     <v-circle v-if="!imageConfig" :config="circleConfig" />
     <v-image v-else :config="imageConfig" />

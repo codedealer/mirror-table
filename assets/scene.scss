@@ -6,6 +6,7 @@
 }
 
 .scene {
+  position: relative;
   display: grid;
   place-items: center;
   width: 100%;
@@ -20,6 +21,8 @@
 }
 
 .canvas-container {
+  position: relative;
+
   &.scroll-enabled {
     width: 100%;
     height: calc(100vh - var(--status-bar-height));
@@ -37,4 +40,12 @@
   &.scroll-enabled {
     overflow: hidden;
   }
+}
+
+.canvas-context-panel {
+  --va-card-padding: 0.3125rem;
+  --va-card-box-shadow: none;
+  position: absolute;
+  top: calc(1px * var(--top, 0));
+  left: calc(1px * var(--left, 0));
 }
