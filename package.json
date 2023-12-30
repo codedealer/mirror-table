@@ -48,7 +48,7 @@
     "markdown-it-task-lists": "^2.1.1",
     "pinia": "^2.1.7",
     "vue-konva": "^3.0.2",
-    "vuestic-ui": "^1.8.5"
+    "vuestic-ui": "^1.8.7"
   },
   "lint-staged": {
     "*.{js,ts,vue}": "eslint --cache --fix"
