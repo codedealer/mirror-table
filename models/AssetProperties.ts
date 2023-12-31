@@ -7,17 +7,17 @@ export const generateSelectOptions = (): SelectOption[] => {
     {
       text: 'Text file',
       value: 'text',
-      description: 'Just a markdown file that can be edited or displayed on a screen',
+      description: 'Just a markdown file that can displayed as a title screen',
     },
     {
-      text: 'Simple image',
+      text: 'Image template',
       value: 'image',
-      description: 'Independent image with optional caption. Each new image in a scene behaves like a separate entity. Think markers on a map: the image for a marker is the same but they are different entities.',
+      description: 'Independent image with optional caption. Each new image in a scene behaves like a separate entity and can have its own caption with the original caption only serving as a template. Think markers on a map: the image for a marker is the same but they are different entities.',
     },
     {
       text: 'Asset with preview',
       value: 'complex',
-      description: 'An asset with a preview. Each asset on a scene is linked to this file. E.g. a change of caption in one scene will change it in all scenes.',
+      description: 'Markdown file with a preview image. Each asset on a scene is linked to this file. E.g. a change of caption in one scene will change it in all scenes.',
     },
   ];
 };
