@@ -8874,7 +8874,7 @@ vuestic-ui@^1.8.0:
     colortranslator "^1.9.2"
     lodash "^4.17.21"
 
-vuestic-ui@^1.8.5:
+vuestic-ui@^1.8.7:
   version "1.8.7"
   resolved "https://registry.yarnpkg.com/vuestic-ui/-/vuestic-ui-1.8.7.tgz#192e4576b9bac59ecafb428c6d879275accc9368"
   integrity sha512-rTcviYlTfQWca1AiCBXxCIL0nX/QAc7arzHr3JiJX+JDHLn8+chfgXUxB2fwKnwZnLk1B30wd//ySzfQ1uRe0g==
