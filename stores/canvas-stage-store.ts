@@ -55,6 +55,8 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
       return container;
     }
 
+    const labelPadding = 100;
+
     const realStageWidth = stageConfig.value.width * stageConfig.value.scaleX! - fieldPadding.value * 2;
     const realStageHeight = stageConfig.value.height * stageConfig.value.scaleY! - fieldPadding.value * 2;
 
@@ -67,7 +69,7 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     // scale it down if it's too big
     const scale = Math.min(
       realStageWidth / container.width,
-      realStageHeight / container.height,
+      realStageHeight / (container.height + labelPadding),
       1,
     );
 
@@ -76,8 +78,8 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
       scaleX: scale,
       scaleY: scale,
       x: stageCenter.x - (container.width * scale) / 2,
-      y: stageCenter.y - (container.height * scale) / 2,
-    } satisfies ElementContainerConfig;
+      y: stageCenter.y - ((container.height + labelPadding) * scale) / 2,
+    } as ElementContainerConfig;
 
     return scaledContainer;
   };

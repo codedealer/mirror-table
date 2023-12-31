@@ -95,6 +95,16 @@ export const useWindowStore = defineStore('window', () => {
     window.title = title;
   };
 
+  const toggleOrAdd = (window: ModalWindow) => {
+    const existingWindow = windows.value.find(w => w.id === window.id);
+
+    if (existingWindow) {
+      toggle(existingWindow);
+    } else {
+      add(window);
+    }
+  };
+
   return {
     windows,
     maxWindows,
@@ -106,6 +116,7 @@ export const useWindowStore = defineStore('window', () => {
     unpin,
     toggle,
     toggleEdit,
+    toggleOrAdd,
     setWindowStatus,
     setWindowTitle,
     setLastActiveWindowId,

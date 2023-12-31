@@ -24,15 +24,7 @@ const toggleFile = () => {
     return;
   }
   const windowStore = useWindowStore();
-  // check if file is already open
-  const existingWindow = windowStore.windows.find(window => window.id === props.node.id);
 
-  if (existingWindow) {
-    windowStore.toggle(existingWindow);
-    return;
-  }
-
-  // open file
   // assuming the file is a markdown file for now
   // create a new window
   const windowContent: ModalWindowContentMarkdown = {
@@ -47,7 +39,7 @@ const toggleFile = () => {
     windowContent,
   );
 
-  windowStore.add(window);
+  windowStore.toggleOrAdd(window);
 };
 
 const undoTrashFolder = () => {

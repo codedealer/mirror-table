@@ -1,9 +1,40 @@
 import type { ContextAction, SceneElementCanvasObjectAsset } from '~/models/types';
 import { SelectionGroups } from '~/models/types';
 
+const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
+  const actions: ContextAction[] = [];
+
+  const windowStore = useWindowStore();
+
+  actions.push({
+    id: 'open-window',
+    label: 'Open in window',
+    icon: { name: 'open_in_new' },
+    action: () => {
+      const window = WindowFactory(
+        element.asset.id,
+        element.asset.title,
+        {
+          type: 'markdown',
+          editing: false,
+          data: undefined,
+        },
+      );
+
+      windowStore.toggleOrAdd(window);
+    },
+    disabled: false,
+    pinned: false,
+    alwaysVisible: false,
+  });
+
+  return actions;
+};
+
 export const CanvasAssetContextActionsFactory = (elementId: string) => {
   const canvasElementsStore = useCanvasElementsStore();
   const sceneStore = useSceneStore();
+  const canvasStageStore = useCanvasStageStore();
 
   const element = canvasElementsStore.canvasElements.find(element => element.id === elementId);
 
@@ -12,6 +43,12 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
   if (!element || !isSceneElementCanvasObjectAsset(element)) {
     // non-assets aren't supported for now
     return actions;
+  }
+
+  switch (element.asset.kind) {
+    case AssetPropertiesKinds.COMPLEX:
+      actions.push(...ComplexKindActionsFactory(element));
+      break;
   }
 
   actions.push({
@@ -37,6 +74,32 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
         scaleY: 1,
       },
     }),
+    disabled: false,
+    pinned: false,
+    alwaysVisible: false,
+  });
+
+  actions.push({
+    id: 'fit-to-stage',
+    label: 'Fit to Stage',
+    icon: { name: 'crop_free' },
+    action: async () => {
+      const scaledContainer = canvasStageStore.fitToStage(element.container);
+
+      await sceneStore.updateElement<SceneElementCanvasObjectAsset>(elementId, {
+        container: scaledContainer,
+      });
+    },
+    disabled: false,
+    pinned: false,
+    alwaysVisible: false,
+  });
+
+  actions.push({
+    id: 'delete',
+    label: 'Delete',
+    icon: { name: 'delete', color: 'danger' },
+    action: () => sceneStore.removeElement(element),
     disabled: false,
     pinned: false,
     alwaysVisible: false,
