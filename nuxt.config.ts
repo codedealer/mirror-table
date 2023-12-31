@@ -2,10 +2,14 @@ import { createResolver } from '@nuxt/kit'
 
 const { resolve } = createResolver(import.meta.url);
 export default {
-  /*alias: {
-    "jose": resolve(__dirname, "./node_modules/jose/dist/browser/index.js"),
-    "@panva/hkdf": resolve(__dirname, "./node_modules/@panva/hkdf/dist/web/index.js"),
-  },*/
+  vite: {
+    vue: {
+      script: {
+        defineModel: true,
+        propsDestructure: true,
+      },
+    },
+  },
   nitro: {
     preset: '',
   },
