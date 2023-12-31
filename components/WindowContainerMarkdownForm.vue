@@ -49,6 +49,12 @@ const showTitle = ref(false);
 const title = ref('');
 
 watchEffect(() => {
+  if (showTitle.value && !title.value) {
+    title.value = label.value;
+  }
+});
+
+watchEffect(() => {
   if (!file.value) {
     return;
   }
@@ -68,8 +74,6 @@ const setDirty = () => {
   ) {
     return;
   }
-
-  console.log('setDirty');
 
   windowStore.setWindowStatus(props.window, ModalWindowStatus.DIRTY);
 };
@@ -124,7 +128,7 @@ const submit = async () => {
     const appProperties = structuredClone(toRaw(file.value.appProperties)) as AssetProperties;
 
     appProperties.title = title.value;
-    appProperties.showTitle = showTitle.value;
+    appProperties.showTitle = appProperties.title ? showTitle.value : false;
 
     // save image if available
     if (file.value.appProperties.kind !== AssetPropertiesKinds.TEXT) {

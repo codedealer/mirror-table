@@ -38,6 +38,10 @@ export const AssetPropertiesFactory = (obj: Record<string, string>): AssetProper
     showTitle: !!obj.showTitle,
   };
 
+  if (!assetProperties.title) {
+    assetProperties.showTitle = false;
+  }
+
   if (obj.preview) {
     assetProperties.preview = PreviewPropertiesFactory(obj.preview);
   }

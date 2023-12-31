@@ -99,7 +99,6 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
         appProperties = AssetPropertiesFactory({
           type: AppPropertiesTypes.ASSET,
           kind: fileKind.value,
-          title: stripFileExtension(filename),
         });
       } else {
         throw new Error('Not implemented');
