@@ -129,6 +129,10 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
       const parentFile = await driveFileStore.getFile(parentId);
 
+      if (!parentFile) {
+        throw new Error('Parent file not found');
+      }
+
       parentNode = DriveTreeNodeFactory(parentFile);
     } catch (e) {
       const notificationStore = useNotificationStore();
