@@ -4,7 +4,8 @@ import type {
   DataRetrievalStrategy,
   DriveFile,
   DriveFileRaw,
-  DriveFileUpdateReturnType, GetFilesOptions,
+  DriveFileUpdateObject, DriveFileUpdateReturnType,
+  GetFilesOptions,
   RawMediaObject,
 } from '~/models/types';
 
@@ -195,8 +196,34 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     void cacheFile(files.value[id]);
   };
 
+  const updateFileMetadata = (file: DriveFile, metadata: DriveFileUpdateReturnType) => {
+    const {
+      appProperties,
+      ...payload
+    } = metadata;
+
+    if (!Object.keys(payload).every(key => typeof payload[key as keyof typeof payload] === 'string')) {
+      console.log(payload);
+      throw new Error('Update metadata payload contains non-string values');
+    }
+
+    const updateObject = payload as DriveFileUpdateObject;
+    if (
+      appProperties &&
+      isAssetProperties(appProperties)
+    ) {
+      updateObject.appProperties = AssetPropertiesFactory(appProperties);
+    }
+
+    Object.assign(file, updateObject, { loadedAt: Date.now() });
+  };
+
   // this is a bad way of handling this, it needs to be a completely new (clone) file object
-  const saveFile = async (fileId: string, blob?: File) => {
+  const saveFile = async (
+    fileId: string,
+    appProperties: AppProperties,
+    blobOrFilename: File | string,
+  ) => {
     if (!files.value[fileId]) {
       throw new Error('File not found');
     }
@@ -205,37 +232,39 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     if (file.mimeType === DriveMimeTypes.FOLDER) {
       throw new Error('Cannot save folder');
     }
-    if (!file.appProperties) {
-      throw new Error('File has no properties');
-    }
 
-    const propertiesObject = serializeAppProperties(file.appProperties);
+    const propertiesObject = serializeAppProperties(appProperties);
 
     let updatedMetadata: DriveFileUpdateReturnType;
     try {
       file.loading = true;
 
-      if (blob) {
-        // in this case another request is needed to get the new metadata
-        await updateMedia(fileId, blob, propertiesObject);
-
-        updatedMetadata = await loadFile<DriveFileUpdateReturnType>(fileId, updateFieldMask);
-      } else {
+      if (typeof blobOrFilename === 'string') {
         updatedMetadata = await updateMetadata(
           fileId,
           {
-            name: file.name,
+            name: blobOrFilename,
             appProperties: propertiesObject,
           },
         );
+      } else {
+        // in this case another request is needed to get the new metadata
+        await updateMedia(fileId, blobOrFilename, propertiesObject);
+
+        updatedMetadata = await loadFile<DriveFileUpdateReturnType>(fileId, updateFieldMask);
       }
     } finally {
       file.loading = false;
     }
 
     // update file object with new metadata
-    // WARNING: this is a naive merge relying on the fact that update mask only has primitive values
-    Object.assign(file, updatedMetadata, { loadedAt: Date.now() });
+    try {
+      updateFileMetadata(file, updatedMetadata);
+    } catch (e) {
+      console.error(e);
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+    }
 
     void cacheFile(file);
   };
