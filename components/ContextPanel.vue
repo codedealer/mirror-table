@@ -26,7 +26,7 @@ const pinnedActions = computed(() => props.actions.filter(action => action.pinne
       :key="action.id"
       :disabled="action.disabled"
       :color="action.icon?.color ?? 'primary-dark'"
-      :icon="action.icon.name"
+      :icon="action.icon?.name"
       :preset="preset"
       :size="size"
       :class="action.alwaysVisible ? '' : 'context-panel__action--hiding'"
@@ -67,6 +67,8 @@ const pinnedActions = computed(() => props.actions.filter(action => action.pinne
         </va-list-item>
       </va-list>
     </va-button-dropdown>
+
+    <TheSceneCanvasAssetLabelModal />
   </div>
 </template>
 

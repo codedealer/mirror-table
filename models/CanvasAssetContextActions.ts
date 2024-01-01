@@ -31,6 +31,42 @@ const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
   return actions;
 };
 
+const ImageKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
+  const sceneStore = useSceneStore();
+  const actions: ContextAction[] = [];
+
+  actions.push({
+    id: 'toggle-label',
+    label: element.asset.showTitle ? 'Hide Label' : 'Show Label',
+    icon: { name: element.asset.showTitle ? 'label_off' : 'label' },
+    action: async () => {
+      await sceneStore.updateElement<SceneElementCanvasObjectAsset>(element.id, {
+        asset: {
+          showTitle: !element.asset.showTitle,
+        },
+      });
+    },
+    disabled: false,
+    pinned: true,
+    alwaysVisible: true,
+  });
+
+  actions.push({
+    id: 'edit-label',
+    label: 'Edit Label',
+    icon: { name: 'edit' },
+    action: () => {
+      const canvasContextPanelStore = useCanvasContextPanelStore();
+      canvasContextPanelStore.modalShow();
+    },
+    disabled: false,
+    pinned: false,
+    alwaysVisible: false,
+  });
+
+  return actions;
+};
+
 export const CanvasAssetContextActionsFactory = (elementId: string) => {
   const canvasElementsStore = useCanvasElementsStore();
   const sceneStore = useSceneStore();
@@ -48,6 +84,9 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
   switch (element.asset.kind) {
     case AssetPropertiesKinds.COMPLEX:
       actions.push(...ComplexKindActionsFactory(element));
+      break;
+    case AssetPropertiesKinds.IMAGE:
+      actions.push(...ImageKindActionsFactory(element));
       break;
   }
 
