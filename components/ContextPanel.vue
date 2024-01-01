@@ -67,8 +67,6 @@ const pinnedActions = computed(() => props.actions.filter(action => action.pinne
         </va-list-item>
       </va-list>
     </va-button-dropdown>
-
-    <TheSceneCanvasAssetLabelModal />
   </div>
 </template>
 

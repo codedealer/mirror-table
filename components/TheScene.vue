@@ -16,6 +16,8 @@ const sceneStore = useSceneStore();
     <TheSceneCanvasContextPanel />
 
     <TheSceneOverlay />
+
+    <TheSceneCanvasAssetLabelModal />
   </div>
 </template>
 
