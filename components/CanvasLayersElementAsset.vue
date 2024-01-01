@@ -6,7 +6,7 @@ const props = defineProps<{
   item: LayerItem<SceneElementCanvasObjectAsset>
 }>();
 
-const { file, label, isLoading, error } = useDriveFile<DriveAsset>(
+const { label, isLoading, error } = useDriveFile<DriveAsset>(
   toRef(() => props.item.item.asset.id),
   {
     strategy: DataRetrievalStrategies.LAZY,
@@ -32,10 +32,8 @@ const isSelected = computed(() => {
   return canvasElementsStore.selectedElements.findIndex(e => e.id === props.item.id) !== -1;
 });
 
-const { label: elementLabel } = useCanvasElementAssetLabel(
+const { label: elementLabel, isVisible } = useCanvasElementAssetLabel(
   toRef(() => props.item.item),
-  file,
-  label,
 );
 </script>
 
@@ -66,7 +64,7 @@ const { label: elementLabel } = useCanvasElementAssetLabel(
         v-show="!error"
         caption
       >
-        {{ elementLabel }}
+        {{ isVisible ? elementLabel : label }}
       </va-list-item-label>
     </va-list-item-section>
     <va-list-item-section icon>

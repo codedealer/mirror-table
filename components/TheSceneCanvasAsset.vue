@@ -2,7 +2,7 @@
 import type { ComputedRef } from 'vue';
 import type Konva from 'konva';
 import type {
-  CanvasElementStateAsset, ElementContainerConfig, KonvaComponent,
+  CanvasElementStateAsset, ElementContainerConfig,
   SceneElementCanvasObjectAsset,
 } from '~/models/types';
 import { isCanvasElementStateAsset } from '~/models/types';
@@ -53,8 +53,6 @@ watchEffect(() => {
 
   state.value = stateObject;
 });
-
-const container = ref<KonvaComponent<Konva.Group> | null>(null);
 
 const containerConfig: ComputedRef<ElementContainerConfig> = computed(() => {
   if (!state.value) {
@@ -138,6 +136,8 @@ const circleConfig = ref({
   strokeWidth: 4,
 });
 
+useCanvasAssetLabelWatcher(toRef(() => props.element));
+
 const { onNodeTransformEnd } = useCanvasTransformEvents();
 
 const { onHover, onHoverOut } = useCanvasAssetPointerEvents(state);
@@ -145,7 +145,6 @@ const { onHover, onHoverOut } = useCanvasAssetPointerEvents(state);
 
 <template>
   <v-group
-    ref="container"
     :config="containerConfig"
     @dragstart="onHoverOut"
     @dragend="onNodeTransformEnd"
@@ -155,6 +154,7 @@ const { onHover, onHoverOut } = useCanvasAssetPointerEvents(state);
   >
     <v-circle v-if="!imageConfig" :config="circleConfig" />
     <v-image v-else :config="imageConfig" />
+
     <TheSceneCanvasAssetLabel
       v-if="imageConfig && !state?.error"
       :element="element"

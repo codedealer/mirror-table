@@ -1,24 +1,14 @@
 <script setup lang="ts">
 import type Konva from 'konva';
-import type { DriveAsset, KonvaComponent, SceneElementCanvasObjectAsset } from '~/models/types';
+import type { KonvaComponent, SceneElementCanvasObjectAsset } from '~/models/types';
 import { useCanvasElementAssetLabel } from '~/composables/useCanvasElementAssetLabel';
 
 const props = defineProps<{
   element: SceneElementCanvasObjectAsset
 }>();
 
-const { file, label } = useDriveFile<DriveAsset>(
-  toRef(() => props.element.asset.id),
-  {
-    strategy: DataRetrievalStrategies.LAZY,
-    predicate: isDriveAsset,
-  },
-);
-
 const { label: elementLabel, isVisible } = useCanvasElementAssetLabel(
   toRef(() => props.element),
-  file,
-  label,
 );
 
 const tableStore = useTableStore();
@@ -92,6 +82,12 @@ watch(labelTextConfig, async () => {
 
 // because of the reverse scaling, we need to force update the transformer
 watch(groupConfig, async () => {
+  if (
+    !canvasStageStore.imageTransformer ||
+    canvasStageStore.imageTransformer.nodes().length === 0
+  ) {
+    return;
+  }
   await nextTick();
   await nextTick();
   await nextTick();
