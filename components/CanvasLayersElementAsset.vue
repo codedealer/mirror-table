@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DriveAsset, DriveImage, LayerItem, SceneElementCanvasObjectAsset } from '~/models/types';
+import type { ContextAction, DriveAsset, DriveImage, LayerItem, SceneElementCanvasObjectAsset } from '~/models/types';
 import { useCanvasElementAssetLabel } from '~/composables/useCanvasElementAssetLabel';
 
 const props = defineProps<{
@@ -35,6 +35,12 @@ const isSelected = computed(() => {
 const { label: elementLabel, isVisible } = useCanvasElementAssetLabel(
   toRef(() => props.item.item),
 );
+
+const contextActions = ref<ContextAction[]>([]);
+
+watchEffect(() => {
+  contextActions.value = CanvasAssetContextActionsFactory(props.item.id);
+});
 </script>
 
 <template>
@@ -68,13 +74,8 @@ const { label: elementLabel, isVisible } = useCanvasElementAssetLabel(
       </va-list-item-label>
     </va-list-item-section>
     <va-list-item-section icon>
-      <va-button
-        v-show="!isLoading"
-        icon="delete"
-        color="danger"
-        preset="plain"
-        size="small"
-        @click.stop="sceneStore.removeElement(item.item)"
+      <ContextPanel
+        :actions="contextActions"
       />
     </va-list-item-section>
   </va-list-item>

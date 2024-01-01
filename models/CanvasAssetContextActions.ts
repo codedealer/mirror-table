@@ -1,5 +1,5 @@
-import type { ContextAction, SceneElementCanvasObjectAsset } from '~/models/types';
-import { SelectionGroups } from '~/models/types';
+import type { ContextAction, SceneElementCanvasObjectAsset, SelectionGroup } from '~/models/types';
+import { SelectionGroupNames, SelectionGroups } from '~/models/types';
 
 const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
   const actions: ContextAction[] = [];
@@ -48,7 +48,7 @@ const ImageKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
     },
     disabled: false,
     pinned: true,
-    alwaysVisible: true,
+    alwaysVisible: false,
   });
 
   actions.push({
@@ -58,6 +58,79 @@ const ImageKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
     action: () => {
       const canvasContextPanelStore = useCanvasContextPanelStore();
       canvasContextPanelStore.modalShow();
+    },
+    disabled: false,
+    pinned: false,
+    alwaysVisible: false,
+  });
+
+  return actions;
+};
+
+const getLayerRanks = (group: SelectionGroup) => {
+  const sceneStore = useSceneStore();
+
+  const layerRanks = sceneStore.sceneElements
+    .filter(e => e.selectionGroup === group)
+    .map(e => e.defaultRank);
+  layerRanks.sort((a, b) => b - a);
+
+  return layerRanks;
+};
+
+const groupActionsFactory = (element: SceneElementCanvasObjectAsset) => {
+  const sceneStore = useSceneStore();
+  const actions: ContextAction[] = [];
+
+  const availableGroups = Object
+    .values(SelectionGroups)
+    .filter(group =>
+      group !== SelectionGroups.SCREEN &&
+      group !== element.selectionGroup);
+
+  availableGroups.forEach((group) => {
+    actions.push({
+      id: `move-to-${group}`,
+      label: `Move to ${SelectionGroupNames[group]} Layer`,
+      icon: { name: SelectionGroupIcons[group] },
+      action: () => sceneStore.updateElement(element.id, {
+        selectionGroup: group,
+        enabled: group !== SelectionGroups.HIDDEN,
+      }),
+      disabled: false,
+      pinned: false,
+      alwaysVisible: false,
+    });
+  });
+
+  actions.push({
+    id: 'move-to-top',
+    label: 'To top of the layer',
+    icon: { name: 'vertical_align_top' },
+    action: async () => {
+      const layerRanks = getLayerRanks(element.selectionGroup);
+      const maxRank = layerRanks[0];
+
+      await sceneStore.updateElement(element.id, {
+        defaultRank: maxRank + 1,
+      });
+    },
+    disabled: false,
+    pinned: false,
+    alwaysVisible: false,
+  });
+
+  actions.push({
+    id: 'move-to-bottom',
+    label: 'To bottom of the layer',
+    icon: { name: 'vertical_align_bottom' },
+    action: async () => {
+      const layerRanks = getLayerRanks(element.selectionGroup);
+      const minRank = layerRanks[layerRanks.length - 1];
+
+      await sceneStore.updateElement(element.id, {
+        defaultRank: minRank - 1,
+      });
     },
     disabled: false,
     pinned: false,
@@ -100,7 +173,7 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
     }),
     disabled: false,
     pinned: true,
-    alwaysVisible: true,
+    alwaysVisible: false,
   });
 
   actions.push({
@@ -133,6 +206,8 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
     pinned: false,
     alwaysVisible: false,
   });
+
+  actions.push(...groupActionsFactory(element));
 
   actions.push({
     id: 'delete',

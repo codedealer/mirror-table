@@ -116,5 +116,15 @@
         }
       }
     }
+
+    .context-panel__action--hiding {
+      display: none;
+    }
+
+    &:hover {
+      .context-panel__action--hiding {
+        display: inherit;
+      }
+    }
   }
 }
