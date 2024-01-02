@@ -75,7 +75,7 @@
   position: absolute;
   top: 1rem;
   right: 0;
-  z-index: 1;
+  z-index: calc(1 + var(--dynamic-panel-z-index));
 }
 
 .va-sidebar {
