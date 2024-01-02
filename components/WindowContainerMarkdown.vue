@@ -3,11 +3,11 @@ import type {
   DriveAsset,
   ModalWindow,
   ModalWindowContentMarkdown,
-  RawMediaObject,
 } from '~/models/types';
 
 import WindowContainerMarkdownForm from '~/components/WindowContainerMarkdownForm.vue';
 import WindowContainerMarkdownMeta from '~/components/WindowContainerMarkdownMeta.vue';
+import { useDriveMedia } from '~/composables/useDriveMedia';
 
 const props = defineProps<{
   window: ModalWindow
@@ -25,48 +25,21 @@ const { file } = useDriveFile<DriveAsset>(
   },
 );
 
-const media = ref<RawMediaObject | undefined>();
+const { media, error: mediaError } = useDriveMedia(file);
 
-// this will reload new file every time md5Checksum changes
-const loadMedia = async () => {
-  if (
-    !file.value ||
-    file.value.appProperties.kind === AssetPropertiesKinds.IMAGE ||
-    (
-      file.value.id === media.value?.id &&
-      file.value.md5Checksum === media.value?.md5Checksum
-    )
-  ) {
-    return;
-  }
+const windowStore = useWindowStore();
 
-  const driveFileStore = useDriveFileStore();
-  const windowStore = useWindowStore();
-
-  try {
-    console.log(`Downloading media for ${file.value.id}`);
-
-    windowStore.setWindowStatus(props.window, ModalWindowStatus.LOADING);
-    const mediaObj = await driveFileStore.downloadMedia(props.window.id);
-
-    if (!mediaObj) {
-      throw new Error('Could not download file');
-    }
-
-    media.value = mediaObj;
-
-    windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
-  } catch (e) {
-    console.error(e);
+watchEffect(() => {
+  if (mediaError.value) {
     const notificationStore = useNotificationStore();
-    notificationStore.error(extractErrorMessage(e));
-    windowStore.setWindowStatus(props.window, ModalWindowStatus.ERROR);
-  }
-};
+    notificationStore.error(extractErrorMessage(mediaError.value));
 
-watch(file, loadMedia, {
-  immediate: true,
-  deep: true,
+    windowStore.setWindowStatus(props.window, ModalWindowStatus.ERROR);
+  } else if (file.value?.loading) {
+    windowStore.setWindowStatus(props.window, ModalWindowStatus.LOADING);
+  } else if (props.window.status !== ModalWindowStatus.DIRTY) {
+    windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
+  }
 });
 
 const permissions = computed(() => ({

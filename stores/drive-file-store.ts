@@ -409,6 +409,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     let request: Promise<FileResponse>;
     let response: FileResponse;
     try {
+      file.loading = true;
+
       if (mediaRequestRegistry.has(fileId)) {
         console.warn(`Duplicate media request for file ${fileId}`);
 
@@ -420,6 +422,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
       response = await request;
     } finally {
+      file.loading = false;
+
       mediaRequestRegistry.delete(fileId);
     }
 
