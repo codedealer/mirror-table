@@ -1,6 +1,6 @@
 import { collection, deleteDoc, doc, orderBy, query, setDoc, updateDoc, where } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
-import type { DriveAsset, NestedPartial, Scene, SceneElement } from '~/models/types';
+import type { DriveAsset, NestedPartial, Scene, SceneElement, SceneElementScreen } from '~/models/types';
 import { SceneElementCanvasObjectAssetFactory } from '~/models/SceneElementCanvasObjectAsset';
 
 export const useSceneStore = defineStore('scene', () => {
@@ -88,6 +88,34 @@ export const useSceneStore = defineStore('scene', () => {
     }
   };
 
+  const addScreen = async (
+    fileId: string,
+    thumbnail?: string | null,
+  ) => {
+    if (!sceneElementsRef.value) {
+      return;
+    }
+
+    const docRef = doc(sceneElementsRef.value);
+    const screenElement: SceneElementScreen = {
+      id: docRef.id,
+      _type: 'screen',
+      enabled: false,
+      file: fileId,
+      thumbnail: thumbnail ?? null,
+      selectionGroup: SelectionGroups.SCREEN,
+      defaultRank: Date.now(),
+    };
+
+    try {
+      await setDoc(docRef, screenElement);
+    } catch (error) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Failed to add screen to the scene.');
+      console.error(error);
+    }
+  };
+
   const updateElement = async <T extends SceneElement>(
     id: string,
     update: NestedPartial<T>,
@@ -120,6 +148,7 @@ export const useSceneStore = defineStore('scene', () => {
     sceneElements,
     addElement,
     addAsset,
+    addScreen,
     updateElement,
     removeElement,
   };

@@ -579,8 +579,14 @@ export const isStateful = <T extends SceneElementCanvasObject, U extends CanvasE
 export interface SceneElementScreen extends SceneElement {
   _type: 'screen'
   file: string
-  thumbnail: DriveImage | string | null
+  thumbnail: string | null
 }
+
+export const isSceneElementScreen = (
+  obj: SceneElement,
+): obj is SceneElementScreen => {
+  return obj._type === 'screen';
+};
 
 export interface LayerGroup {
   name: SelectionGroupName

@@ -20,7 +20,10 @@ const pinnedActions = computed(() => props.actions.filter(action => action.pinne
 </script>
 
 <template>
-  <div class="context-panel flex gap-05">
+  <div
+    v-show="actions.length"
+    class="context-panel flex gap-05"
+  >
     <va-button
       v-for="action in pinnedActions"
       :key="action.id"

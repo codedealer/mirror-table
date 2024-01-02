@@ -11,7 +11,7 @@ const props = defineProps<{
   tree: Tree
 }>();
 
-const { file, label } = useDriveFile(toRef(() => props.node.id));
+const { file, label, error } = useDriveFile(toRef(() => props.node.id));
 
 const nodeLabel = computed(() => {
   return label.value ?? props.node.label;
@@ -61,8 +61,8 @@ const undoTrashFolder = () => {
       @click="toggleFile"
     >
       <DriveDirectoryTreeFileIcon
-        :node="node"
         :file="file"
+        :error="error"
       />
       <div
         class="drive-node__name"

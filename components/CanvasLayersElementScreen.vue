@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import type { ContextAction, DriveAsset, DriveImage, LayerItem, SceneElementCanvasObjectAsset } from '~/models/types';
-import { useCanvasElementAssetLabel } from '~/composables/useCanvasElementAssetLabel';
+import type { type ContextAction, DriveAsset, DriveImage, LayerItem, SceneElementScreen } from '~/models/types';
 
 const props = defineProps<{
-  item: LayerItem<SceneElementCanvasObjectAsset>
+  item: LayerItem<SceneElementScreen>
 }>();
 
-const { label, isLoading, error } = useDriveFile<DriveAsset>(
-  toRef(() => props.item.item.asset.id),
+const { label, isLoading, error, file } = useDriveFile<DriveAsset>(
+  toRef(() => props.item.item.file),
   {
     strategy: DataRetrievalStrategies.LAZY,
     predicate: isDriveAsset,
@@ -15,24 +14,10 @@ const { label, isLoading, error } = useDriveFile<DriveAsset>(
 );
 
 const { file: image, isLoading: imageLoading } = useDriveFile<DriveImage>(
-  toRef(() => props.item.item.asset.preview.id),
+  toRef(() => props.item.item.thumbnail ?? ''),
   {
     strategy: DataRetrievalStrategies.LAZY,
   },
-);
-
-const canvasElementsStore = useCanvasElementsStore();
-
-const select = () => {
-  canvasElementsStore.selectElement(props.item.id);
-};
-
-const isSelected = computed(() => {
-  return canvasElementsStore.selectedElements.findIndex(e => e.id === props.item.id) !== -1;
-});
-
-const { label: elementLabel, isVisible } = useCanvasElementAssetLabel(
-  toRef(() => props.item.item),
 );
 
 const contextActions = ref<ContextAction[]>([]);
@@ -45,18 +30,23 @@ watchEffect(() => {
 <template>
   <va-list-item
     :disabled="isLoading || !!error"
-    :class="{ active: isSelected && !isLoading }"
     class="layer-element"
     href="#"
-    @click="select"
   >
     <va-list-item-section avatar>
       <DriveThumbnail
+        v-if="props.item.item.thumbnail"
         :file="image"
         :file-is-loading="imageLoading"
         width="48"
         height="48"
         fit="cover"
+      />
+
+      <DriveDirectoryTreeFileIcon
+        v-else
+        :file="file"
+        :error="error"
       />
     </va-list-item-section>
     <va-list-item-section>
@@ -69,7 +59,7 @@ watchEffect(() => {
         v-show="!error"
         caption
       >
-        {{ isVisible ? elementLabel : label }}
+        {{ label }}
       </va-list-item-label>
     </va-list-item-section>
     <va-list-item-section icon>

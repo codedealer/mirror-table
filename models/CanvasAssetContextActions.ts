@@ -1,5 +1,5 @@
-import type { ContextAction, SceneElementCanvasObjectAsset, SelectionGroup } from '~/models/types';
-import { SelectionGroupNames, SelectionGroups } from '~/models/types';
+import type { ContextAction, SceneElement, SceneElementCanvasObjectAsset, SelectionGroup } from '~/models/types';
+import { SelectionGroupNames, SelectionGroups, isSceneElementScreen } from '~/models/types';
 
 const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
   const actions: ContextAction[] = [];
@@ -78,30 +78,9 @@ const getLayerRanks = (group: SelectionGroup) => {
   return layerRanks;
 };
 
-const groupActionsFactory = (element: SceneElementCanvasObjectAsset) => {
+const hierarchyActionsFactory = (element: SceneElement) => {
   const sceneStore = useSceneStore();
   const actions: ContextAction[] = [];
-
-  const availableGroups = Object
-    .values(SelectionGroups)
-    .filter(group =>
-      group !== SelectionGroups.SCREEN &&
-      group !== element.selectionGroup);
-
-  availableGroups.forEach((group) => {
-    actions.push({
-      id: `move-to-${group}`,
-      label: `Move to ${SelectionGroupNames[group]} Layer`,
-      icon: { name: SelectionGroupIcons[group] },
-      action: () => sceneStore.updateElement(element.id, {
-        selectionGroup: group,
-        enabled: group !== SelectionGroups.HIDDEN,
-      }),
-      disabled: false,
-      pinned: false,
-      alwaysVisible: false,
-    });
-  });
 
   actions.push({
     id: 'move-to-top',
@@ -140,17 +119,67 @@ const groupActionsFactory = (element: SceneElementCanvasObjectAsset) => {
   return actions;
 };
 
-export const CanvasAssetContextActionsFactory = (elementId: string) => {
-  const canvasElementsStore = useCanvasElementsStore();
+const groupActionsFactory = (element: SceneElementCanvasObjectAsset) => {
   const sceneStore = useSceneStore();
-  const canvasStageStore = useCanvasStageStore();
+  const actions: ContextAction[] = [];
 
-  const element = canvasElementsStore.canvasElements.find(element => element.id === elementId);
+  const availableGroups = Object
+    .values(SelectionGroups)
+    .filter(group =>
+      group !== SelectionGroups.SCREEN &&
+      group !== element.selectionGroup);
+
+  availableGroups.forEach((group) => {
+    actions.push({
+      id: `move-to-${group}`,
+      label: `Move to ${SelectionGroupNames[group]} Layer`,
+      icon: { name: SelectionGroupIcons[group] },
+      action: () => sceneStore.updateElement(element.id, {
+        selectionGroup: group,
+        enabled: group !== SelectionGroups.HIDDEN,
+      }),
+      disabled: false,
+      pinned: false,
+      alwaysVisible: false,
+    });
+  });
+
+  return actions;
+};
+
+export const CanvasAssetContextActionsFactory = (elementId: string) => {
+  const sceneStore = useSceneStore();
+
+  const element = sceneStore.sceneElements.find(element => element.id === elementId);
 
   const actions: ContextAction[] = [];
 
-  if (!element || !isSceneElementCanvasObjectAsset(element)) {
+  if (!element) {
     // non-assets aren't supported for now
+    return actions;
+  }
+
+  const hierarchyActions = hierarchyActionsFactory(element);
+  const deleteAction = {
+    id: 'delete',
+    label: 'Delete',
+    icon: { name: 'delete', color: 'danger' },
+    action: () => sceneStore.removeElement(element),
+    disabled: false,
+    pinned: false,
+    alwaysVisible: false,
+  };
+
+  if (isSceneElementScreen(element)) {
+    actions.push(...hierarchyActions, deleteAction);
+    return actions;
+  }
+
+  if (!isSceneElementCanvasObject(element)) {
+    return actions;
+  }
+
+  if (!isSceneElementCanvasObjectAsset(element)) {
     return actions;
   }
 
@@ -196,6 +225,7 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
     label: 'Fit to Stage',
     icon: { name: 'crop_free' },
     action: async () => {
+      const canvasStageStore = useCanvasStageStore();
       const scaledContainer = canvasStageStore.fitToStage(element.container);
 
       await sceneStore.updateElement<SceneElementCanvasObjectAsset>(elementId, {
@@ -208,16 +238,10 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
   });
 
   actions.push(...groupActionsFactory(element));
+  actions.push(...hierarchyActions);
+  actions.push(deleteAction);
 
-  actions.push({
-    id: 'delete',
-    label: 'Delete',
-    icon: { name: 'delete', color: 'danger' },
-    action: () => sceneStore.removeElement(element),
-    disabled: false,
-    pinned: false,
-    alwaysVisible: false,
-  });
+  actions.push();
 
   return actions;
 };

@@ -6,12 +6,24 @@ export const AssetContextActionsFactory = (file: DriveAsset, node: TreeNode) => 
 
   const actions: ContextAction[] = [];
 
+  if (file.appProperties.kind !== AssetPropertiesKinds.TEXT) {
+    actions.push({
+      id: 'send-to-scene',
+      label: 'Send to Scene',
+      icon: { name: 'token', color: 'primary' },
+      action: () => sceneStore.addAsset(file),
+      disabled: !file.capabilities?.canDownload || !file.appProperties.preview,
+      pinned: true,
+      alwaysVisible: false,
+    });
+  }
+
   actions.push({
-    id: 'send-to-scene',
-    label: 'Send to Scene',
-    icon: { name: 'token', color: 'primary' },
-    action: () => sceneStore.addAsset(file),
-    disabled: !file.capabilities?.canDownload || !file.appProperties.preview,
+    id: 'send-to-screen',
+    label: 'Make a Title Screen',
+    icon: { name: 'dvr', color: 'primary' },
+    action: () => sceneStore.addScreen(file.id, file.appProperties?.preview?.id),
+    disabled: !file.size || file.size === '0' || !file.capabilities?.canDownload,
     pinned: true,
     alwaysVisible: false,
   });
