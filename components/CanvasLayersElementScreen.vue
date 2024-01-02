@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { type ContextAction, DriveAsset, DriveImage, LayerItem, SceneElementScreen } from '~/models/types';
+import type { ContextAction, DriveAsset, DriveImage, LayerItem, SceneElementScreen } from '~/models/types';
 
 const props = defineProps<{
   item: LayerItem<SceneElementScreen>
