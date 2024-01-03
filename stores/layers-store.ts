@@ -48,8 +48,20 @@ export const useLayersStore = defineStore('layers', () => {
     return layers;
   });
 
+  const activeGroups = ref<{ [K in SelectionGroup]?: boolean }>({});
+
+  for (const group of Object.values(SelectionGroups)) {
+    activeGroups.value[group] = true;
+  }
+
+  const toggleGroup = (group: SelectionGroup) => {
+    activeGroups.value[group] = !activeGroups.value[group];
+  };
+
   return {
     layers,
+    activeGroups,
+    toggleGroup,
   };
 });
 

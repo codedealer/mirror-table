@@ -1,5 +1,5 @@
 import type { ComputedRef } from 'vue';
-import { isSceneElementCanvasObject } from '~/models/types';
+import { TableModes, isSceneElementCanvasObject } from '~/models/types';
 import type {
   CanvasElementState, ElementContainerConfig,
   SceneElementCanvasObject,
@@ -87,6 +87,25 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
       container: transforms,
     });
   };
+
+  const tableStore = useTableStore();
+  const layersStore = useLayersStore();
+
+  const { activeGroups } = storeToRefs(layersStore);
+
+  watch([toRef(() => tableStore.mode), activeGroups], () => {
+    Object.values(canvasElementsStateRegistry.value).forEach((state) => {
+      const element = canvasElements.value.find(element => element.id === state.id);
+      if (!element) {
+        return;
+      }
+
+      state.selectable = tableStore.mode === TableModes.OWN && layersStore.activeGroups[element.selectionGroup] === true;
+    });
+  }, {
+    immediate: true,
+    deep: true,
+  });
 
   return {
     screenElements,
