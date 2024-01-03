@@ -3,10 +3,19 @@ import { isSceneElementCanvasObject } from '~/models/types';
 import type {
   CanvasElementState, ElementContainerConfig,
   SceneElementCanvasObject,
+  SceneElementScreen,
 } from '~/models/types';
 
 export const useCanvasElementsStore = defineStore('canvas-elements', () => {
   const sceneStore = useSceneStore();
+
+  const screenElements: ComputedRef<SceneElementScreen[]> = computed(() => {
+    if (!sceneStore.sceneElements) {
+      return [];
+    }
+
+    return sceneStore.sceneElements.filter(isSceneElementScreen);
+  });
 
   const canvasElements: ComputedRef<SceneElementCanvasObject[]> = computed(() => {
     if (!sceneStore.sceneElements) {
@@ -80,6 +89,7 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
   };
 
   return {
+    screenElements,
     canvasElements,
     canvasElementsStateRegistry,
     selectedElements,

@@ -23,7 +23,7 @@ export const AssetContextActionsFactory = (file: DriveAsset, node: TreeNode) => 
     label: 'Make a Title Screen',
     icon: { name: 'dvr', color: 'primary' },
     action: () => sceneStore.addScreen(file.id, file.appProperties?.preview?.id),
-    disabled: !file.size || file.size === '0' || !file.capabilities?.canDownload,
+    disabled: (!file.size || file.size === '0') && !file.appProperties?.preview?.id,
     pinned: true,
     alwaysVisible: false,
   });

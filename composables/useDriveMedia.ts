@@ -1,7 +1,7 @@
-import type { DriveAsset, RawMediaObject } from '~/models/types';
+import type { DriveFile, RawMediaObject } from '~/models/types';
 
 export const useDriveMedia = (
-  file: Ref<DriveAsset | undefined>,
+  file: Ref<DriveFile | undefined>,
 ) => {
   const media = ref<RawMediaObject | undefined>();
   const error = ref<unknown>();
@@ -10,8 +10,12 @@ export const useDriveMedia = (
     // we skip image assets (they have no body) and matching checksums
     if (
       !file.value ||
+      !file.value.md5Checksum ||
       file.value.loading ||
-      file.value.appProperties.kind === AssetPropertiesKinds.IMAGE ||
+      (
+        isAssetProperties(file.value.appProperties) &&
+        file.value.appProperties.kind === AssetPropertiesKinds.IMAGE
+      ) ||
       (
         file.value.id === media.value?.id &&
         file.value.md5Checksum === media.value?.md5Checksum
