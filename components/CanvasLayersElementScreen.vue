@@ -31,6 +31,7 @@ watchEffect(() => {
   <va-list-item
     :disabled="isLoading || !!error"
     class="layer-element"
+    :class="item.item.enabled ? '' : 'layer-element--hidden'"
     href="#"
   >
     <va-list-item-section avatar>

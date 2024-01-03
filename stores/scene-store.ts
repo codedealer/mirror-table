@@ -39,7 +39,7 @@ export const useSceneStore = defineStore('scene', () => {
 
     let q = query(sceneElementsRef.value);
 
-    if (!tableStore.permissions.isOwner) {
+    if (tableStore.mode !== TableModes.OWN) {
       q = query(
         q,
         where('enabled', '==', true),

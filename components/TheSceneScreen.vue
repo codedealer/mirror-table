@@ -5,7 +5,10 @@ const canvasElementsStore = useCanvasElementsStore();
 </script>
 
 <template>
-  <div class="title-screen-container">
+  <div
+    v-show="canvasElementsStore.screenElements.length > 0"
+    class="title-screen-container"
+  >
     <TheSceneScreenElement
       v-for="element in canvasElementsStore.screenElements"
       :key="element.id"

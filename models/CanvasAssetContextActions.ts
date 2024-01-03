@@ -171,6 +171,18 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
   };
 
   if (isSceneElementScreen(element)) {
+    actions.push({
+      id: 'toggle-visibility',
+      label: element.enabled ? 'Hide' : 'Show',
+      icon: { name: element.enabled ? 'visibility_off' : 'visibility' },
+      action: () => sceneStore.updateElement(elementId, {
+        enabled: !element.enabled,
+      }),
+      disabled: false,
+      pinned: true,
+      alwaysVisible: !element.enabled,
+    });
+
     actions.push(...hierarchyActions, deleteAction);
     return actions;
   }

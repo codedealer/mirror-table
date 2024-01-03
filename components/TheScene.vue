@@ -11,7 +11,7 @@ const sceneStore = useSceneStore();
   <div class="scene">
     <TheSceneCanvas v-if="sceneStore.scene" />
 
-    <TheSceneScreen v-show="sceneStore.scene" />
+    <TheSceneScreen />
 
     <TheSceneCanvasContextPanel />
 
