@@ -22,9 +22,9 @@ export const useLayersStore = defineStore('layers', () => {
     let currentSelectionGroup: SelectionGroup | undefined;
     let currentLayerGroup: LayerGroup | undefined;
 
-    const reversedElements = [...sceneStore.sceneElements].reverse();
+    for (let i = sceneStore.sceneElements.length - 1; i >= 0; i--) {
+      const sceneElement = sceneStore.sceneElements[i];
 
-    for (const sceneElement of reversedElements) {
       if (sceneElement.selectionGroup !== currentSelectionGroup) {
         currentSelectionGroup = sceneElement.selectionGroup;
         currentLayerGroup = {
