@@ -14,7 +14,7 @@ export const useCanvasAssetLabelWatcher = (
   const sceneStore = useSceneStore();
 
   if (
-    !tableStore.permissions.isOwner ||
+    tableStore.mode !== TableModes.OWN ||
     element.value.asset.kind !== AssetPropertiesKinds.COMPLEX
   ) {
     return;
@@ -41,7 +41,6 @@ export const useCanvasAssetLabelWatcher = (
 
       void sceneStore.updateElement<SceneElementCanvasObjectAsset>(element.value.id, {
         asset: {
-          ...element.value.asset,
           showTitle: file.value.appProperties.showTitle,
           title: file.value.appProperties.title,
         },

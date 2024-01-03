@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import type { ComputedRef } from 'vue';
 import type Konva from 'konva';
-import type { CanvasElementStateAsset, ElementContainerConfig, SceneElementCanvasObjectAsset } from '~/models/types';
+import type {
+  CanvasElementStateAsset,
+  DriveImage,
+  ElementContainerConfig,
+  SceneElementCanvasObjectAsset,
+} from '~/models/types';
 import { isCanvasElementStateAsset } from '~/models/types';
 import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
 import { useCanvasAssetPointerEvents } from '~/composables/useCanvasAssetPointerEvents';
@@ -45,6 +50,34 @@ watch(() => canvasElementsStateRegistry.value[props.element.id], (stateObject) =
   deep: true,
 });
 
+const { file: imageFile } = useDriveFile<DriveImage>(
+  toRef(() => props.element.asset.preview.id),
+  {
+    strategy: DataRetrievalStrategies.LAZY,
+  },
+);
+
+const { media: imageObject } = useDriveMedia(imageFile);
+
+const { src } = useMediaImageSrc(imageObject);
+
+watch(src, () => {
+  if (!src.value) {
+    return;
+  }
+
+  const imageElement = new Image();
+  imageElement.src = src.value;
+
+  updateState({
+    loading: false,
+    loaded: true,
+    imageElement,
+  });
+}, {
+  immediate: true,
+});
+
 const containerConfig: ComputedRef<ElementContainerConfig> = computed(() => {
   if (!state.value) {
     return props.element.container;
@@ -73,41 +106,6 @@ const imageConfig: ComputedRef<Konva.ImageConfig | null> = computed(() => {
   };
 });
 
-const driveFileStore = useDriveFileStore();
-
-updateState({
-  loading: true,
-});
-
-try {
-  const mediaObject = await driveFileStore.downloadMedia(props.element.asset.preview.id);
-  if (!mediaObject) {
-    throw new Error(`Failed to download media for asset ${props.element.asset.preview.id}`);
-  }
-
-  const blob = convertToBlob(mediaObject);
-  const src = URL.createObjectURL(blob);
-  const image = new Image();
-  image.src = src;
-
-  updateState({
-    imageElement: image,
-    loaded: true,
-  });
-} catch (e) {
-  console.error(e);
-  const notificationStore = useNotificationStore();
-  notificationStore.error(extractErrorMessage(e));
-
-  updateState({
-    error: e,
-  });
-} finally {
-  updateState({
-    loading: false,
-  });
-}
-
 onUnmounted(() => {
   if (!state.value || !state.value.imageElement) {
     return;
@@ -116,15 +114,6 @@ onUnmounted(() => {
   URL.revokeObjectURL(state.value.imageElement.src);
 
   canvasElementsStore.deleteState(props.element.id);
-});
-
-const circleConfig = ref({
-  x: 100,
-  y: 100,
-  radius: 50,
-  fill: 'red',
-  stroke: 'black',
-  strokeWidth: 4,
 });
 
 useCanvasAssetLabelWatcher(toRef(() => props.element));
@@ -143,8 +132,7 @@ const { onHover, onHoverOut } = useCanvasAssetPointerEvents(state);
     @pointerover="onHover"
     @pointerout="onHoverOut"
   >
-    <v-circle v-if="!imageConfig" :config="circleConfig" />
-    <v-image v-else :config="imageConfig" />
+    <v-image v-if="imageConfig" :config="imageConfig" />
 
     <TheSceneCanvasAssetLabel
       v-if="imageConfig && !state?.error"
