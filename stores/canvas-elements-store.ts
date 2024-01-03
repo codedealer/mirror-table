@@ -92,8 +92,9 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
   const layersStore = useLayersStore();
 
   const { activeGroups } = storeToRefs(layersStore);
+  const { mode } = storeToRefs(tableStore);
 
-  watch([toRef(() => tableStore.mode), activeGroups], () => {
+  watch([mode, activeGroups], () => {
     Object.values(canvasElementsStateRegistry.value).forEach((state) => {
       const element = canvasElements.value.find(element => element.id === state.id);
       if (!element) {

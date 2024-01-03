@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import type { ComputedRef } from 'vue';
 import type Konva from 'konva';
-import type {
-  CanvasElementStateAsset, ElementContainerConfig,
-  SceneElementCanvasObjectAsset,
-} from '~/models/types';
+import type { CanvasElementStateAsset, ElementContainerConfig, SceneElementCanvasObjectAsset } from '~/models/types';
 import { isCanvasElementStateAsset } from '~/models/types';
 import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
 import { useCanvasAssetPointerEvents } from '~/composables/useCanvasAssetPointerEvents';
@@ -23,35 +20,29 @@ const updateState = (partialState: Partial<CanvasElementStateAsset>) => {
   );
 };
 
-const state = ref<CanvasElementStateAsset | undefined>();
-watchEffect(() => {
-  if (!(props.element.id in canvasElementsStore.canvasElementsStateRegistry)) {
-    const stateObject: CanvasElementStateAsset = {
+const state = ref<CanvasElementStateAsset | undefined>(undefined);
+
+const { canvasElementsStateRegistry } = storeToRefs(canvasElementsStore);
+
+watch(() => canvasElementsStateRegistry.value[props.element.id], (stateObject) => {
+  if (!stateObject || !isCanvasElementStateAsset(stateObject)) {
+    canvasElementsStore.canvasElementsStateRegistry[props.element.id] = {
       _type: 'asset',
       id: props.element.id,
       loading: false,
       loaded: false,
       selectable: true,
       selected: false,
-    };
+    } as CanvasElementStateAsset;
 
-    canvasElementsStore.canvasElementsStateRegistry[props.element.id] = stateObject;
-  }
-
-  const stateObject = canvasElementsStore.canvasElementsStateRegistry[props.element.id];
-
-  if (!isCanvasElementStateAsset(stateObject)) {
-    updateState({
-      error: new Error(`Invalid state for asset ${props.element.id}`),
-    });
     state.value = undefined;
-
     return;
   }
 
-  updateState({ error: undefined });
-
   state.value = stateObject;
+}, {
+  immediate: true,
+  deep: true,
 });
 
 const containerConfig: ComputedRef<ElementContainerConfig> = computed(() => {
