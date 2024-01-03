@@ -120,3 +120,14 @@ header {
 .va-button-dropdown {
   display: inline-flex;
 }
+
+/* fix for buttons losing background color in build */
+.va-button:before {
+  background: var(--va-background-color) !important;
+  opacity: var(--va-background-color-opacity) !important;
+}
+
+.va-button:after {
+  background: var(--va-background-mask-color) !important;
+  opacity: var(--va-background-mask-opacity) !important;
+}

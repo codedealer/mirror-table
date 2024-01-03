@@ -45,6 +45,10 @@
 
     &:hover {
       background-color: color-mix(in oklab, var(--va-background-secondary), #ffffff10);
+
+      .window-tab__actions {
+        display: flex;
+      }
     }
 
     &.window-tab--active {
@@ -79,10 +83,6 @@
     justify-content: flex-end;
     flex-wrap: nowrap;
     display: none;
-
-    .window-tab:hover & {
-      display: flex;
-    }
   }
 }
 
