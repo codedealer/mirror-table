@@ -72,7 +72,7 @@ const statusLabel = computed(() => {
             <va-icon
               v-if="statusIconName"
               :name="statusIconName"
-              :color="window.status === ModalWindowStatus.ERROR ? 'danger' : 'background-border'"
+              :color="window.status === ModalWindowStatus.ERROR ? 'danger' : 'text-primary'"
               :spin="window.status === ModalWindowStatus.LOADING"
               size="large"
             />
@@ -81,8 +81,8 @@ const statusLabel = computed(() => {
           <va-button
             preset="plain"
             icon="cancel"
-            color="background-border"
-            size="medium"
+            color="text-primary"
+            size="large"
             @click="windowStore.toggle(window)"
           />
         </div>

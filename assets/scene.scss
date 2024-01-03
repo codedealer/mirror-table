@@ -18,6 +18,14 @@
   > * {
     grid-area: scene;
   }
+
+  .canvas-context-panel {
+    --va-card-padding: 0.3125rem;
+    --va-card-box-shadow: none;
+    position: absolute;
+    top: calc(1px * var(--top, 0));
+    left: calc(1px * var(--left, 0));
+  }
 }
 
 .canvas-container {
@@ -40,14 +48,6 @@
   &.scroll-enabled {
     overflow: hidden;
   }
-}
-
-.canvas-context-panel {
-  --va-card-padding: 0.3125rem;
-  --va-card-box-shadow: none;
-  position: absolute;
-  top: calc(1px * var(--top, 0));
-  left: calc(1px * var(--left, 0));
 }
 
 .title-screen-container {
