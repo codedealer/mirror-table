@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { TableModes } from '~/models/types';
-import type { type DriveAsset, DriveImage, SceneElementScreen } from '~/models/types';
+import type { DriveAsset, DriveImage, SceneElementScreen } from '~/models/types';
 
 const props = defineProps<{
   item: SceneElementScreen
