@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type Konva from 'konva';
 import type { KonvaComponent, SceneElementCanvasObjectAsset } from '~/models/types';
+import { TableModes } from '~/models/types';
 import { useCanvasElementAssetLabel } from '~/composables/useCanvasElementAssetLabel';
 
 const props = defineProps<{
@@ -13,7 +14,7 @@ const { label: elementLabel, isVisible } = useCanvasElementAssetLabel(
 
 const tableStore = useTableStore();
 
-const isEditable = computed(() => tableStore.permissions.isOwner);
+const isEditable = computed(() => tableStore.mode === TableModes.OWN);
 
 const paddingSize = 10;
 const minWidth = 100;
@@ -70,6 +71,7 @@ const groupConfig = computed<Konva.GroupConfig>(() => {
   return {
     scaleX: 1 / props.element.container.scaleX,
     scaleY: 1 / props.element.container.scaleY,
+    visible: isVisible.value || isEditable.value,
   };
 });
 
@@ -98,7 +100,6 @@ watch(groupConfig, async () => {
 <template>
   <v-group
     v-if="elementLabel.length > 0"
-    v-show="isVisible || isEditable"
     :config="groupConfig"
   >
     <v-rect :config="labelBackgroundConfig" />
