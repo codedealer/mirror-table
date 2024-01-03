@@ -6,6 +6,7 @@ import MarkdownItSub from 'markdown-it-sub';
 import MarkdownItSup from 'markdown-it-sup';
 import MarkdownItAnchor from 'markdown-it-anchor';
 import MarkdownItTaskLists from 'markdown-it-task-lists';
+import MarkDownItAttribution from 'markdown-it-attribution';
 
 defineProps<{
   source: string
@@ -17,7 +18,9 @@ const md = new MarkdownIt({ breaks: true })
   .use(MarkdownItSub)
   .use(MarkdownItSup)
   .use(MarkdownItAnchor)
-  .use(MarkdownItTaskLists, { enabled: true });
+  .use(MarkdownItTaskLists, { enabled: true })
+  .use(MarkDownItAttribution)
+;
 </script>
 
 <template>

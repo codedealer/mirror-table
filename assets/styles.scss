@@ -6,12 +6,14 @@
 @import './windows.scss';
 @import './scene.scss';
 @import './hover-panel.scss';
+@import './markdown.scss';
 
 body {
   --va-button-font-weight: 400;
   --status-bar-height: 32px;
-  --window-z-index: 100;
-  --dynamic-panel-z-index: 200;
+  --screen-container-z-index: 2;
+  --dynamic-panel-z-index: 100;
+  --window-z-index: 200;
   overflow-x: clip;
 }
 .va-h1 {

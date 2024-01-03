@@ -46,7 +46,7 @@ const {
       />
     </div>
 
-    <WindowContainerMarkdownRenderer
+    <MarkdownRenderer
       v-if="media"
       v-show="!window.content.editing"
       :source="media.data"
