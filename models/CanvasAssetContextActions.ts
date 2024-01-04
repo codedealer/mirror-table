@@ -164,7 +164,14 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
     id: 'delete',
     label: 'Delete',
     icon: { name: 'delete', color: 'danger' },
-    action: () => sceneStore.removeElement(element),
+    action: async () => {
+      await sceneStore.removeElement(element);
+
+      // the element will be destroyed, so we need to hide the panel
+      // because there will be no OnHoverOut event
+      const canvasContextPanelStore = useCanvasContextPanelStore();
+      canvasContextPanelStore.hide();
+    },
     disabled: false,
     pinned: false,
     alwaysVisible: false,
