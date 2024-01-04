@@ -31,14 +31,7 @@ const { canvasElementsStateRegistry } = storeToRefs(canvasElementsStore);
 
 watch(() => canvasElementsStateRegistry.value[props.element.id], (stateObject) => {
   if (!stateObject || !isCanvasElementStateAsset(stateObject)) {
-    canvasElementsStore.canvasElementsStateRegistry[props.element.id] = {
-      _type: 'asset',
-      id: props.element.id,
-      loading: false,
-      loaded: false,
-      selectable: true,
-      selected: false,
-    } as CanvasElementStateAsset;
+    canvasElementsStore.createAssetState(props.element.id);
 
     state.value = undefined;
     return;
@@ -48,6 +41,18 @@ watch(() => canvasElementsStateRegistry.value[props.element.id], (stateObject) =
 }, {
   immediate: true,
   deep: true,
+});
+
+const layersStore = useLayersStore();
+watch(() => props.element.selectionGroup, (group) => {
+  if (!state.value) {
+    return;
+  }
+
+  updateState({
+    selectable: layersStore.activeGroups[group] === true,
+    selected: false,
+  });
 });
 
 const { file: imageFile } = useDriveFile<DriveImage>(

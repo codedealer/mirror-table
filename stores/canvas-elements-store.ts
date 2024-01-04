@@ -1,7 +1,8 @@
 import type { ComputedRef } from 'vue';
 import { TableModes, isSceneElementCanvasObject } from '~/models/types';
 import type {
-  CanvasElementState, ElementContainerConfig,
+  CanvasElementState, CanvasElementStateAsset,
+  ElementContainerConfig,
   SceneElementCanvasObject,
   SceneElementScreen,
 } from '~/models/types';
@@ -70,6 +71,29 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     });
   };
 
+  const layersStore = useLayersStore();
+  const tableStore = useTableStore();
+
+  const { activeGroups } = storeToRefs(layersStore);
+  const { mode } = storeToRefs(tableStore);
+
+  const createAssetState = (elementId: string) => {
+    const element = canvasElements.value.find(element => element.id === elementId);
+    if (!element) {
+      console.warn(`Trying to create a state for a non-existent asset: ${elementId}`);
+      return;
+    }
+
+    canvasElementsStateRegistry.value[elementId] = {
+      _type: 'asset',
+      id: elementId,
+      loading: false,
+      loaded: false,
+      selected: false,
+      selectable: tableStore.mode === TableModes.OWN && layersStore.activeGroups[element.selectionGroup] === true,
+    } as CanvasElementStateAsset;
+  };
+
   const deleteState = (elementId: string) => {
     delete canvasElementsStateRegistry.value[elementId];
   };
@@ -88,12 +112,6 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     });
   };
 
-  const tableStore = useTableStore();
-  const layersStore = useLayersStore();
-
-  const { activeGroups } = storeToRefs(layersStore);
-  const { mode } = storeToRefs(tableStore);
-
   watch([mode, activeGroups], () => {
     Object.values(canvasElementsStateRegistry.value).forEach((state) => {
       const element = canvasElements.value.find(element => element.id === state.id);
@@ -102,6 +120,7 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
       }
 
       state.selectable = tableStore.mode === TableModes.OWN && layersStore.activeGroups[element.selectionGroup] === true;
+      state.selected = state.selected && state.selectable;
     });
   }, {
     immediate: true,
@@ -116,6 +135,7 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     updateElementState,
     selectElement,
     deselectAll,
+    createAssetState,
     deleteState,
     applyContainerTransforms,
   };
