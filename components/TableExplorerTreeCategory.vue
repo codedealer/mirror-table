@@ -10,10 +10,15 @@ const props = defineProps<{
 }>();
 
 const tableExplorerStore = useTableExplorerStore();
+const sceneStore = useSceneStore();
 
 const { item: category } = useExplorerItem<Category>(toRef(() => props.node));
 
 const { here: sessionGroupsHere } = useSessionGroupsHere(category);
+
+const isActive = computed(() => {
+  return sceneStore.scene?.path.includes(category.value?.id ?? '_');
+});
 
 const undoDeleteCategory = async () => {
   if (!category.value) {
@@ -35,7 +40,7 @@ const undoDeleteCategory = async () => {
     class="drive-node drive-node__folder"
   >
     <va-button
-      color="text-primary"
+      :color="isActive ? 'primary' : 'text-primary'"
       hover-behavior="opacity"
       class="drive-node__label"
       :hover-opacity="1"
