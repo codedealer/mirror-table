@@ -21,16 +21,8 @@
   padding: 0 var(--window-manager-gap);
   position: relative;
 
-  .window-tab-container {
-    display: block;
-    flex: 1;
-    max-width: var(--window-tab-max-size);
-    &.window-tab--pinned {
-      --window-tab-max-size: 96px;
-    }
-  }
-
   .window-tab {
+    max-width: var(--window-tab-max-size);
     flex: 1;
     border-radius: 3px 3px 0 0;
     background-color: var(--window-tab-background);
@@ -43,12 +35,17 @@
     flex-wrap: nowrap;
     overflow: hidden;
 
+
     &:hover {
       background-color: color-mix(in oklab, var(--va-background-secondary), #ffffff10);
 
       .window-tab__actions {
         display: flex;
       }
+    }
+
+    &.window-tab--pinned {
+      --window-tab-max-size: 96px;
     }
 
     &.window-tab--active {

@@ -14,7 +14,7 @@ const windowStore = useWindowStore();
 </script>
 
 <template>
-  <div class="window-tab-container" :class="tabClassList">
+  <div class="ghost-container">
     <div
       :class="tabClassList"
       class="window-tab"
