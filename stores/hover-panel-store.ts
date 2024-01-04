@@ -17,7 +17,7 @@ export const useHoverPanelStore = defineStore('hoverPanel', () => {
       return true;
     }
 
-    if (tableStore.mode === TableModes.VIEW) {
+    if (tableStore.mode !== TableModes.OWN) {
       return true;
     }
 

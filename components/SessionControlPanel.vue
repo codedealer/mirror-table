@@ -6,20 +6,23 @@ const hoverPanelStore = useHoverPanelStore();
 
 let tries = 0;
 
-watchEffect(() => {
-  if (!sessionStore.activeSessionId || !sessionStore.emptyTable || tries > 0) {
-    return;
-  }
+onMounted(() => {
+  watchEffect(() => {
+    if (!sessionStore.activeSessionId || !sessionStore.emptyTable || tries > 0) {
+      return;
+    }
 
-  // show the panel with the prompt to create a session
-  hoverPanelStore.show(true);
-  tries++;
+    // show the panel with the prompt to create a session
+    hoverPanelStore.show(true);
+    tries++;
+  });
 });
 </script>
 
 <template>
   <va-card>
     <SessionControlPanelInvitePrompt v-if="sessionStore.emptyTable" />
+    <SessionControlPanelOwnMode v-else />
   </va-card>
 </template>
 

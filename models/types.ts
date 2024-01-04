@@ -499,14 +499,17 @@ export interface Category {
   deleted: boolean
 }
 
+export interface BaseScene {
+  id: string
+  path: string[]
+}
+
 /**
  * Entity in a subcollection of a table. Each table has many scenes.
  */
-export interface Scene {
-  id: string
+export interface Scene extends BaseScene {
   tableId: string
   categoryId: string
-  path: string[]
   title: string
   owner: string
   thumbnail: DriveFile | string | null

@@ -2,7 +2,7 @@ import { acceptHMRUpdate, defineStore } from 'pinia';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 import type { WithFieldValue } from '@firebase/firestore';
 import { collection, deleteField, query, where } from '@firebase/firestore';
-import type { Scene, Table, TableMode, TablePermissions, TableSession } from '~/models/types';
+import type { BaseScene, Table, TableMode, TablePermissions, TableSession } from '~/models/types';
 import { TableModes } from '~/models/types';
 
 export const useTableStore = defineStore('table', () => {
@@ -92,7 +92,7 @@ export const useTableStore = defineStore('table', () => {
 
   const setActiveScene = async (
     sessionIds: string[] | string,
-    scene: Scene,
+    scene: BaseScene,
   ) => {
     if (!table.value || !scene) {
       return;
@@ -124,7 +124,7 @@ export const useTableStore = defineStore('table', () => {
 
   const moveGroupToScene = async (
     groupId: string,
-    scene: Scene,
+    scene: BaseScene,
   ) => {
     const sessionStore = useSessionStore();
     const sessionIds = sessionStore
@@ -135,7 +135,7 @@ export const useTableStore = defineStore('table', () => {
   };
 
   const moveAllViewersToScene = async (
-    scene: Scene,
+    scene: BaseScene,
   ) => {
     const sessionStore = useSessionStore();
     const sessionIds = sessionStore
