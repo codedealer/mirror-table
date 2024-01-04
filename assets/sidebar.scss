@@ -101,6 +101,11 @@
     align-items: center;
     justify-content: flex-end;
   }
+
+  &.screen-height {
+    height: 100vh;
+    overflow: clip;
+  }
 }
 
 .layers-list {

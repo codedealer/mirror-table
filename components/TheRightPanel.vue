@@ -8,7 +8,11 @@ const { sideBarMinimized } = storeToRefs(rightPanelStore);
 
 <template>
   <div class="right-panel ghost-container">
-    <va-sidebar :minimized="sideBarMinimized" minimized-width="0">
+    <va-sidebar
+      :minimized="sideBarMinimized"
+      class="screen-height"
+      minimized-width="0"
+    >
       <va-sidebar-item class="profile-item" hover-color="background-secondary">
         <va-sidebar-item-content>
           <va-avatar
