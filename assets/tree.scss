@@ -138,6 +138,16 @@
 .drive-directory-tree-header {
   padding: var(--va-tree-view-padding);
   background-color: var(--va-background-secondary);
+
+  .context-panel__action--hiding {
+    display: none;
+  }
+
+  &:hover {
+    .context-panel__action--hiding {
+      display: inherit;
+    }
+  }
 }
 .drive-directory-tree-header__content {
   padding: var(--va-tree-node-padding);

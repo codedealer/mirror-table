@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useDriveFolderContextActions } from '~/composables/useDriveFolderContextActions';
+
 const driveTreeStore = useDriveTreeStore();
 
 const setRoot = () => {
@@ -8,6 +10,19 @@ const setRoot = () => {
 const setRootToParent = () => {
   driveTreeStore.setRootToParent();
 };
+
+const { file } = useDriveFile(
+  toRef(() => driveTreeStore.rootNode.id),
+  {
+    strategy: DataRetrievalStrategies.LAZY,
+  },
+);
+
+const { actions } = useDriveFolderContextActions(
+  file,
+  toRef(() => driveTreeStore.rootNode),
+  toRef(() => undefined),
+);
 </script>
 
 <template>
@@ -50,33 +65,9 @@ const setRootToParent = () => {
         {{ driveTreeStore.rootNode.label }}
       </div>
       <div class="drive-directory-tree-header__actions">
-        <va-popover
-          message="Go to parent folder"
-          stick-to-edges
-        >
-          <va-button
-            v-show="!driveTreeStore.isRootFolder"
-            preset="plain"
-            color="primary-dark"
-            size="medium"
-            :loading="driveTreeStore.rootNode.loading"
-            :disabled="driveTreeStore.rootNode.disabled"
-            @click="setRootToParent"
-          >
-            <div class="drive-node__icon">
-              <va-icon
-                name="drive_folder_upload"
-                color="primary-dark"
-                size="medium"
-                class="drive-node__icon"
-              />
-            </div>
-          </va-button>
-        </va-popover>
-
-        <DriveDirectoryTreeFolderContextMenu
-          :node="driveTreeStore.rootNode"
-          header
+        <ContextPanel
+          v-show="file && !file.trashed"
+          :actions="actions"
         />
       </div>
     </div>

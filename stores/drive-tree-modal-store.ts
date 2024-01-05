@@ -18,7 +18,7 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
   const fileOptions = ref<SelectOption[]>([]);
   const selectedOption = ref<SelectOption>();
   const fileParent = ref<DriveTreeNode>();
-  const filePath = ref<string[]>([]);
+  const filePath = ref<number[]>([]);
   const fileType = ref<AppPropertiesType>('asset');
   const fileKind = computed<AssetPropertiesKind | undefined>(() => {
     if (fileType.value === AppPropertiesTypes.ASSET) {
@@ -41,7 +41,7 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
     title: string,
     type: typeof DriveMimeTypes[keyof typeof DriveMimeTypes],
     parent: DriveTreeNode,
-    path?: string[],
+    path?: number[],
     options?: SelectOption[],
   ) => {
     cancel();

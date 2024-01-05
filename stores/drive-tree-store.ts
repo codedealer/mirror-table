@@ -145,7 +145,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     return await setRootFolder(parentNode);
   };
 
-  const toggleFold = async (node: DriveTreeNode, path: string[]) => {
+  const toggleFold = async (node: DriveTreeNode, path: number[]) => {
     const MAX_DEPTH = 3;
 
     if (!node.isFolder) {
@@ -174,7 +174,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
   const createChild = async (
     nameOrFile: string | File,
     parent: DriveTreeNode,
-    parentPath: string[] = [],
+    parentPath: number[] = [],
     appProperties?: AppProperties,
   ) => {
     let success = false;

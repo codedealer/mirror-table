@@ -2,12 +2,12 @@
 import type { Tree } from 'he-tree-vue';
 import type { DriveTreeNode } from '~/models/types';
 import clickOrDoubleClick from '~/utils/clickOrDoubleClick';
-import DriveDirectoryTreeFolderContextMenu from '~/components/DriveDirectoryTreeFolderContextMenu.vue';
+import { useDriveFolderContextActions } from '~/composables/useDriveFolderContextActions';
 
 const props = defineProps<{
   node: DriveTreeNode
   index: number
-  path: string[]
+  path: number[]
   tree: Tree
 }>();
 
@@ -24,6 +24,12 @@ const setRootFolder = () => {
 };
 
 const onClickOrDoubleClick = clickOrDoubleClick(toggleFold, setRootFolder);
+
+const { actions } = useDriveFolderContextActions(
+  file,
+  toRef(() => props.node),
+  toRef(() => props.path),
+);
 
 const undoTrashFolder = () => {
   const driveTreeStore = useDriveTreeStore();
@@ -76,10 +82,9 @@ const undoTrashFolder = () => {
         />
       </va-popover>
 
-      <DriveDirectoryTreeFolderContextMenu
+      <ContextPanel
         v-show="file && !file.trashed"
-        :node="node"
-        :path="path"
+        :actions="actions"
       />
     </div>
   </div>
