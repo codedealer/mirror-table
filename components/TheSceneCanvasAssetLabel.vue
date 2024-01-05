@@ -17,7 +17,7 @@ const tableStore = useTableStore();
 const isEditable = computed(() => tableStore.mode === TableModes.OWN);
 
 const paddingSize = 10;
-const minWidth = 100;
+const minWidth = 150;
 const labelText = ref<KonvaComponent<Konva.Text> | null>(null);
 
 const labelTextConfig = computed<Konva.TextConfig>(() => {
