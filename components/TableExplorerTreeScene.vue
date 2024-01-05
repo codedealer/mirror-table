@@ -81,7 +81,10 @@ const undoDeleteScene = () => {
           :group="group"
         />
 
-        <div class="text-overflow">
+        <div
+          class="text-overflow"
+          :title="scene?.title ?? '[ NO DATA ]'"
+        >
           {{ scene?.title ?? '[ NO DATA ]' }}
         </div>
       </div>

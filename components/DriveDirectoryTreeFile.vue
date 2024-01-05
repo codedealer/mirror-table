@@ -67,6 +67,7 @@ const undoTrashFolder = () => {
       <div
         class="drive-node__name"
         :class="file?.trashed ? 'drive-node__name--trashed' : ''"
+        :title="nodeLabel"
       >
         {{ nodeLabel }}
       </div>
