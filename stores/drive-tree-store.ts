@@ -3,8 +3,7 @@ import { DriveFileExtensions } from '~/models/types';
 import type {
   AppProperties,
   AssetPropertiesKind,
-  type DriveFile,
-
+  DriveFile,
   DriveTreeNode,
 } from '~/models/types';
 
