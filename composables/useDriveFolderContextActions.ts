@@ -1,4 +1,5 @@
 import type { ContextAction, DriveFile, TreeNode } from '~/models/types';
+import { AssetPropertiesKinds } from '~/models/types';
 import { generateSelectOptions } from '~/models/AssetProperties';
 
 export const useDriveFolderContextActions = (
@@ -17,9 +18,7 @@ export const useDriveFolderContextActions = (
     ),
     // if path is undefined, we are in the root folder
     canDelete: (
-      path.value
-        ? false
-        : file.value?.capabilities?.canDelete
+      path.value && file.value?.capabilities?.canDelete
     ),
   }));
 
@@ -76,6 +75,38 @@ export const useDriveFolderContextActions = (
           node.value,
           path.value,
           generateSelectOptions(),
+        );
+      },
+      disabled: !permissions.value.canAddChildren,
+      pinned: false,
+      alwaysVisible: false,
+    });
+
+    actions.push({
+      id: 'import-image',
+      label: 'Import: images',
+      icon: { name: 'add_photo_alternate', color: 'secondary' },
+      action: async () => {
+        await driveTreeStore.importImages(
+          AssetPropertiesKinds.IMAGE,
+          node.value,
+          path.value,
+        );
+      },
+      disabled: !permissions.value.canAddChildren,
+      pinned: false,
+      alwaysVisible: false,
+    });
+
+    actions.push({
+      id: 'import-asset',
+      label: 'Import: images as assets',
+      icon: { name: 'post_add', color: 'secondary' },
+      action: async () => {
+        await driveTreeStore.importImages(
+          AssetPropertiesKinds.COMPLEX,
+          node.value,
+          path.value,
         );
       },
       disabled: !permissions.value.canAddChildren,

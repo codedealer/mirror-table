@@ -51,6 +51,10 @@ const buildPicker = async (opts: BuildPickerOptions): Promise<google.picker.Pick
     );
   }
 
+  if (options.allowMultiSelect) {
+    builder.enableFeature(window.google.picker.Feature.MULTISELECT_ENABLED);
+  }
+
   builder.setCallback(options.callback);
 
   const picker = builder.build();

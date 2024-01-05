@@ -1,8 +1,17 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { AppProperties, DriveTreeNode } from '~/models/types';
+import { DriveFileExtensions } from '~/models/types';
+import type {
+  AppProperties,
+  AssetPropertiesKind,
+  type DriveFile,
+
+  DriveTreeNode,
+} from '~/models/types';
+
 import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
 import { buildNodes } from '~/utils/driveOps';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
+import { PreviewPropertiesFactory } from '~/models/PreviewProprerties';
 
 export const useDriveTreeStore = defineStore('drive-tree', () => {
   const rootNode = ref<DriveTreeNode>({
@@ -225,6 +234,103 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     node.label = label;
   };
 
+  const quickCreateAssets = async (
+    kind: AssetPropertiesKind,
+    ids: string[],
+    parent: DriveTreeNode,
+    path?: number[],
+  ) => {
+    let images: DriveFile[] = [];
+
+    setNodeLoading(parent, true);
+
+    const driveFileStore = useDriveFileStore();
+
+    try {
+      images = await driveFileStore.getFiles(ids);
+    } catch (e) {
+      console.error(e);
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+    }
+
+    // create an asset for each image, set images as preview
+    for (const image of images) {
+      const fileName = stripFileExtension(image.name);
+      const fileType = DriveMimeTypes.MARKDOWN;
+      const fileExtension = DriveFileExtensions[fileType];
+
+      const fileObject = new File(
+        [],
+        `${fileName}.${fileExtension}`,
+        { type: fileType },
+      );
+
+      const appProperties = AssetPropertiesFactory({
+        type: AppPropertiesTypes.ASSET,
+        kind,
+      });
+
+      appProperties.preview = PreviewPropertiesFactory({
+        id: image.id,
+        nativeWidth: image.imageMediaMetadata!.width,
+        nativeHeight: image.imageMediaMetadata!.height,
+      });
+
+      console.log(`Creating asset for ${image.name}`);
+      try {
+        await driveFileStore.createFile(fileObject, parent.id, appProperties);
+      } catch (e) {
+        console.error(e);
+        const notificationStore = useNotificationStore();
+        notificationStore.error(extractErrorMessage(e));
+
+        break;
+      }
+    }
+
+    const success = await loadChildren(parent);
+
+    if (success && parent.$folded) {
+      await toggleFold(parent, path ?? []);
+    }
+
+    setNodeLoading(parent, false);
+  };
+
+  const importImages = async (
+    kind: AssetPropertiesKind,
+    parentNode: DriveTreeNode,
+    path?: number[],
+  ) => {
+    const { buildPicker } = usePicker();
+    const userStore = useUserStore();
+
+    try {
+      await buildPicker({
+        parentId: userStore.profile!.settings.driveFolderId,
+        uploadParentId: parentNode.id,
+        template: PickerViewTemplates.IMAGES,
+        allowMultiSelect: true,
+        allowUpload: true,
+        callback: (result) => {
+          if (
+            result.action === google.picker.Action.PICKED &&
+            result.docs.length > 0
+          ) {
+            const ids = result.docs.map(d => d.id);
+
+            void quickCreateAssets(kind, ids, parentNode, path);
+          }
+        },
+      });
+    } catch (e) {
+      console.error(e);
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+    }
+  };
+
   return {
     nodes,
     rootNode,
@@ -237,6 +343,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     removeFile,
     setNodeLoading,
     setNodeLabel,
+    importImages,
   };
 });
 
