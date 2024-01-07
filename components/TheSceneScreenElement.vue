@@ -90,12 +90,14 @@ const toggleEnabled = () => {
         v-if="imageFile"
         class="title-screen__content__image"
       >
-        <img
-          v-show="src"
+        <DriveThumbnail
           :src="src"
+          :file-is-loading="!src"
+          fit="contain"
+          :width="imageFile.imageMediaMetadata.width ?? 32"
+          :height="imageFile.imageMediaMetadata.height ?? 32"
           :class="contentObject && contentObject.data ? 'title-screen__content__image--with-text' : ''"
-          alt="Title image"
-        >
+        />
       </div>
       <div class="title-screen__content__text">
         <MarkdownRenderer

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useCssVar } from '@vueuse/core';
 import type { DriveFile } from '~/models/types';
 import { aspectRatio } from '~/utils';
 import { PickerViewTemplates } from '~/models/types';
@@ -111,17 +110,6 @@ const fileErrorMessage = computed(() => {
   return '';
 });
 
-const container = ref(null);
-const widthVar = useCssVar('--width', container);
-const heightVar = useCssVar('--height', container);
-
-onMounted(() => {
-  watchEffect(() => {
-    widthVar.value = String(props.width);
-    heightVar.value = String(props.height);
-  });
-});
-
 const uploadImage = async () => {
   const { buildPicker } = usePicker();
   const userStore = useUserStore();
@@ -152,15 +140,15 @@ const uploadImage = async () => {
 
 <template>
   <div
-    ref="container"
     class="drive-thumbnail"
-    :style="{ width, height }"
+    :style="{ ['--width']: width, ['--height']: height }"
   >
     <div
       v-if="imageSrc.length > 0 && !fileIsLoading"
       class="drive-thumbnail__image-container"
     >
       <va-image
+        v-bind="$attrs"
         :src="imageSrc"
         :ratio="containerAspectRatio"
         :fit="objectFit"
