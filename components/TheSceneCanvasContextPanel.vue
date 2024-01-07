@@ -17,6 +17,15 @@ watchEffect(() => {
   menuOptions.value = CanvasAssetContextActionsFactory(elementId.value);
 });
 
+const menuModel = ref(false);
+
+// hide the menu when the context panel is hidden
+watchEffect(() => {
+  if (!store.visible) {
+    menuModel.value = false;
+  }
+});
+
 const styleObject = computed(() => ({
   '--top': store.position.y,
   '--left': store.position.x,
@@ -31,6 +40,7 @@ const styleObject = computed(() => ({
   >
     <va-card-content>
       <ContextPanel
+        v-model:dropdown="menuModel"
         :actions="menuOptions"
         preset=""
         size="small"

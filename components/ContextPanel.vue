@@ -16,6 +16,10 @@ const props = withDefaults(defineProps<{
   preset: 'plain',
 });
 
+const dropdownModel = defineModel<boolean>('dropdown', {
+  required: false,
+});
+
 const pinnedActions = computed(() => props.actions.filter(action => action.pinned));
 </script>
 
@@ -38,6 +42,7 @@ const pinnedActions = computed(() => props.actions.filter(action => action.pinne
     />
 
     <va-button-dropdown
+      v-model="dropdownModel"
       :icon="icon"
       :opened-icon="openedIcon"
       :preset="preset"
