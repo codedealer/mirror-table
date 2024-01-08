@@ -3,6 +3,7 @@ import type { ModalWindow } from '~/models/types';
 
 const props = defineProps<{
   window: ModalWindow
+  index: number
 }>();
 
 const tabClassList = computed(() => ({
@@ -19,18 +20,27 @@ const windowStore = useWindowStore();
       :class="tabClassList"
       class="window-tab"
     >
-      <va-button
-        preset="plain"
-        size="medium"
-        @click="window.pinned ? windowStore.unpin(window) : windowStore.pin(window)"
+      <va-badge
+        v-show="index < 11"
+        :text="index === 10 ? '0' : index.toString()"
+        overlap
+        placement="top-left"
+        :offset="['-6px', '0']"
+        color="primary-dark"
       >
-        <va-icon
-          name="push_pin"
+        <va-button
+          preset="plain"
           size="medium"
-          :color="window.pinned ? 'primary' : 'text-primary'"
-          :rotation="window.pinned ? 0 : 45"
-        />
-      </va-button>
+          @click="window.pinned ? windowStore.unpin(window) : windowStore.pin(window)"
+        >
+          <va-icon
+            name="push_pin"
+            size="medium"
+            :color="window.pinned ? 'primary' : 'text-primary'"
+            :rotation="window.pinned ? 0 : 45"
+          />
+        </va-button>
+      </va-badge>
 
       <va-button
         preset="plain"
