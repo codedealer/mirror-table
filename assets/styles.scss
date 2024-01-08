@@ -11,9 +11,12 @@
 body {
   --va-button-font-weight: 400;
   --status-bar-height: 32px;
+  /* z stack */
   --screen-container-z-index: 2;
+  --hover-panel-z-index: 99;
   --dynamic-panel-z-index: 100;
   --window-z-index: 200;
+
   overflow-x: clip;
 }
 .va-h1 {
