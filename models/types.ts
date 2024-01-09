@@ -521,6 +521,7 @@ export interface Scene extends BaseScene {
   settings: {
     [x: string]: unknown
   }
+  searchIndex?: string[]
 }
 
 export const isScene = (obj: unknown): obj is Scene => {

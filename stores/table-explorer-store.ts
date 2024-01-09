@@ -190,9 +190,11 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
       return;
     }
 
-    const categoryRef = id
+    const _categoryRef = id
       ? doc($db, 'tables', tableStore.table.id, 'categories', id)
       : doc(collection($db, 'tables', tableStore.table.id, 'categories'));
+
+    const categoryRef = _categoryRef.withConverter(firestoreDataConverter<Category>());
 
     const category: WithFieldValue<Category> = {
       id: categoryRef.id,
@@ -283,9 +285,11 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
       return;
     }
 
-    const sceneRef = id
+    const _sceneRef = id
       ? doc($db, 'tables', tableStore.table.id, 'scenes', id)
       : doc(collection($db, 'tables', tableStore.table.id, 'scenes'));
+
+    const sceneRef = _sceneRef.withConverter(firestoreDataConverter<Scene>());
 
     try {
       if (!id) {
@@ -319,12 +323,14 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
           deleted: false,
           slug: '',
           settings: {},
+          searchIndex: generateFirestoreSearchIndex(title),
         };
 
         await setDoc(sceneRef, scene);
       } else {
         await updateDoc(sceneRef, {
           title,
+          searchIndex: generateFirestoreSearchIndex(title),
         });
 
         // update the node
