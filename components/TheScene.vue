@@ -18,6 +18,8 @@ const sceneStore = useSceneStore();
     <TheSceneOverlay />
 
     <TheSceneCanvasAssetLabelModal />
+
+    <TheSceneSearch />
   </div>
 </template>
 

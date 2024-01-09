@@ -262,6 +262,11 @@ export interface SelectOption {
   description?: string
 }
 
+export interface ItemSelectorOption {
+  id: string
+  name?: string
+}
+
 export const DynamicPanelModelTypes = {
   RIGHT: 'right',
   LEFT: 'left',
