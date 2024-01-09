@@ -12,7 +12,7 @@ const generateFirestoreSearchIndex = (input: string) => {
     result.push(...generateFirestoreSearchIndex(split.slice(1).join(' ')));
   }
 
-  return result;
+  return [...new Set(result)];
 };
 
 export default generateFirestoreSearchIndex;
