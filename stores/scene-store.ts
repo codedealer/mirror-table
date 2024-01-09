@@ -10,6 +10,8 @@ export const useSceneStore = defineStore('scene', () => {
   const sessionStore = useSessionStore();
   const driveStore = useDriveStore();
 
+  const searchModalState = ref(false);
+
   const sceneDocRef = computed(() => {
     if (!tableStore.table || !sessionStore.activeSession) {
       return undefined;
@@ -144,6 +146,7 @@ export const useSceneStore = defineStore('scene', () => {
   };
 
   return {
+    searchModalState,
     scene,
     sceneElements,
     addElement,

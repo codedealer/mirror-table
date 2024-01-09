@@ -4,13 +4,14 @@ import { collection, getDocs, limit, query, where } from '@firebase/firestore';
 import ItemSelector from '~/components/ItemSelector.vue';
 import type { Scene } from '~/models/types';
 
-const state = ref(false);
-
 const selectedScene = ref<Scene>();
 const search = ref('');
 
 const { $db } = useNuxtApp();
 const tableStore = useTableStore();
+const sceneStore = useSceneStore();
+
+const { searchModalState: state } = storeToRefs(sceneStore);
 
 const result = ref<Scene[]>([]);
 

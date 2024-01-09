@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const tableExplorerStore = useTableExplorerStore();
+const sceneStore = useSceneStore();
 </script>
 
 <template>
@@ -38,6 +39,26 @@ const tableExplorerStore = useTableExplorerStore();
         {{ tableExplorerStore.rootNode?.label }}
       </div>
       <div class="drive-directory-tree-header__actions">
+        <va-popover
+          message="Search (SHIFT + S)"
+        >
+          <va-button
+            preset="plain"
+            color="primary"
+            size="medium"
+            @click="sceneStore.searchModalState = true"
+          >
+            <div class="drive-node__icon">
+              <va-icon
+                name="search"
+                color="primary"
+                size="medium"
+                class="drive-node__icon"
+              />
+            </div>
+          </va-button>
+        </va-popover>
+
         <TableExplorerTreeCategoryContextMenu
           :node="tableExplorerStore.rootNode"
           :path="[]"
