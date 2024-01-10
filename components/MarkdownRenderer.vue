@@ -18,7 +18,7 @@ const md = new MarkdownIt({ breaks: true })
   .use(MarkdownItSub)
   .use(MarkdownItSup)
   .use(MarkdownItAnchor)
-  .use(MarkdownItTaskLists, { enabled: true })
+  .use(MarkdownItTaskLists, { enabled: true, label: true })
   .use(MarkDownItAttribution)
 ;
 </script>
