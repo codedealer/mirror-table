@@ -35,7 +35,7 @@ const { sideBarMinimized } = storeToRefs(rightPanelStore);
 
       <DriveDirectoryTree />
 
-      <DriveDirectorySeach />
+      <DriveDirectorySearch />
     </va-sidebar>
 
     <div
