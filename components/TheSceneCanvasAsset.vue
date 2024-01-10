@@ -126,14 +126,25 @@ useCanvasAssetLabelWatcher(toRef(() => props.element));
 const { onNodeTransformEnd } = useCanvasTransformEvents();
 
 const { onHover, onHoverOut } = useCanvasAssetPointerEvents(state);
+
+const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
+  onNodeTransformEnd(e);
+  onHover(e);
+};
+
+const onTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
+  onNodeTransformEnd(e);
+  onHover(e);
+};
 </script>
 
 <template>
   <v-group
     :config="containerConfig"
     @dragstart="onHoverOut"
-    @dragend="onNodeTransformEnd"
-    @transformend="onNodeTransformEnd"
+    @dragend="onDragEnd"
+    @transformend="onTransformEnd"
+    @transformstart="onHoverOut"
     @pointerover="onHover"
     @pointerout="onHoverOut"
   >
