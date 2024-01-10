@@ -15,9 +15,9 @@ import {
   getFile as loadFile,
   downloadMedia as loadMedia,
   parseMediaResponse,
+  searchFiles,
   updateMedia,
-  updateMetadata,
-  uploadMedia,
+  updateMetadata, uploadMedia,
 } from '~/utils/driveOps';
 import { serializeAppProperties } from '~/utils/appPropertiesSerializer';
 import { convertToDriveFile } from '~/models/DriveFile';
@@ -218,7 +218,6 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     Object.assign(file, updateObject, { loadedAt: Date.now() });
   };
 
-  // this is a bad way of handling this, it needs to be a completely new (clone) file object
   const saveFile = async (
     fileId: string,
     appProperties: AppProperties,
@@ -433,6 +432,29 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     return media;
   };
 
+  const search = async (name: string) => {
+    if (!name.length) {
+      return [];
+    }
+
+    let result: DriveFileRaw[] = [];
+    try {
+      result = await searchFiles(name);
+    } catch (e) {
+      console.error(e);
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+
+      return [];
+    }
+
+    const files = result.map(convertToDriveFile);
+
+    void cacheFiles(files);
+
+    return files;
+  };
+
   return {
     files,
     getFile,
@@ -442,6 +464,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     removeFile,
     saveFile,
     downloadMedia,
+    search,
   };
 });
 

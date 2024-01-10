@@ -210,6 +210,21 @@ export const listFiles = async (folderId: string) => {
   return response.result.files ? response.result.files as DriveFileRaw[] : [];
 };
 
+export const searchFiles = async (name: string) => {
+  // search just assets for now
+  const driveStore = useDriveStore();
+  const client = await driveStore.getClient();
+
+  const response = await client.drive.files.list({
+    q: `name contains '${name}' and trashed = false and appProperties has { key = 'type' and value = 'asset' }`,
+    fields: `files(${fieldMask})`,
+    orderBy: 'folder, name',
+    pageSize: 10,
+  });
+
+  return response.result.files ? response.result.files as DriveFileRaw[] : [];
+};
+
 export const buildNodes = (files: DriveFile[]) => {
   const nodes = files.map(file => DriveTreeNodeFactory(file));
 

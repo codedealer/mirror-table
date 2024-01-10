@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { Tree } from 'he-tree-vue';
-import type { DriveTreeNode, ModalWindowContentMarkdown } from '~/models/types';
-import { WindowFactory } from '~/models/Window';
+import type { DriveTreeNode } from '~/models/types';
 import { useDriveFileContextActions } from '~/composables/useDriveFileContextActions';
+import toggleFile from '~/utils/toggleFile';
 
 const props = defineProps<{
   node: DriveTreeNode
@@ -19,27 +19,8 @@ const nodeLabel = computed(() => {
 
 const { actions } = useDriveFileContextActions(file, toRef(() => props.node));
 
-const toggleFile = () => {
-  if (!file.value || file.value?.trashed) {
-    return;
-  }
-  const windowStore = useWindowStore();
-
-  // assuming the file is a markdown file for now
-  // create a new window
-  const windowContent: ModalWindowContentMarkdown = {
-    type: 'markdown',
-    editing: false,
-    data: undefined,
-  };
-
-  const window = WindowFactory(
-    props.node.id,
-    nodeLabel.value,
-    windowContent,
-  );
-
-  windowStore.toggleOrAdd(window);
+const onToggleFile = () => {
+  toggleFile(file.value, label.value);
 };
 
 const undoTrashFolder = () => {
@@ -58,7 +39,7 @@ const undoTrashFolder = () => {
       :loading="node.loading || file?.loading"
       :disabled="node.disabled || !file"
       preset="plain"
-      @click="toggleFile"
+      @click="onToggleFile"
     >
       <DriveDirectoryTreeFileIcon
         :file="file"

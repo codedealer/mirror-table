@@ -1,6 +1,6 @@
 import type { ContextAction, DriveAsset, TreeNode } from '~/models/types';
 
-export const AssetContextActionsFactory = (file: DriveAsset, node: TreeNode) => {
+export const AssetContextActionsFactory = (file: DriveAsset, node?: TreeNode) => {
   const driveTreeStore = useDriveTreeStore();
   const sceneStore = useSceneStore();
 
@@ -28,15 +28,17 @@ export const AssetContextActionsFactory = (file: DriveAsset, node: TreeNode) => 
     alwaysVisible: false,
   });
 
-  actions.push({
-    id: 'delete',
-    label: 'Delete',
-    icon: { name: 'delete', color: 'danger' },
-    action: () => driveTreeStore.removeFile(node),
-    disabled: !file.capabilities?.canDelete,
-    pinned: false,
-    alwaysVisible: false,
-  });
+  if (node) {
+    actions.push({
+      id: 'delete',
+      label: 'Delete',
+      icon: { name: 'delete', color: 'danger' },
+      action: () => driveTreeStore.removeFile(node),
+      disabled: !file.capabilities?.canDelete,
+      pinned: false,
+      alwaysVisible: false,
+    });
+  }
 
   return actions;
 };

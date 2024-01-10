@@ -33,6 +33,8 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
   const { isReady } = storeToRefs(driveStore);
   const { profile } = storeToRefs(userStore);
 
+  const searchModalState = ref(false);
+
   const isRootFolder = computed(() => {
     if (!rootNode.value || !profile.value) {
       // passthrough until initialized
@@ -331,6 +333,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
   };
 
   return {
+    searchModalState,
     nodes,
     rootNode,
     isRootFolder,

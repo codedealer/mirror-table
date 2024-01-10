@@ -7,10 +7,6 @@ const setRoot = () => {
   driveTreeStore.setRootFolder();
 };
 
-const setRootToParent = () => {
-  driveTreeStore.setRootToParent();
-};
-
 const { file } = useDriveFile(
   toRef(() => driveTreeStore.rootNode.id),
   {
