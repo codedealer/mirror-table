@@ -6,6 +6,7 @@ import type { Scene } from '~/models/types';
 
 const selectedScene = ref<Scene>();
 const search = ref('');
+const loading = ref(false);
 
 const { $db } = useNuxtApp();
 const tableStore = useTableStore();
@@ -36,14 +37,18 @@ const searchFn = useDebounceFn(async (value: string) => {
   );
 
   try {
+    loading.value = true;
+
     const snapshot = await getDocs(searchQuery);
     result.value = snapshot.docs.map(doc => doc.data());
   } catch (error) {
     console.error(error);
     const notificationStore = useNotificationStore();
     notificationStore.error(extractErrorMessage(error));
+  } finally {
+    loading.value = false;
   }
-}, 1000, {
+}, 600, {
   maxWait: 4000,
 });
 
@@ -95,6 +100,7 @@ onKeyStroke(true, (e) => {
           v-model="search"
           v-model:selected="selectedScene"
           :options="result"
+          :loading="loading"
           placeholder="Search scenes"
           autofocus
         >

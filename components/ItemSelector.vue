@@ -2,9 +2,12 @@
 import { onKeyStroke } from '@vueuse/core';
 import type { ItemSelectorOption } from '~/models/types';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   options: ItemSelectorOption[]
-}>();
+  loading?: boolean
+}>(), {
+  loading: false,
+});
 
 const inputModel = defineModel<string>({
   required: true,
@@ -12,6 +15,10 @@ const inputModel = defineModel<string>({
 
 const selected = defineModel<ItemSelectorOption>('selected', {
   required: false,
+});
+
+const showNoResults = computed(() => {
+  return props.options.length === 0 && !props.loading && inputModel.value.length > 0;
 });
 
 const active = ref<ItemSelectorOption>();
@@ -95,28 +102,46 @@ onKeyStroke(['ArrowUp', 'ArrowDown', 'Enter'], (event) => {
       class="item-selector__input"
     />
 
-    <div class="item-selector__result">
-      <va-scroll-container vertical>
-        <div class="item-selector__options">
-          <a
-            v-for="option in options"
-            :key="option.id"
-            :class="active && active.id === option.id ? 'item-selector__item--active' : ''"
-            class="item-selector__item"
-            href="#"
-            @click.prevent="select(option)"
-          >
-            <slot :option="option">
-              <va-list-item-section>
-                <va-list-item-label caption>
-                  {{ option.id }}
-                </va-list-item-label>
-              </va-list-item-section>
-            </slot>
-          </a>
-        </div>
-      </va-scroll-container>
-    </div>
+    <va-inner-loading :loading="loading">
+      <div
+        v-show="!showNoResults"
+        class="item-selector__result"
+      >
+        <va-scroll-container vertical>
+          <div class="item-selector__options">
+            <a
+              v-for="option in options"
+              :key="option.id"
+              :class="active && active.id === option.id ? 'item-selector__item--active' : ''"
+              class="item-selector__item"
+              href="#"
+              @click.prevent="select(option)"
+            >
+              <slot :option="option">
+                <va-list-item-section>
+                  <va-list-item-label caption>
+                    {{ option.id }}
+                  </va-list-item-label>
+                </va-list-item-section>
+              </slot>
+            </a>
+          </div>
+        </va-scroll-container>
+      </div>
+
+      <div
+        v-show="showNoResults"
+        class="item-selector__result item-selector__result--empty"
+      >
+        <va-card outlined>
+          <va-card-content>
+            <p class="centered">
+              <em>No results found</em>
+            </p>
+          </va-card-content>
+        </va-card>
+      </div>
+    </va-inner-loading>
   </div>
 </template>
 
@@ -127,6 +152,13 @@ onKeyStroke(['ArrowUp', 'ArrowDown', 'Enter'], (event) => {
 .item-selector__result {
   margin-top: 2rem;
   height: min(var(--va-modal-dialog-max-height), 45vh);
+
+  &--empty {
+    em {
+      opacity: 0.8;
+      font-size: 85%;
+    }
+  }
 
   .item-selector__item {
     --active-color: color-mix(in oklab, var(--va-primary-dark) 40%, transparent 60%);

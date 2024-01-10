@@ -10,6 +10,7 @@ const { searchModalState: state } = storeToRefs(driveTreeStore);
 
 const search = ref('');
 const selectedFile = ref<DriveFile>();
+const loading = ref(false);
 
 const result = ref<DriveFile[]>([]);
 
@@ -19,7 +20,11 @@ const searchFn = useDebounceFn(async (value: string) => {
     return;
   }
 
+  loading.value = true;
+
   result.value = await driveFileStore.search(value);
+
+  loading.value = false;
 }, 400, {
   maxWait: 4000,
 });
@@ -72,6 +77,7 @@ onKeyStroke(true, (e) => {
           v-model="search"
           v-model:selected="selectedFile"
           :options="result"
+          :loading="loading"
           placeholder="Search assets"
           autofocus
         >
