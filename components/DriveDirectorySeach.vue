@@ -72,7 +72,7 @@ onKeyStroke(true, (e) => {
           v-model="search"
           v-model:selected="selectedFile"
           :options="result"
-          placeholder="Search files"
+          placeholder="Search assets"
           autofocus
         >
           <template #default="{ option }">

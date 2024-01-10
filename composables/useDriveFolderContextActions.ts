@@ -39,7 +39,7 @@ export const useDriveFolderContextActions = (
         },
         disabled: driveTreeStore.isRootFolder,
         pinned: true,
-        alwaysVisible: !driveTreeStore.isRootFolder,
+        alwaysVisible: true,
       });
     }
 

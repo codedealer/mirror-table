@@ -61,6 +61,26 @@ const { actions } = useDriveFolderContextActions(
         {{ driveTreeStore.rootNode.label }}
       </div>
       <div class="drive-directory-tree-header__actions">
+        <va-popover
+          message="Search (SHIFT + F)"
+        >
+          <va-button
+            preset="plain"
+            color="primary"
+            size="medium"
+            @click="driveTreeStore.searchModalState = true"
+          >
+            <div class="drive-node__icon">
+              <va-icon
+                name="search"
+                color="primary-dark"
+                size="medium"
+                class="drive-node__icon"
+              />
+            </div>
+          </va-button>
+        </va-popover>
+
         <ContextPanel
           v-show="file && !file.trashed"
           :actions="actions"
