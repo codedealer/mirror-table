@@ -96,6 +96,14 @@
       &::marker {
         color: var(--va-primary);
       }
+
+      &.task-list-item {
+        margin-left: -1.25rem;
+
+        &::marker {
+          color: transparent;
+        }
+      }
     }
 
     ul {
@@ -110,11 +118,81 @@
 
     li {
       margin-bottom: 0.25rem;
+
+      &.task-list-item {
+        padding-left: 0.5rem;
+      }
     }
 
     ol {
       list-style: lower-alpha;
       margin-left: 1.5rem;
+    }
+  }
+
+  .task-list-item {
+    label {
+      cursor: pointer;
+    }
+  }
+
+  .task-list-item-checkbox {
+    margin-right: 0.5rem;
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 2px solid var(--va-background-border);
+    appearance: none;
+    background-color: transparent;
+    outline: none;
+    transition: background-color 0.1s;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    vertical-align: middle;
+
+    &:checked {
+      background-size: cover;
+      padding: 2px;
+      border-color: var(--va-primary);
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="20" height="20" viewBox="0 0 32 32" xml:space="preserve"><path style="fill: %23FA45AB" d="M11.941,28.877l-11.941-11.942l5.695-5.696l6.246,6.246l14.364-14.364L32,8.818"/></svg>');
+    }
+
+    &:disabled {
+      background-color: var(--va-background-element);
+
+      &:checked {
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="20" height="20" viewBox="0 0 32 32" xml:space="preserve"><path style="fill: %23AD1F70" d="M11.941,28.877l-11.941-11.942l5.695-5.696l6.246,6.246l14.364-14.364L32,8.818"/></svg>');
+      }
+    }
+
+    @media (hover: hover) {
+      &:not(:disabled):hover {
+        background-color: color-mix(in oklab, var(--va-primary) 50%, var(--va-background-element) 50%);
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+    border: 1px solid var(--va-background-border);
+    border-radius: 0.25rem;
+
+    th, td {
+      padding: 0.5rem;
+    }
+
+    th {
+      background-color: var(--va-background-secondary);
+      font-weight: bold;
+      text-align: left;
+    }
+
+    tr:nth-child(even) {
+      background-color: var(--va-background-secondary);
     }
   }
 }
