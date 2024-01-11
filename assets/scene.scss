@@ -88,6 +88,12 @@
     text-align: center;
     max-width: 80ch;
 
+    p, blockquote, li, code, pre {
+      @container title-screen (min-width: 768px) {
+        font-size: clamp(18px, 18px + 2cqi, 28px);
+      }
+    }
+
     .c-blockquote {
       margin: 0.5rem 0;
       padding: 0;
@@ -100,13 +106,14 @@
       blockquote {
         position: relative;
         padding-inline-start: 2rem;
+        border: none;
       }
 
       blockquote:before {
         position: absolute;
         left: 0;
         top: -20px;
-        font-size: 60px;
+        font-size: 200%;
         content: open-quote;
         color: var(--va-primary);
       }

@@ -36,10 +36,6 @@
       margin-bottom: 0;
     }
 
-    @container title-screen (min-width: 768px) {
-      font-size: clamp(18px, 18px + 2cqi, 28px);
-    }
-
     code {
       font-size: 0.9em;
       padding: 0.25em 0.5em;
