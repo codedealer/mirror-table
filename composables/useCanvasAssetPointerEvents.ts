@@ -8,7 +8,7 @@ export const useCanvasAssetPointerEvents = (
   const canvasContextPanelStore = useCanvasContextPanelStore();
 
   const onHover = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
-    if (!state.value || !state.value?.selectable) {
+    if (!state.value || !state.value?.selectable || !state.value?.loaded) {
       return;
     }
 

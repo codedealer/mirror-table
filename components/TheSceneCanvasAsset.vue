@@ -111,6 +111,23 @@ const imageConfig: ComputedRef<Konva.ImageConfig | null> = computed(() => {
   };
 });
 
+const loadingRect = computed(() => {
+  return {
+    x: 0,
+    y: 0,
+    width: containerConfig.value.width,
+    height: containerConfig.value.height,
+    fill: '#444',
+    opacity: 0.5,
+  };
+});
+
+const tableStore = useTableStore();
+
+const showLoading = computed(() => {
+  return tableStore.mode === TableModes.OWN && (!state.value || !state.value.loaded);
+});
+
 onUnmounted(() => {
   if (!state.value || !state.value.imageElement) {
     return;
@@ -148,10 +165,12 @@ const onTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
     @pointerover="onHover"
     @pointerout="onHoverOut"
   >
+    <v-rect v-if="showLoading" :config="loadingRect" />
+
     <v-image v-if="imageConfig" :config="imageConfig" />
 
     <TheSceneCanvasAssetLabel
-      v-if="imageConfig && !state?.error"
+      v-if="imageConfig"
       :element="element"
     />
   </v-group>
