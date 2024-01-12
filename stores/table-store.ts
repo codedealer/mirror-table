@@ -94,7 +94,7 @@ export const useTableStore = defineStore('table', () => {
   const {
     create,
     updateSessionPresence,
-    updatePanelsState,
+    update,
     remove,
   } = useFirestoreTable();
 
@@ -163,13 +163,13 @@ export const useTableStore = defineStore('table', () => {
     await updateSessionPresence(table.value.id, session);
   };
 
-  const togglePanelsState = async (panels: Record<DynamicPanelModelType, boolean>) => {
+  const togglePanelsState = async (panels: Partial<Record<DynamicPanelModelType, boolean>>) => {
     if (!table.value) {
       return;
     }
 
     try {
-      await updatePanelsState(table.value.id, panels);
+      await update(table.value.id, { panels });
     } catch (e) {
       console.error(e);
       const notificationStore = useNotificationStore();

@@ -1,6 +1,14 @@
 import type { UpdateData, WithFieldValue } from '@firebase/firestore';
 import { collection, doc, serverTimestamp, updateDoc, writeBatch } from '@firebase/firestore';
-import type { Category, DriveFile, DynamicPanelModelType, Scene, Table, TableCard, TableSession } from '~/models/types';
+import type {
+  Category,
+  DriveFile,
+  NestedPartial,
+  Scene,
+  Table,
+  TableCard,
+  TableSession,
+} from '~/models/types';
 import { idToSlug } from '~/utils';
 
 export const useFirestoreTable = () => {
@@ -119,13 +127,13 @@ export const useFirestoreTable = () => {
     await updateDoc(tableRef, update);
   };
 
-  const updatePanelsState = async (
+  const update = async (
     tableId: string,
-    panels: Record<DynamicPanelModelType, boolean>,
+    payload: NestedPartial<Table>,
   ) => {
     const tableRef = doc($db, 'tables', tableId);
 
-    const updateData = makeFirestoreUpdateData({ panels });
+    const updateData = makeFirestoreUpdateData(payload);
     await updateDoc(tableRef, updateData);
   };
 
@@ -137,7 +145,7 @@ export const useFirestoreTable = () => {
   return {
     create,
     updateSessionPresence,
-    updatePanelsState,
+    update,
     remove,
   };
 };
