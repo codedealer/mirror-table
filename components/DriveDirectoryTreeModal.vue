@@ -34,7 +34,7 @@ const driveTreeModalStore = useDriveTreeModalStore();
         v-if="driveTreeModalStore.fileOptions.length > 1"
         v-model="driveTreeModalStore.selectedOption"
         name="options"
-        label="Asset type"
+        label="Type"
         :options="driveTreeModalStore.fileOptions"
         required
       />

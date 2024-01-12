@@ -93,11 +93,13 @@ export const isGapiErrorResponseResult = (obj: unknown): obj is GapiErrorRespons
 export const DriveMimeTypes = {
   FOLDER: 'application/vnd.google-apps.folder',
   MARKDOWN: 'text/markdown',
+  WIDGET: 'application/json',
 } as const;
 
 export const DriveFileExtensions = {
   'application/vnd.google-apps.folder': '',
   'text/markdown': 'md',
+  'application/json': 'json',
 } as const;
 
 export interface Notification {
@@ -165,6 +167,23 @@ export interface AssetProperties extends AppProperties {
 
 export const isAssetProperties = (obj: unknown): obj is AssetProperties => {
   return isObject(obj) && 'type' in obj && obj.type === AppPropertiesTypes.ASSET && 'kind' in obj && Object.values(AssetPropertiesKinds).includes(obj.kind as AssetPropertiesKind);
+};
+
+export const WidgetTemplates = {
+  MARKDOWN: 'markdown',
+} as const;
+
+export type WidgetTemplate = typeof WidgetTemplates[keyof typeof WidgetTemplates];
+
+export interface WidgetProperties extends AppProperties {
+  type: 'widget'
+  template: WidgetTemplate
+  firestoreId?: string
+  title?: string
+}
+
+export const isWidgetProperties = (obj: unknown): obj is WidgetProperties => {
+  return isObject(obj) && 'type' in obj && obj.type === AppPropertiesTypes.WIDGET && 'template' in obj && Object.values(WidgetTemplates).includes(obj.template as WidgetTemplate);
 };
 
 export interface DriveFileCapabilities {

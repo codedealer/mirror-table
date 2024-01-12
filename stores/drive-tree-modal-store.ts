@@ -4,10 +4,11 @@ import type {
   AppPropertiesType,
   AssetPropertiesKind,
   DriveTreeNode,
-  SelectOption,
+  SelectOption, WidgetTemplate,
 } from '~/models/types';
-import { AppPropertiesTypes, DriveFileExtensions } from '~/models/types';
+import { AppPropertiesTypes, DriveFileExtensions, WidgetTemplates } from '~/models/types';
 import { AssetPropertiesFactory } from '~/models/AssetProperties';
+import { WidgetPropertiesFactory } from '~/models/WidgetProperties';
 
 export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
   const modalState = ref(false);
@@ -19,13 +20,6 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
   const selectedOption = ref<SelectOption>();
   const fileParent = ref<DriveTreeNode>();
   const filePath = ref<number[]>([]);
-  const fileType = ref<AppPropertiesType>('asset');
-  const fileKind = computed<AssetPropertiesKind | undefined>(() => {
-    if (fileType.value === AppPropertiesTypes.ASSET) {
-      return selectedOption.value?.value as AssetPropertiesKind | undefined;
-    }
-    return undefined;
-  });
 
   const cancel = () => {
     formTitle.value = '';
@@ -94,15 +88,52 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
 
     let appProperties: AppProperties | undefined;
     // should probably move this out
-    if (mimeType.value !== DriveMimeTypes.FOLDER) {
-      if (fileType.value === AppPropertiesTypes.ASSET && fileKind.value) {
-        appProperties = AssetPropertiesFactory({
-          type: AppPropertiesTypes.ASSET,
-          kind: fileKind.value,
-        });
-      } else {
+    let fileType: AppPropertiesType | undefined;
+    switch (mimeType.value) {
+      case DriveMimeTypes.FOLDER:
+        break;
+      case DriveMimeTypes.MARKDOWN:
+        fileType = AppPropertiesTypes.ASSET;
+        break;
+      case DriveMimeTypes.WIDGET:
+        fileType = AppPropertiesTypes.WIDGET;
+        break;
+      default:
         throw new Error('Not implemented');
+    }
+
+    try {
+      if (mimeType.value !== DriveMimeTypes.FOLDER) {
+        if (fileType === AppPropertiesTypes.ASSET) {
+          const fileKind = selectedOption.value?.value as AssetPropertiesKind;
+          if (!fileKind || !Object.values(AssetPropertiesKinds).includes(fileKind)) {
+            throw new Error('You must choose a type of the asset');
+          }
+
+          appProperties = AssetPropertiesFactory({
+            type: AppPropertiesTypes.ASSET,
+            kind: fileKind,
+          });
+        } else if (fileType === AppPropertiesTypes.WIDGET) {
+          const template = selectedOption.value?.value as WidgetTemplate;
+          if (!template || !Object.values(WidgetTemplates).includes(template)) {
+            throw new Error('You must choose a template of the widget');
+          }
+
+          appProperties = WidgetPropertiesFactory({
+            type: AppPropertiesTypes.WIDGET,
+            template,
+          });
+        } else {
+          throw new Error('Not implemented');
+        }
       }
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+
+      loading.value = false;
+      return false;
     }
 
     const result = await driveTreeStore.createChild(
@@ -129,7 +160,6 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
     selectedOption,
     fileParent,
     filePath,
-    fileKind,
     show,
     hide,
     createFile,

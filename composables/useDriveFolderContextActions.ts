@@ -1,6 +1,7 @@
 import type { ContextAction, DriveFile, TreeNode } from '~/models/types';
 import { AssetPropertiesKinds } from '~/models/types';
 import { generateSelectOptions } from '~/models/AssetProperties';
+import { generateTemplates } from '~/models/WidgetProperties';
 
 export const useDriveFolderContextActions = (
   file: Ref<DriveFile | undefined>,
@@ -75,6 +76,26 @@ export const useDriveFolderContextActions = (
           node.value,
           path.value,
           generateSelectOptions(),
+        );
+      },
+      disabled: !permissions.value.canAddChildren,
+      pinned: false,
+      alwaysVisible: false,
+    });
+
+    actions.push({
+      id: 'add-widget',
+      label: 'Add widget',
+      icon: { name: 'extension', color: 'primary' },
+      action: () => {
+        const driveTreeModalStore = useDriveTreeModalStore();
+
+        driveTreeModalStore.show(
+          'New widget',
+          DriveMimeTypes.WIDGET,
+          node.value,
+          path.value,
+          generateTemplates(),
         );
       },
       disabled: !permissions.value.canAddChildren,

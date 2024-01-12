@@ -1,5 +1,6 @@
 import type { AppProperties } from '~/models/types';
-import { isAssetProperties } from '~/models/types';
+import { isAssetProperties, isWidgetProperties } from '~/models/types';
+import { plainObjFromWidgetProperties } from '~/models/WidgetProperties';
 
 export const serializedPropertyDictionary: Record<string, string> = {
   id: 'i',
@@ -28,6 +29,8 @@ export const validatePayloadSize = (key: string, payload: string) => {
 export const serializeAppProperties = (appProperties?: AppProperties): Record<string, string | null> => {
   if (isAssetProperties(appProperties)) {
     return plainObjFromAssetProperties(appProperties);
+  } else if (isWidgetProperties(appProperties)) {
+    return plainObjFromWidgetProperties(appProperties);
   }
 
   throw new Error('Not implemented');
