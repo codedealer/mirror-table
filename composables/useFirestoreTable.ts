@@ -1,6 +1,6 @@
 import type { UpdateData, WithFieldValue } from '@firebase/firestore';
 import { collection, doc, serverTimestamp, updateDoc, writeBatch } from '@firebase/firestore';
-import type { Category, DriveFile, Scene, Table, TableCard, TableSession } from '~/models/types';
+import type { Category, DriveFile, DynamicPanelModelType, Scene, Table, TableCard, TableSession } from '~/models/types';
 import { idToSlug } from '~/utils';
 
 export const useFirestoreTable = () => {
@@ -39,6 +39,10 @@ export const useFirestoreTable = () => {
       editors: [userStore.user.uid],
       viewers: [userStore.user.uid],
       session,
+      panels: {
+        [DynamicPanelModelTypes.LEFT]: false,
+        [DynamicPanelModelTypes.RIGHT]: false,
+      },
       createdAt: serverTimestamp(),
       slug: idToSlug(tableRef.id),
     };
@@ -115,6 +119,16 @@ export const useFirestoreTable = () => {
     await updateDoc(tableRef, update);
   };
 
+  const updatePanelsState = async (
+    tableId: string,
+    panels: Record<DynamicPanelModelType, boolean>,
+  ) => {
+    const tableRef = doc($db, 'tables', tableId);
+
+    const updateData = makeFirestoreUpdateData({ panels });
+    await updateDoc(tableRef, updateData);
+  };
+
   const remove = (): never => {
     // TODO: move this to api call on the server to delete entire collections of scenes.
     throw new Error('Not implemented');
@@ -123,6 +137,7 @@ export const useFirestoreTable = () => {
   return {
     create,
     updateSessionPresence,
+    updatePanelsState,
     remove,
   };
 };

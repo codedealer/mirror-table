@@ -1,9 +1,21 @@
 import type { DynamicPanelContentType, DynamicPanelModelType } from '~/models/types';
 
 export const useDynamicPanelStore = defineStore('dynamic-panel', () => {
-  const models = ref<Record<DynamicPanelModelType, boolean>>({
+  const tableStore = useTableStore();
+
+  const _models = ref<Record<DynamicPanelModelType, boolean>>({
     [DynamicPanelModelTypes.LEFT]: false,
     [DynamicPanelModelTypes.RIGHT]: false,
+  });
+
+  const models = computed(() => {
+    if (!tableStore.table || tableStore.mode === TableModes.OWN) {
+      // owner has manual control over the panels
+      return _models.value;
+    }
+
+    // otherwise, the panels are controlled by the table
+    return tableStore.table.panels;
   });
 
   const contents = ref<Record<DynamicPanelModelType, DynamicPanelContentType | null>>({

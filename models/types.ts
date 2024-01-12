@@ -278,6 +278,7 @@ export const DynamicPanelContentTypes = {
   EXPLORER: 'explorer',
   SESSIONS: 'sessions',
   LAYERS: 'layers',
+  WIDGETS: 'widgets',
 } as const;
 
 export type DynamicPanelContentType = typeof DynamicPanelContentTypes[keyof typeof DynamicPanelContentTypes];
@@ -484,6 +485,9 @@ export interface Table {
   editors: string[]
   viewers: string[]
   session: TableSession
+  panels: {
+    [K in DynamicPanelModelType]: boolean
+  }
   createdAt: Timestamp
   slug: string
 }

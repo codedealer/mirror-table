@@ -13,6 +13,21 @@ const openSessions = () => {
   dynamicPanelStore.open(DynamicPanelModelTypes.LEFT, DynamicPanelContentTypes.SESSIONS);
 };
 
+const tableStore = useTableStore();
+
+const showIndicator = computed(() => {
+  if (!tableStore.table) {
+    return false;
+  }
+
+  return tableStore.table.panels[DynamicPanelModelTypes.RIGHT] || tableStore.table.panels[DynamicPanelModelTypes.LEFT];
+});
+
+const openWidgets = () => {
+  dynamicPanelStore.open(DynamicPanelModelTypes.RIGHT, DynamicPanelContentTypes.WIDGETS);
+  dynamicPanelStore.open(DynamicPanelModelTypes.LEFT, DynamicPanelContentTypes.WIDGETS);
+};
+
 const openLayers = () => {
   dynamicPanelStore.open(DynamicPanelModelTypes.LEFT, DynamicPanelContentTypes.LAYERS);
 };
@@ -39,6 +54,19 @@ const canvasToolStore = useCanvasToolStore();
     </va-sidebar-item>
 
     <va-divider />
+
+    <va-sidebar-item @click="openWidgets">
+      <va-sidebar-item-content>
+        <div class="toolbar-button">
+          <va-badge :dot="showIndicator" overlap>
+            <va-icon name="splitscreen" rotation="90" size="large" color="primary" />
+          </va-badge>
+
+          <span class="toolbar-button__content">Panels</span>
+        </div>
+        <va-sidebar-item-title>Panels</va-sidebar-item-title>
+      </va-sidebar-item-content>
+    </va-sidebar-item>
 
     <va-sidebar-item @click="openExplorer">
       <va-sidebar-item-content>

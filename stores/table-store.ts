@@ -2,7 +2,14 @@ import { acceptHMRUpdate, defineStore } from 'pinia';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 import type { WithFieldValue } from '@firebase/firestore';
 import { collection, deleteField, query, where } from '@firebase/firestore';
-import type { BaseScene, Table, TableMode, TablePermissions, TableSession } from '~/models/types';
+import type {
+  BaseScene,
+  DynamicPanelModelType,
+  Table,
+  TableMode,
+  TablePermissions,
+  TableSession,
+} from '~/models/types';
 import { TableModes } from '~/models/types';
 
 export const useTableStore = defineStore('table', () => {
@@ -87,6 +94,7 @@ export const useTableStore = defineStore('table', () => {
   const {
     create,
     updateSessionPresence,
+    updatePanelsState,
     remove,
   } = useFirestoreTable();
 
@@ -155,6 +163,20 @@ export const useTableStore = defineStore('table', () => {
     await updateSessionPresence(table.value.id, session);
   };
 
+  const togglePanelsState = async (panels: Record<DynamicPanelModelType, boolean>) => {
+    if (!table.value) {
+      return;
+    }
+
+    try {
+      await updatePanelsState(table.value.id, panels);
+    } catch (e) {
+      console.error(e);
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Failed to update panels state.');
+    }
+  };
+
   return {
     tableSlug,
     table,
@@ -168,6 +190,7 @@ export const useTableStore = defineStore('table', () => {
     moveGroupToScene,
     moveAllViewersToScene,
     removeViewer,
+    togglePanelsState,
     remove,
   };
 });

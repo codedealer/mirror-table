@@ -4,7 +4,7 @@ import { useDynamicPanelStore } from '~/stores/dynamic-panel-store';
 import type { DynamicPanelContentType, DynamicPanelModelType } from '~/models/types';
 import { useRightPanelStore } from '~/stores/right-panel-store';
 import { DynamicPanelContentTypes } from '~/models/types';
-import { CanvasLayers, SessionExplorer, TableExplorer } from '#components';
+import { CanvasLayers, SessionExplorer, TableExplorer, TableWidgets } from '#components';
 
 const props = defineProps<{
   name: DynamicPanelModelType
@@ -17,6 +17,7 @@ const availableComponents: Record<DynamicPanelContentType, unknown> = {
   [DynamicPanelContentTypes.EXPLORER]: TableExplorer,
   [DynamicPanelContentTypes.SESSIONS]: SessionExplorer,
   [DynamicPanelContentTypes.LAYERS]: CanvasLayers,
+  [DynamicPanelContentTypes.WIDGETS]: TableWidgets,
 };
 
 const content = computed(() => {
@@ -82,7 +83,7 @@ if (props.name === DynamicPanelModelTypes.RIGHT) {
     </div>
     <va-scroll-container vertical>
       <div class="dynamic-panel__content">
-        <component :is="content" />
+        <component :is="content" :type="name" />
       </div>
     </va-scroll-container>
   </va-sidebar>
