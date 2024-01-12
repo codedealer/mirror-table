@@ -33,7 +33,7 @@ const { sideBarMinimized } = storeToRefs(rightPanelStore);
         </va-sidebar-item-content>
       </va-sidebar-item>
 
-      <DriveDirectoryTree />
+      <DriveDirectoryTree v-show="!sideBarMinimized" />
 
       <DriveDirectorySearch />
     </va-sidebar>
