@@ -2,7 +2,6 @@
 import type {
   DriveAsset,
   ModalWindow,
-  ModalWindowContentMarkdown,
 } from '~/models/types';
 
 import WindowContainerMarkdownForm from '~/components/WindowContainerMarkdownForm.vue';
@@ -12,10 +11,6 @@ import { useDriveMedia } from '~/composables/useDriveMedia';
 const props = defineProps<{
   window: ModalWindow
 }>();
-
-const windowContent = computed(() =>
-  props.window.content as ModalWindowContentMarkdown,
-);
 
 const { file } = useDriveFile<DriveAsset>(
   toRef(() => props.window.id),
@@ -70,7 +65,6 @@ const toggleEdit = () => {
       <va-spacer />
 
       <WindowContainerMarkdownMeta
-        :content="windowContent"
         :file="file"
       />
     </div>

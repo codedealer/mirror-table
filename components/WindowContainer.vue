@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useDraggable } from '@vueuse/core';
 import type { ModalWindow } from '~/models/types';
+import WindowContainerWidget from '~/components/WindowContainerWidget.vue';
 
 const props = defineProps<{
   window: ModalWindow
@@ -90,6 +91,10 @@ const statusLabel = computed(() => {
 
       <WindowContainerMarkdown
         v-if="window.content.type === 'markdown'"
+        :window="window"
+      />
+      <WindowContainerWidget
+        v-else-if="window.content.type === 'widget'"
         :window="window"
       />
     </div>

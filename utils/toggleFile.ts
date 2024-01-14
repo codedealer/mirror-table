@@ -1,4 +1,9 @@
-import type { DriveFile, ModalWindowContentMarkdown } from '~/models/types';
+import type {
+  DriveFile,
+  ModalWindowContent,
+  ModalWindowContentMarkdown,
+  ModalWindowContentWidget,
+} from '~/models/types';
 import { WindowFactory } from '~/models/Window';
 
 const toggleFile = (file: DriveFile | undefined, label: string) => {
@@ -8,13 +13,22 @@ const toggleFile = (file: DriveFile | undefined, label: string) => {
 
   const windowStore = useWindowStore();
 
-  // assuming the file is a markdown file for now
   // create a new window
-  const windowContent: ModalWindowContentMarkdown = {
-    type: 'markdown',
-    editing: false,
-    data: undefined,
-  };
+  let windowContent: ModalWindowContent;
+  if (isDriveAsset(file)) {
+    windowContent = {
+      type: 'markdown',
+      editing: false,
+      data: undefined,
+    } as ModalWindowContentMarkdown;
+  } else if (isDriveWidget(file)) {
+    windowContent = {
+      type: 'widget',
+      editing: false,
+    } as ModalWindowContentWidget;
+  } else {
+    throw new Error('Trying to open an unknown file type');
+  }
 
   const window = WindowFactory(
     file.id,

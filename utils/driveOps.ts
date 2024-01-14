@@ -1,4 +1,5 @@
 import type {
+  AppPropertiesType,
   DriveFile,
   DriveFileRaw,
   DriveFileUpdateReturnType,
@@ -202,7 +203,7 @@ export const listFiles = async (folderId: string) => {
   }
 
   const response = await client.drive.files.list({
-    q: `'${folderId}' in parents and trashed = false and (mimeType = '${DriveMimeTypes.FOLDER}' or appProperties has { key = 'type' and value = 'asset' })`,
+    q: `'${folderId}' in parents and trashed = false and (mimeType = '${DriveMimeTypes.FOLDER}' or appProperties has { key = 'type' and value = 'asset' } or appProperties has { key = 'type' and value = 'widget' })`,
     fields: `files(${fieldMask})`,
     orderBy: 'folder, name',
   });
@@ -210,13 +211,18 @@ export const listFiles = async (folderId: string) => {
   return response.result.files ? response.result.files as DriveFileRaw[] : [];
 };
 
-export const searchFiles = async (name: string) => {
+export const searchFiles = async (
+  name: string,
+  type: AppPropertiesType = AppPropertiesTypes.ASSET,
+) => {
   // search just assets for now
   const driveStore = useDriveStore();
   const client = await driveStore.getClient();
 
+  name = name.replace(/['"]+/g, '');
+
   const response = await client.drive.files.list({
-    q: `name contains '${name}' and trashed = false and appProperties has { key = 'type' and value = 'asset' }`,
+    q: `name contains '${name}' and trashed = false and appProperties has { key = 'type' and value = '${type}' }`,
     fields: `files(${fieldMask})`,
     orderBy: 'folder, name',
     pageSize: 10,

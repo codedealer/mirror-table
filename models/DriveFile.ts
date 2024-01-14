@@ -1,4 +1,4 @@
-import type { DriveAsset, DriveFile, DriveFileRaw } from '~/models/types';
+import type { DriveFile, DriveFileRaw } from '~/models/types';
 import { isAssetProperties } from '~/models/types';
 
 export const convertToDriveFile = (file: DriveFileRaw) => {
@@ -6,15 +6,12 @@ export const convertToDriveFile = (file: DriveFileRaw) => {
   driveFile.loading = false;
   driveFile.loadedAt = Date.now();
 
-  // convert to DriveAsset if needed
+  // convert properties object if needed
   if (file.appProperties) {
     if (isAssetProperties(file.appProperties)) {
-      const asset = {
-        ...driveFile,
-        appProperties: AssetPropertiesFactory(file.appProperties),
-      } as unknown as DriveAsset;
-
-      return asset;
+      driveFile.appProperties = AssetPropertiesFactory(file.appProperties);
+    } else if (isWidgetProperties(file.appProperties)) {
+      driveFile.appProperties = WidgetPropertiesFactory(file.appProperties);
     } else {
       throw new Error('Not implemented');
     }

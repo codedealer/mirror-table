@@ -208,11 +208,14 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     }
 
     const updateObject = payload as DriveFileUpdateObject;
-    if (
-      appProperties &&
-      isAssetProperties(appProperties)
-    ) {
-      updateObject.appProperties = AssetPropertiesFactory(appProperties);
+    if (appProperties) {
+      if (isAssetProperties(appProperties)) {
+        updateObject.appProperties = AssetPropertiesFactory(appProperties);
+      } else if (isWidgetProperties(appProperties)) {
+        updateObject.appProperties = WidgetPropertiesFactory(appProperties);
+      } else {
+        throw new Error('Unknown app properties type');
+      }
     }
 
     Object.assign(file, updateObject, { loadedAt: Date.now() });

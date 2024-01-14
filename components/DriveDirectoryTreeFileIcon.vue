@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DriveFile } from '~/models/types';
-import { AssetPropertiesKinds, isDriveAsset } from '~/models/types';
+import { AssetPropertiesKinds, isDriveAsset, isDriveWidget } from '~/models/types';
 
 const props = defineProps<{
   file?: DriveFile
@@ -8,7 +8,15 @@ const props = defineProps<{
 }>();
 
 const iconName = computed(() => {
-  if (!props.file || !isDriveAsset(props.file)) {
+  if (!props.file) {
+    return 'article';
+  }
+
+  if (isDriveWidget(props.file)) {
+    return 'extension';
+  }
+
+  if (!isDriveAsset(props.file)) {
     return 'article';
   }
 

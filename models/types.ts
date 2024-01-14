@@ -218,6 +218,14 @@ export const isDriveAsset = (file: DriveFile): file is DriveAsset => {
   return isAssetProperties(file.appProperties);
 };
 
+export interface DriveWidget extends DriveFile {
+  appProperties: WidgetProperties
+}
+
+export const isDriveWidget = (file: DriveFile): file is DriveWidget => {
+  return isWidgetProperties(file.appProperties);
+};
+
 export type DriveImage = DriveFile & Required<Pick<gapi.client.drive.File, 'imageMediaMetadata'>>;
 
 export interface ContextAction {
@@ -256,6 +264,10 @@ export interface ModalWindowContent {
 export interface ModalWindowContentMarkdown extends ModalWindowContent {
   type: 'markdown'
   data: undefined // markdown content is moved to component
+}
+
+export interface ModalWindowContentWidget extends ModalWindowContent {
+  type: 'widget'
 }
 
 export const ModalWindowStatus = {
@@ -446,6 +458,22 @@ export interface CanvasTool {
 }
 
 // FIRESTORE TYPES
+
+/**
+ * Main widget entity. Exists in root collection under owner id.
+ */
+export interface Widget {
+  id: string
+  owner: string
+  enabled: boolean
+  template: WidgetTemplate
+  rank: number
+}
+
+export interface WidgetMarkdown extends Widget {
+  template: 'markdown'
+  content: string
+}
 
 /**
  * Data for a table card that appears on a dashboard. Each user has a copy.

@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { DriveFile, ModalWindowContentMarkdown } from '~/models/types';
+import type { DriveFile } from '~/models/types';
 
 const props = defineProps<{
-  content: ModalWindowContentMarkdown
   file?: DriveFile
 }>();
 
