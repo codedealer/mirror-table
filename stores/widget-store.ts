@@ -1,5 +1,5 @@
-import { collection, doc, getDoc, setDoc } from '@firebase/firestore';
-import type { Widget } from '~/models/types';
+import { collection, doc, getDoc, setDoc, updateDoc } from '@firebase/firestore';
+import type { NestedPartial, Widget } from '~/models/types';
 
 export const useWidgetStore = defineStore('widget', () => {
   const _widgets = ref<Widget[]>([]);
@@ -51,10 +51,32 @@ export const useWidgetStore = defineStore('widget', () => {
     return widget;
   };
 
+  const updateWidget = async <T extends Widget>(id: string, payload: NestedPartial<T>) => {
+    if (!userStore.user) {
+      return false;
+    }
+
+    const docRef = doc(collection($db, 'users', userStore.user.uid, 'widgets'), id).withConverter(firestoreDataConverter<T>());
+
+    try {
+      const data = makeFirestoreUpdateData(payload);
+      await updateDoc(docRef, data);
+    } catch (e) {
+      console.error(e);
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+
+      return false;
+    }
+
+    return true;
+  };
+
   return {
     widgets,
     getWidget,
     createWidget,
+    updateWidget,
   };
 });
 

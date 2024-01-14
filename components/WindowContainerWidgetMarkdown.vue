@@ -19,6 +19,8 @@ watch(() => props.file, async (file) => {
   }
 
   widget.value = await widgetStore.getWidget<WidgetMarkdown>(file.appProperties.firestoreId);
+}, {
+  immediate: true,
 });
 
 const value = ref('');
@@ -42,6 +44,18 @@ const checkDirty = () => {
 watch(value, useDebounceFn(checkDirty, 1000));
 
 const windowForm = ref();
+
+const update = async (file: DriveWidget) => {
+  const payload: Partial<WidgetMarkdown> = {
+    content: value.value,
+  };
+
+  const updated = await widgetStore.updateWidget(widget.value!.id, payload);
+
+  if (!updated) {
+    throw new Error('Failed to update widget');
+  }
+};
 
 const create = async (file: DriveWidget) => {
   const payload: WidgetMarkdown = {
@@ -89,7 +103,7 @@ const submit = async () => {
     if (!props.file.appProperties.firestoreId) {
       await create(props.file);
     } else {
-      throw new Error('Not implemented');
+      await update(props.file);
     }
 
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
