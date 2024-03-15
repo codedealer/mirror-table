@@ -1,12 +1,67 @@
-import { collection, doc, getDoc, setDoc, updateDoc } from '@firebase/firestore';
+import { collection, doc, getDoc, orderBy, query, setDoc, updateDoc, where } from '@firebase/firestore';
+import { useFirestore } from '@vueuse/firebase/useFirestore';
 import type { NestedPartial, Widget } from '~/models/types';
 
 export const useWidgetStore = defineStore('widget', () => {
-  const _widgets = ref<Widget[]>([]);
-  const widgets = computed(() => _widgets.value);
-
   const { $db } = useNuxtApp();
   const userStore = useUserStore();
+  const tableStore = useTableStore();
+
+  const widgetsRef = computed(() => {
+    if (!userStore.user || !tableStore.table) {
+      return undefined;
+    }
+
+    return collection($db, 'users', userStore.user.uid, 'widgets').withConverter(firestoreDataConverter<Widget>());
+  });
+
+  const widgetsQuery = computed(() => {
+    if (!widgetsRef.value) {
+      return undefined;
+    }
+
+    const widgetIds = new Set(
+      Object.values(tableStore.table!.widgets).flat(),
+    );
+
+    if (!widgetIds.size) {
+      return undefined;
+    }
+
+    let q = query(
+      widgetsRef.value,
+      where('id', 'in', Array.from(widgetIds)),
+    );
+
+    if (tableStore.mode !== TableModes.OWN) {
+      q = query(
+        q,
+        where('enabled', '==', true),
+      );
+    }
+
+    q = query(
+      q,
+      orderBy('rank', 'asc'),
+    );
+
+    return q;
+  });
+
+  const widgets = useFirestore(widgetsQuery, []);
+
+  const widgetMap = computed(() => {
+    if (!widgets.value || !Array.isArray(widgets.value)) {
+      return new Map();
+    }
+
+    const map = widgets.value.reduce((acc, widget) => {
+      acc.set(widget.id, widget);
+      return acc;
+    }, new Map<string, Widget>());
+
+    return map;
+  });
 
   const getWidget = async <T extends Widget>(id: string) => {
     if (!userStore.user) {
@@ -74,6 +129,7 @@ export const useWidgetStore = defineStore('widget', () => {
 
   return {
     widgets,
+    widgetMap,
     getWidget,
     createWidget,
     updateWidget,

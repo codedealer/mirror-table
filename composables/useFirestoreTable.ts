@@ -51,6 +51,10 @@ export const useFirestoreTable = () => {
         [DynamicPanelModelTypes.LEFT]: false,
         [DynamicPanelModelTypes.RIGHT]: false,
       },
+      widgets: {
+        [DynamicPanelModelTypes.LEFT]: [],
+        [DynamicPanelModelTypes.RIGHT]: [],
+      },
       createdAt: serverTimestamp(),
       slug: idToSlug(tableRef.id),
     };

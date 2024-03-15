@@ -299,8 +299,8 @@ export interface ItemSelectorOption {
 }
 
 export const DynamicPanelModelTypes = {
-  RIGHT: 'right',
   LEFT: 'left',
+  RIGHT: 'right',
 } as const;
 
 export type DynamicPanelModelType = typeof DynamicPanelModelTypes[keyof typeof DynamicPanelModelTypes];
@@ -532,9 +532,12 @@ export interface Table {
   editors: string[]
   viewers: string[]
   session: TableSession
+  // controls which panels are open to viewers
   panels: {
     [K in DynamicPanelModelType]: boolean
   }
+  // lists widget ids of widgets on each panel
+  widgets: Record<DynamicPanelModelType, string[]>
   createdAt: Timestamp
   slug: string
 }

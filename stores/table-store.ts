@@ -177,6 +177,25 @@ export const useTableStore = defineStore('table', () => {
     }
   };
 
+  const addWidgetToPanel = async (panel: DynamicPanelModelType, widgetId: string) => {
+    if (!table.value) {
+      return;
+    }
+
+    const ids = [...table.value.widgets[panel], widgetId];
+    const uniqueIds = [...new Set(ids)];
+
+    const notificationStore = useNotificationStore();
+    try {
+      await update(table.value.id, { widgets: { [panel]: uniqueIds } });
+
+      notificationStore.success(`Widget added to ${panel} panel.`);
+    } catch (e) {
+      console.error(e);
+      notificationStore.error('Failed to add widget to panel.');
+    }
+  };
+
   return {
     tableSlug,
     table,
@@ -191,6 +210,7 @@ export const useTableStore = defineStore('table', () => {
     moveAllViewersToScene,
     removeViewer,
     togglePanelsState,
+    addWidgetToPanel,
     remove,
   };
 });

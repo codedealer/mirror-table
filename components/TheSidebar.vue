@@ -24,8 +24,17 @@ const showIndicator = computed(() => {
 });
 
 const openWidgets = () => {
-  dynamicPanelStore.open(DynamicPanelModelTypes.RIGHT, DynamicPanelContentTypes.WIDGETS);
-  dynamicPanelStore.open(DynamicPanelModelTypes.LEFT, DynamicPanelContentTypes.WIDGETS);
+  if (
+    dynamicPanelStore.models[DynamicPanelModelTypes.RIGHT] ||
+    dynamicPanelStore.models[DynamicPanelModelTypes.LEFT]
+  ) {
+    dynamicPanelStore.close(DynamicPanelModelTypes.RIGHT);
+    dynamicPanelStore.close(DynamicPanelModelTypes.LEFT);
+    return;
+  }
+
+  dynamicPanelStore.open(DynamicPanelModelTypes.RIGHT, DynamicPanelContentTypes.WIDGETS, true);
+  dynamicPanelStore.open(DynamicPanelModelTypes.LEFT, DynamicPanelContentTypes.WIDGETS, true);
 };
 
 const openLayers = () => {
