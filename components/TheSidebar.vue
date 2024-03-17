@@ -25,8 +25,8 @@ const showIndicator = computed(() => {
 
 const openWidgets = () => {
   if (
-    dynamicPanelStore.models[DynamicPanelModelTypes.RIGHT] ||
-    dynamicPanelStore.models[DynamicPanelModelTypes.LEFT]
+    dynamicPanelStore.contents[DynamicPanelModelTypes.RIGHT] === DynamicPanelContentTypes.WIDGETS ||
+    dynamicPanelStore.contents[DynamicPanelModelTypes.LEFT] === DynamicPanelContentTypes.WIDGETS
   ) {
     dynamicPanelStore.close(DynamicPanelModelTypes.RIGHT);
     dynamicPanelStore.close(DynamicPanelModelTypes.LEFT);
