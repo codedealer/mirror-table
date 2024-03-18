@@ -18,14 +18,31 @@ export const useDynamicPanelStore = defineStore('dynamic-panel', () => {
     return tableStore.table.panels;
   });
 
-  const contents = ref<Record<DynamicPanelModelType, DynamicPanelContentType | null>>({
+  const _contents = ref<Record<DynamicPanelModelType, DynamicPanelContentType | null>>({
     [DynamicPanelModelTypes.LEFT]: null,
     [DynamicPanelModelTypes.RIGHT]: null,
   });
 
+  const contents = computed(() => {
+    if (!tableStore.table || tableStore.mode === TableModes.OWN) {
+      // owner has manual control over the panels
+      return _contents.value;
+    }
+
+    // otherwise, the panels show widgets
+    return {
+      [DynamicPanelModelTypes.LEFT]: tableStore.table.panels[DynamicPanelModelTypes.LEFT]
+        ? DynamicPanelContentTypes.WIDGETS
+        : null,
+      [DynamicPanelModelTypes.RIGHT]: tableStore.table.panels[DynamicPanelModelTypes.RIGHT]
+        ? DynamicPanelContentTypes.WIDGETS
+        : null,
+    };
+  });
+
   const close = (model: DynamicPanelModelType) => {
     models.value[model] = false;
-    contents.value[model] = null;
+    _contents.value[model] = null;
   };
 
   const open = (
@@ -33,7 +50,7 @@ export const useDynamicPanelStore = defineStore('dynamic-panel', () => {
     content: DynamicPanelContentType,
     keepOpen = false,
   ) => {
-    if (models.value[model] && contents.value[model] === content) {
+    if (models.value[model] && _contents.value[model] === content) {
       if (keepOpen) {
         return;
       }
@@ -43,7 +60,7 @@ export const useDynamicPanelStore = defineStore('dynamic-panel', () => {
     }
 
     models.value[model] = true;
-    contents.value[model] = content;
+    _contents.value[model] = content;
   };
 
   return {
