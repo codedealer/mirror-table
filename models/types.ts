@@ -464,6 +464,7 @@ export interface CanvasTool {
  */
 export interface Widget {
   id: string
+  fileId: string
   owner: string
   enabled: boolean
   template: WidgetTemplate

@@ -74,6 +74,9 @@ header {
     margin-bottom: 1rem;
   }
 }
+.card-thin {
+  --va-card-padding: 0.5rem;
+}
 .tc {
   text-align: center;
 }
@@ -104,6 +107,10 @@ header {
 .centered {
   display: grid;
   place-items: center;
+}
+
+small {
+  font-size: 80%;
 }
 
 /* fix for buttons in popover */

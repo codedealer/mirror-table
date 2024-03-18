@@ -61,6 +61,7 @@ const create = async (file: DriveWidget) => {
   const payload: WidgetMarkdown = {
     id: '', // will be filled on creation
     owner: '', // will be filled on creation
+    fileId: file.id,
     enabled: true,
     template: file.appProperties.template,
     rank: Date.now(),

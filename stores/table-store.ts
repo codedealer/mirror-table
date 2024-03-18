@@ -196,6 +196,24 @@ export const useTableStore = defineStore('table', () => {
     }
   };
 
+  const removeWidgetFromPanel = async (panel: DynamicPanelModelType, widgetId: string) => {
+    if (!table.value) {
+      return;
+    }
+
+    const ids = table.value.widgets[panel].filter(id => id !== widgetId);
+
+    const notificationStore = useNotificationStore();
+    try {
+      await update(table.value.id, { widgets: { [panel]: ids } });
+
+      notificationStore.success(`Widget removed from ${panel} panel.`);
+    } catch (e) {
+      console.error(e);
+      notificationStore.error('Failed to remove widget from panel.');
+    }
+  };
+
   return {
     tableSlug,
     table,
@@ -211,6 +229,7 @@ export const useTableStore = defineStore('table', () => {
     removeViewer,
     togglePanelsState,
     addWidgetToPanel,
+    removeWidgetFromPanel,
     remove,
   };
 });

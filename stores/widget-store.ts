@@ -52,7 +52,7 @@ export const useWidgetStore = defineStore('widget', () => {
 
   const widgetMap = computed(() => {
     if (!widgets.value || !Array.isArray(widgets.value)) {
-      return new Map();
+      return new Map<string, Widget>();
     }
 
     const map = widgets.value.reduce((acc, widget) => {

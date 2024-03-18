@@ -17,7 +17,7 @@ export const WidgetContextActionsFactory = (file: DriveWidget, node?: TreeNode) 
         const tableStore = useTableStore();
         await tableStore.addWidgetToPanel(panel, file.appProperties.firestoreId);
       },
-      disabled: file.appProperties.firestoreId?.length === 0,
+      disabled: !file.appProperties.firestoreId,
       pinned: true,
       alwaysVisible: false,
     });
