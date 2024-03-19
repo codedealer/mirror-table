@@ -44,6 +44,7 @@ const widgetStore = useWidgetStore();
         :is="widgetComponents[widgetStore.widgetMap.get(widgetId)!.template]"
         v-if="widgetStore.widgetMap.has(widgetId)"
         :key="widgetId"
+        :panel="type"
         :widget="widgetStore.widgetMap.get(widgetId)"
       />
       <TableWidgetsUnavailableWidget

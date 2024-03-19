@@ -97,6 +97,9 @@ header {
   display: flex;
   align-items: center;
 }
+.justify-end {
+  justify-content: flex-end;
+}
 .gap-05 {
   gap: .5rem;
 }

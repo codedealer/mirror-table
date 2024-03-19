@@ -197,7 +197,7 @@ export const useTableStore = defineStore('table', () => {
   };
 
   const removeWidgetFromPanel = async (panel: DynamicPanelModelType, widgetId: string) => {
-    if (!table.value) {
+    if (!table.value || !table.value.widgets[panel].includes(widgetId)) {
       return;
     }
 

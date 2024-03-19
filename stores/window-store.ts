@@ -76,8 +76,11 @@ export const useWindowStore = defineStore('window', () => {
     }
   };
 
-  const toggle = (window: ModalWindow) => {
-    window.active = !window.active;
+  const toggle = (window: ModalWindow, forceOpen = false) => {
+    window.active = forceOpen ||
+      (window.id !== lastActiveWindowId.value && window.active) ||
+      !window.active;
+
     if (window.active) {
       setLastActiveWindowId(window);
     }
@@ -95,11 +98,11 @@ export const useWindowStore = defineStore('window', () => {
     window.title = title;
   };
 
-  const toggleOrAdd = (window: ModalWindow) => {
+  const toggleOrAdd = (window: ModalWindow, forceOpen = false) => {
     const existingWindow = windows.value.find(w => w.id === window.id);
 
     if (existingWindow) {
-      toggle(existingWindow);
+      toggle(existingWindow, forceOpen);
     } else {
       add(window);
     }
