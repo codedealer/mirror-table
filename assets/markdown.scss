@@ -42,6 +42,19 @@
       background-color: var(--va-background-secondary);
       border-radius: 0.25rem;
     }
+
+    .spoiler {
+      background-color: var(--va-background-secondary);
+      color: var(--va-background-secondary);
+      padding: 0 0.5rem;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      transition: color 0.2s ease-in-out;
+
+      &:hover {
+        color: var(--va-text-primary);
+      }
+    }
   }
 
   a {
@@ -77,6 +90,7 @@
   }
 
   pre {
+    border-radius: 0.25rem;
     overflow-x: auto;
     padding: 1rem 0.5rem;
     background-color: var(--va-background-secondary);
@@ -189,6 +203,31 @@
 
     tr:nth-child(even) {
       background-color: var(--va-background-secondary);
+    }
+  }
+}
+// dynamic panels rendering
+.widget {
+  .window-container-markdown-renderer {
+    h1 {
+      font-size: 24px;
+      margin-bottom: 1rem;
+    }
+    h2 {
+      font-size: 20px;
+      margin-bottom: .75rem;
+    }
+    h3 {
+      font-size: 18px;
+      margin-bottom: .5rem;
+    }
+    p {
+      code {
+        background-color: var(--va-background-element);
+      }
+    }
+    pre {
+      background-color: var(--va-background-element);
     }
   }
 }

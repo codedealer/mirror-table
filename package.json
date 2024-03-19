@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@pinia/nuxt": "^0.5.1",
+    "@traptitech/markdown-it-spoiler": "^1.1.6",
     "@vuestic/nuxt": "^1.0.17",
     "@vueuse/core": "^10.6.1",
     "@vueuse/firebase": "^10.6.1",

@@ -46,6 +46,7 @@ const widgetStore = useWidgetStore();
         :key="widgetId"
         :panel="type"
         :widget="widgetStore.widgetMap.get(widgetId)"
+        class="widget"
       />
       <TableWidgetsUnavailableWidget
         v-else

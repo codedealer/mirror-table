@@ -7,6 +7,7 @@ import MarkdownItSup from 'markdown-it-sup';
 import MarkdownItAnchor from 'markdown-it-anchor';
 import MarkdownItTaskLists from 'markdown-it-task-lists';
 import MarkDownItAttribution from 'markdown-it-attribution';
+import MarkDownItSpoiler from '@traptitech/markdown-it-spoiler';
 
 defineProps<{
   source: string
@@ -20,6 +21,7 @@ const md = new MarkdownIt({ breaks: true })
   .use(MarkdownItAnchor)
   .use(MarkdownItTaskLists, { enabled: true, label: true })
   .use(MarkDownItAttribution)
+  .use(MarkDownItSpoiler)
 ;
 </script>
 
