@@ -1,5 +1,5 @@
 import type { Ref } from 'vue';
-import type { DataRetrievalStrategy, DriveAsset, DriveImage } from '~/models/types';
+import type { DataRetrievalStrategy, DriveAsset, DriveImage, PreviewProperties } from '~/models/types';
 
 export interface PreviewImageOptions {
   strategy?: DataRetrievalStrategy
@@ -10,7 +10,7 @@ export interface PreviewImageOptions {
 }
 
 export const usePreviewImage = (
-  asset: Ref<DriveAsset | undefined>,
+  assetOrPreviewProps: Ref<DriveAsset | PreviewProperties | null | undefined>,
   options: PreviewImageOptions = {
     strategy: DataRetrievalStrategies.SOURCE,
     previewDimensionsConstraints: {
@@ -26,28 +26,41 @@ export const usePreviewImage = (
   });
 
   watchEffect(() => {
-    if (!asset.value) {
+    if (!assetOrPreviewProps.value) {
       return;
     }
 
-    if (
-      asset.value.appProperties.kind !== AssetPropertiesKinds.TEXT &&
-      asset.value.appProperties.preview
-    ) {
-      imageFileId.value = asset.value.appProperties.preview.id;
+    if ('appProperties' in assetOrPreviewProps.value) {
+      const asset = assetOrPreviewProps.value;
+      if (
+        asset.appProperties.kind !== AssetPropertiesKinds.TEXT &&
+        asset.appProperties.preview
+      ) {
+        imageFileId.value = asset.appProperties.preview.id;
+      }
+    } else if ('id' in assetOrPreviewProps.value) {
+      imageFileId.value = assetOrPreviewProps.value.id;
     }
   });
 
   const maxWidth = options?.previewDimensionsConstraints?.width ?? 300;
   const maxHeight = options?.previewDimensionsConstraints?.height ?? 300;
   const previewDimensions = computed(() => {
-    if (!asset.value || !asset.value.appProperties.preview) {
+    if (!assetOrPreviewProps.value) {
       return {
         width: maxWidth,
         height: maxHeight,
       };
     }
-    const { nativeWidth, nativeHeight } = asset.value.appProperties.preview;
+    if ('appProperties' in assetOrPreviewProps.value && !assetOrPreviewProps.value.appProperties.preview) {
+      return {
+        width: maxWidth,
+        height: maxHeight,
+      };
+    }
+    const { nativeWidth, nativeHeight } = 'appProperties' in assetOrPreviewProps.value
+      ? assetOrPreviewProps.value.appProperties.preview!
+      : assetOrPreviewProps.value;
     const nativeRatio = aspectRatio(nativeWidth, nativeHeight);
 
     if (nativeWidth <= maxWidth && nativeHeight <= maxHeight) {
