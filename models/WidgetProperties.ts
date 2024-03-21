@@ -8,6 +8,11 @@ export const generateTemplates = (): SelectOption[] => {
       value: WidgetTemplates.MARKDOWN,
       description: 'Simple markdown text',
     },
+    {
+      text: 'Candela Obscura: Player',
+      value: WidgetTemplates.CANDELA_PLAYER,
+      description: 'Embed a Candela Obscura player card',
+    },
   ];
 };
 

@@ -45,7 +45,7 @@ watch(value, useDebounceFn(checkDirty, 1000));
 
 const windowForm = ref();
 
-const update = async (file: DriveWidget) => {
+const update = async (_: DriveWidget) => {
   const payload: Partial<WidgetMarkdown> = {
     content: value.value,
   };
@@ -62,8 +62,8 @@ const create = async (file: DriveWidget) => {
     id: '', // will be filled on creation
     owner: '', // will be filled on creation
     fileId: file.id,
-    enabled: true,
-    template: file.appProperties.template,
+    enabled: false,
+    template: WidgetTemplates.MARKDOWN,
     rank: Date.now(),
     content: value.value,
   };

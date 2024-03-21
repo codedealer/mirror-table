@@ -171,6 +171,7 @@ export const isAssetProperties = (obj: unknown): obj is AssetProperties => {
 
 export const WidgetTemplates = {
   MARKDOWN: 'markdown',
+  CANDELA_PLAYER: 'candela-player',
 } as const;
 
 export type WidgetTemplate = typeof WidgetTemplates[keyof typeof WidgetTemplates];
@@ -474,6 +475,24 @@ export interface Widget {
 export interface WidgetMarkdown extends Widget {
   template: 'markdown'
   content: string
+}
+
+export interface WidgetCandelaPlayer extends Widget {
+  template: 'candela-player'
+  player: {
+    name: string
+    role: string
+    speciality: string
+    avatar: PreviewProperties | null
+    marks: {
+      body: number
+      mind: number
+      bleed: number
+    }
+    scars: number
+  }
+  content: string
+  privateContent: string
 }
 
 /**

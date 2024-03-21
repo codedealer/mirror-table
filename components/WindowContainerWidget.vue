@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DriveWidget, ModalWindow, WidgetTemplate } from '~/models/types';
 import { WidgetTemplates } from '~/models/types';
-import { WindowContainerWidgetMarkdown } from '#components';
+import { WindowContainerWidgetCandelaPlayer, WindowContainerWidgetMarkdown } from '#components';
 
 const props = defineProps<{
   window: ModalWindow
@@ -32,6 +32,7 @@ watchEffect(() => {
 
 const availableTemplates: Record<WidgetTemplate, unknown> = {
   [WidgetTemplates.MARKDOWN]: WindowContainerWidgetMarkdown,
+  [WidgetTemplates.CANDELA_PLAYER]: WindowContainerWidgetCandelaPlayer,
 };
 
 const content = computed(() => {
