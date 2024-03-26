@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core';
+import { collection, doc } from '@firebase/firestore';
+import { useFirestore } from '@vueuse/firebase/useFirestore';
 import { ModalWindowStatus, WidgetTemplates } from '~/models/types';
 import type {
   DriveWidget,
@@ -16,8 +18,21 @@ type WidgetModel = Pick<WidgetCandelaPlayer, 'content' | 'privateContent' | 'pla
 
 const windowStore = useWindowStore();
 const widgetStore = useWidgetStore();
+const userStore = useUserStore();
+const { $db } = useNuxtApp();
 
-const widget = ref<WidgetCandelaPlayer | undefined>();
+const widgetRef = computed(() => {
+  if (!userStore.user || !props.file || !props.file.appProperties.firestoreId) {
+    return undefined;
+  }
+
+  return doc(
+    collection($db, 'users', userStore.user.uid, 'widgets'),
+    props.file.appProperties.firestoreId,
+  ).withConverter(firestoreDataConverter<WidgetCandelaPlayer>());
+});
+
+const widget = useFirestore(widgetRef);
 
 const widgetModel = ref<WidgetModel>({
   content: '',
@@ -36,26 +51,22 @@ const widgetModel = ref<WidgetModel>({
   },
 });
 
-watch(() => props.file, async (file) => {
-  if (!file || !file.appProperties.firestoreId) {
+watchEffect(() => {
+  if (!widget.value) {
     return;
   }
 
-  widget.value = await widgetStore.getWidget<WidgetCandelaPlayer>(file.appProperties.firestoreId);
-
-  const init = structuredClone(toRaw(widget.value));
-
   widgetModel.value = {
-    ...widgetModel.value,
-    ...init,
+    content: widget.value.content,
+    privateContent: widget.value.privateContent,
+    player: structuredClone(toRaw(widget.value.player)),
   };
-}, {
-  immediate: true,
 });
 
 const isLoading = computed(() => (
   props.window.status === ModalWindowStatus.LOADING ||
-  props.file?.loading
+  props.file?.loading ||
+  (!!props.file?.appProperties.firestoreId && widget.value === undefined)
 ));
 
 const {
@@ -72,7 +83,7 @@ const isImageDirty = () => {
     (imageFileId.value === widget.value?.player?.avatar?.id));
 };
 
-const checkDirtyRaw = () => {
+const checkDirty = () => {
   if (isLoading.value || imageLoading.value) {
     return;
   }
@@ -83,56 +94,27 @@ const checkDirtyRaw = () => {
     return;
   }
 
-  let dirty = false;
-  for (const key of Object.keys(widgetModel.value)) {
-    const i = key as keyof typeof widgetModel.value;
-
-    if (key === 'player') {
-      for (const playerKey of Object.keys(widgetModel.value.player)) {
-        const k = playerKey as keyof WidgetCandelaPlayer['player'];
-
-        if (playerKey === 'avatar') {
-          if (isImageDirty()) {
-            dirty = true;
-            break;
-          }
-        } else if (playerKey === 'marks') {
-          for (const markKey of Object.keys(widgetModel.value.player.marks)) {
-            const m = markKey as keyof WidgetCandelaPlayer['player']['marks'];
-
-            if (widgetModel.value.player.marks[m] !== widget.value?.player?.marks?.[m]) {
-              dirty = true;
-              break;
-            }
-          }
-        } else if (widgetModel.value.player[k] !== widget.value?.player?.[k]) {
-          dirty = true;
-          break;
-        }
-      }
-    } else if (widgetModel.value[i] !== widget.value?.[i]) {
-      dirty = true;
-      break;
-    }
-  }
-
-  if (dirty) {
+  if (
+    !isObjectEquals(
+      widgetModel.value,
+      widget.value,
+      (value, original, key) => key === 'avatar' ? !isImageDirty() : value === original,
+    )
+  ) {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.DIRTY);
   } else {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
   }
 };
 
-const checkDirty = useDebounceFn(checkDirtyRaw, 1000);
-
-watch(widgetModel, checkDirty, {
+watch(widgetModel, useDebounceFn(checkDirty, 1000), {
   deep: true,
   immediate: true,
 });
 
 const onImageUpdate = (fileId?: string) => {
   imageFileId.value = fileId ?? '';
-  checkDirtyRaw();
+  checkDirty();
 };
 
 const updateAvatar = (payload: WidgetModel) => {
@@ -166,8 +148,6 @@ const create = async (file: DriveWidget) => {
     throw new Error('Failed to create widget');
   }
 
-  // update the local widget ref with the widget id
-  widget.value = created as WidgetCandelaPlayer;
   // update the file with the widget id
   // TODO: probably want to save the image as well
   const appProperties: WidgetProperties = {
@@ -185,8 +165,7 @@ const create = async (file: DriveWidget) => {
 
 const update = async (_: DriveWidget) => {
   // TODO: update the image in the file properties as well
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { id, enabled, fileId, ...payload } = widgetModel.value as WidgetCandelaPlayer;
+  const payload = structuredClone(toRaw(widgetModel.value));
 
   updateAvatar(payload);
 
@@ -197,12 +176,17 @@ const update = async (_: DriveWidget) => {
   }
 };
 
-const submit = () => {
-  if (!props.file || isLoading.value || imageLoading.value) {
+const submit = async () => {
+  if (
+    !props.file ||
+    isLoading.value ||
+    imageLoading.value ||
+    !widgetModel.value.player.name
+  ) {
     return;
   }
 
-  checkDirtyRaw();
+  checkDirty();
   if (props.window.status === ModalWindowStatus.SYNCED) {
     return;
   }
@@ -211,16 +195,9 @@ const submit = () => {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.LOADING);
 
     if (!props.file.appProperties.firestoreId || !widget.value) {
-      create(props.file);
+      await create(props.file);
     } else {
-      update(props.file);
-
-      // update widget ref
-      const newWidget = structuredClone(toRaw(widgetModel.value));
-      widget.value = {
-        ...widget.value,
-        ...newWidget,
-      } as WidgetCandelaPlayer;
+      await update(props.file);
     }
 
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
@@ -346,7 +323,11 @@ const submit = () => {
           <va-button
             preset="outlined"
             type="submit"
-            :disabled="window.status === ModalWindowStatus.SYNCED || isLoading || imageLoading"
+            :disabled="
+              window.status === ModalWindowStatus.SYNCED
+                || isLoading
+                || imageLoading
+                || !widgetModel.player.name"
           >
             Save
           </va-button>
