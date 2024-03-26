@@ -69,7 +69,7 @@ const showPrivateContent = computed(() => {
               {{ widget.player.marks.mind }}
             </div>
             <div class="widget-candela-player-stat">
-              <va-icon name="auto_awesome" />
+              <va-icon name="wifi_tethering" />
               {{ widget.player.marks.bleed }}
             </div>
             <div class="widget-candela-player-stat">
