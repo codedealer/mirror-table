@@ -474,7 +474,9 @@ export interface Widget {
 
 export interface WidgetMarkdown extends Widget {
   template: 'markdown'
+  avatar: PreviewProperties | null
   content: string
+  privateContent: string
 }
 
 export interface WidgetCandelaPlayer extends Widget {
