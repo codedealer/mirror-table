@@ -34,12 +34,18 @@ export const WidgetContextActionsFactory = (file: DriveWidget, node?: TreeNode) 
       id: 'delete',
       label: 'Delete',
       icon: { name: 'delete', color: 'danger' },
-      action: () => {
+      action: async () => {
         if (file.appProperties.firestoreId) {
           // remove widget from all panels
           Object.values(DynamicPanelModelTypes).forEach((panel) => {
             void tableStore.removeWidgetFromPanel(panel, file.appProperties.firestoreId!);
           });
+
+          const widgetStore = useWidgetStore();
+          const result = await widgetStore.removeWidget(file.appProperties.firestoreId);
+          if (!result) {
+            return;
+          }
         }
 
         void driveTreeStore.removeFile(node);

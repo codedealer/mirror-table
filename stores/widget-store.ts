@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, orderBy, query, setDoc, updateDoc, where } from '@firebase/firestore';
+import { collection, deleteDoc, doc, getDoc, orderBy, query, setDoc, updateDoc, where } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 import type { NestedPartial, Widget } from '~/models/types';
 
@@ -127,12 +127,33 @@ export const useWidgetStore = defineStore('widget', () => {
     return true;
   };
 
+  const removeWidget = async (id: string) => {
+    if (!userStore.user) {
+      return false;
+    }
+
+    const docRef = doc(collection($db, 'users', userStore.user.uid, 'widgets'), id);
+
+    try {
+      await deleteDoc(docRef);
+    } catch (e) {
+      console.error(e);
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+
+      return false;
+    }
+
+    return true;
+  };
+
   return {
     widgets,
     widgetMap,
     getWidget,
     createWidget,
     updateWidget,
+    removeWidget,
   };
 });
 
