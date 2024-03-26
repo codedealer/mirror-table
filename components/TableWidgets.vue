@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DynamicPanelModelType, WidgetTemplate } from '~/models/types';
-import TableWidgetsMarkdownWidget from '~/components/TableWidgetsMarkdownWidget.vue';
+import { TableWidgetsCandelaPlayer, TableWidgetsMarkdownWidget } from '#components';
 
 const props = defineProps<{
   type: DynamicPanelModelType
@@ -16,6 +16,7 @@ const toggleState = (value: boolean) => {
 
 const widgetComponents: Record<WidgetTemplate, unknown> = {
   [WidgetTemplates.MARKDOWN]: TableWidgetsMarkdownWidget,
+  [WidgetTemplates.CANDELA_PLAYER]: TableWidgetsCandelaPlayer,
 };
 
 const widgetStore = useWidgetStore();

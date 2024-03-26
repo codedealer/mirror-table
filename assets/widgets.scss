@@ -1,0 +1,30 @@
+.widget-avatar {
+  --avatar-size: 80px;
+  max-width: var(--avatar-size);
+  max-height: var(--avatar-size);
+  border-radius: 50%;
+  overflow: clip;
+
+  .drive-thumbnail {
+    max-width: 100%;
+    height: auto;
+  }
+}
+.widget-candela-player-name {
+  text-transform: uppercase;
+}
+.widget-candela-player-role {
+  opacity: 0.8;
+  text-transform: lowercase;
+  font-style: italic;
+  font-size: 90%;
+}
+.widget-candela-player-role__role {
+  margin-right: 4px;
+}
+.widget-private-content {
+  border-top: 1px solid var(--va-background-element);
+}
+.widget-controls {
+  border-bottom: 1px solid var(--va-background-element);
+}

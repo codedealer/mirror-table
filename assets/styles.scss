@@ -7,6 +7,7 @@
 @import './scene.scss';
 @import './hover-panel.scss';
 @import './markdown.scss';
+@import './widgets.scss';
 
 body {
   --va-button-font-weight: 400;
@@ -28,7 +29,10 @@ body {
 p {
   line-height: 1.3;
 }
-.mb {
+.mb-05 {
+  margin-bottom: .5rem;
+}
+.mb, .mb-1 {
   margin-bottom: 1rem;
 }
 .mb-2 {

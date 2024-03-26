@@ -2,9 +2,9 @@
 import { useDebounceFn } from '@vueuse/core';
 import { ModalWindowStatus, WidgetTemplates } from '~/models/types';
 import type {
-  type DriveWidget,
-  type ModalWindow,
-  WidgetCandelaPlayer, type WidgetProperties,
+  DriveWidget,
+  ModalWindow,
+  WidgetCandelaPlayer, WidgetProperties,
 } from '~/models/types';
 
 const props = defineProps<{
@@ -42,19 +42,15 @@ watch(() => props.file, async (file) => {
   }
 
   widget.value = await widgetStore.getWidget<WidgetCandelaPlayer>(file.appProperties.firestoreId);
-}, {
-  immediate: true,
-});
 
-watchEffect(() => {
-  if (!widget.value) {
-    return;
-  }
+  const init = structuredClone(toRaw(widget.value));
 
   widgetModel.value = {
     ...widgetModel.value,
-    ...widget.value,
+    ...init,
   };
+}, {
+  immediate: true,
 });
 
 const isLoading = computed(() => (
@@ -100,6 +96,15 @@ const checkDirtyRaw = () => {
             dirty = true;
             break;
           }
+        } else if (playerKey === 'marks') {
+          for (const markKey of Object.keys(widgetModel.value.player.marks)) {
+            const m = markKey as keyof WidgetCandelaPlayer['player']['marks'];
+
+            if (widgetModel.value.player.marks[m] !== widget.value?.player?.marks?.[m]) {
+              dirty = true;
+              break;
+            }
+          }
         } else if (widgetModel.value.player[k] !== widget.value?.player?.[k]) {
           dirty = true;
           break;
@@ -126,17 +131,6 @@ watch(widgetModel, checkDirty, {
 });
 
 const onImageUpdate = (fileId?: string) => {
-  /* if (imageFile.value && fileId && fileId.length > 0) {
-    // set the new preview
-    widgetModel.value.player.avatar = PreviewPropertiesFactory({
-      id: imageFile.value.id,
-      nativeWidth: imageFile.value.imageMediaMetadata.width,
-      nativeHeight: imageFile.value.imageMediaMetadata.height,
-    });
-  } else {
-    // remove the current avatar
-    widgetModel.value.player.avatar = null;
-  } */
   imageFileId.value = fileId ?? '';
   checkDirtyRaw();
 };
@@ -161,7 +155,7 @@ const create = async (file: DriveWidget) => {
     enabled: false,
     template: WidgetTemplates.CANDELA_PLAYER,
     rank: Date.now(),
-    ...widgetModel.value,
+    ...structuredClone(toRaw(widgetModel.value)),
   };
 
   updateAvatar(payload);
@@ -172,6 +166,8 @@ const create = async (file: DriveWidget) => {
     throw new Error('Failed to create widget');
   }
 
+  // update the local widget ref with the widget id
+  widget.value = created as WidgetCandelaPlayer;
   // update the file with the widget id
   // TODO: probably want to save the image as well
   const appProperties: WidgetProperties = {
@@ -189,9 +185,8 @@ const create = async (file: DriveWidget) => {
 
 const update = async (_: DriveWidget) => {
   // TODO: update the image in the file properties as well
-  const payload: WidgetModel = {
-    ...widgetModel.value,
-  };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id, enabled, fileId, ...payload } = widgetModel.value as WidgetCandelaPlayer;
 
   updateAvatar(payload);
 
@@ -219,6 +214,13 @@ const submit = () => {
       create(props.file);
     } else {
       update(props.file);
+
+      // update widget ref
+      const newWidget = structuredClone(toRaw(widgetModel.value));
+      widget.value = {
+        ...widget.value,
+        ...newWidget,
+      } as WidgetCandelaPlayer;
     }
 
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);

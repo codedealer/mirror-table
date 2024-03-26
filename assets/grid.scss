@@ -19,3 +19,16 @@
 .main-grid__left { grid-area: main-grid__left; }
 
 .main-grid__right { grid-area: main-grid__right; }
+
+.grid-img-text {
+  --img-text-gap: .5rem;
+  display: grid;
+  grid-template-columns: min-content auto;
+  width: 100%;
+  gap: var(--img-text-gap);
+}
+.widget-candela-player-stats {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+}

@@ -30,6 +30,14 @@ watchEffect(() => {
   }
 });
 
+watchEffect(() => {
+  if (!file.value || !file.value.name) {
+    return;
+  }
+
+  windowStore.setWindowTitle(props.window, stripFileExtension(file.value.name));
+});
+
 const availableTemplates: Record<WidgetTemplate, unknown> = {
   [WidgetTemplates.MARKDOWN]: WindowContainerWidgetMarkdown,
   [WidgetTemplates.CANDELA_PLAYER]: WindowContainerWidgetCandelaPlayer,

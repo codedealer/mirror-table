@@ -44,7 +44,7 @@ const remove = () => {
 </script>
 
 <template>
-  <va-card-block>
+  <va-card-block class="widget-controls">
     <div v-if="showControls" class="ghost-container">
       <va-card-content class="flex justify-end gap-05">
         <va-button

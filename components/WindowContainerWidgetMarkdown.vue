@@ -107,6 +107,11 @@ const submit = async () => {
       await update(props.file);
     }
 
+    // manually update widget ref
+    if (widget.value) {
+      widget.value.content = value.value;
+    }
+
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
   } catch (e) {
     console.error(e);
