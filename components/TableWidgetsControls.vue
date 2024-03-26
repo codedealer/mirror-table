@@ -47,6 +47,12 @@ const remove = () => {
   <va-card-block class="widget-controls">
     <div v-if="showControls" class="ghost-container">
       <va-card-content class="flex justify-end gap-05">
+        <va-badge
+          v-show="!props.widget.enabled"
+          text="Hidden"
+          color="warning"
+        />
+
         <va-button
           icon="visibility"
           preset="plain"
