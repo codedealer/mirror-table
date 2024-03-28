@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useCssVar, useElementHover } from '@vueuse/core';
+import { useElementHover } from '@vueuse/core';
 import type { HoverPanelContentType } from '~/models/types';
 import { HoverPanelContentTypes, HoverPanelModes } from '~/models/types';
 import { SessionControlPanel } from '#components';
@@ -7,7 +7,6 @@ import { SessionControlPanel } from '#components';
 const panel = ref();
 const hoverPanelStore = useHoverPanelStore();
 
-const translateVar = useCssVar('--translate', panel);
 const isHovered = useElementHover(panel, {
   delayEnter: 200,
   delayLeave: 400,
@@ -25,8 +24,8 @@ watchEffect(() => {
   hoverPanelStore.panelState = isHovered.value;
 });
 
-watchEffect(() => {
-  translateVar.value = hoverPanelStore.panelState ? '0' : '1';
+const translateVar = computed(() => {
+  return `--translate: ${hoverPanelStore.panelState ? '0' : '1'}`;
 });
 
 const isActive = computed(() => {
@@ -44,6 +43,7 @@ const isActive = computed(() => {
       v-show="!hoverPanelStore.disabled"
       ref="panel"
       :class="{ active: isActive }"
+      :style="translateVar"
       class="interaction-area"
     >
       <component
