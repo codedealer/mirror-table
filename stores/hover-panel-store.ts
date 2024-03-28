@@ -2,7 +2,7 @@ import { acceptHMRUpdate } from 'pinia';
 import type { HoverPanelMode } from '~/models/types';
 import { HoverPanelContentTypes, HoverPanelModes } from '~/models/types';
 
-export const useHoverPanelStore = defineStore('hoverPanel', () => {
+export const useHoverPanelStore = defineStore('hover-panel', () => {
   const tableStore = useTableStore();
   const panelState = ref(false);
   const _disabled = ref(false);

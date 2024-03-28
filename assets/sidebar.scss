@@ -43,11 +43,11 @@
   justify-content: center;
   flex-direction: column;
   gap: 0.5rem;
+  color: var(--va-primary);
 
   .toolbar-button__content {
     font-size: 11px;
     text-transform: lowercase;
-    color: var(--va-primary);
   }
 }
 

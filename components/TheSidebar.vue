@@ -68,7 +68,8 @@ const canvasToolStore = useCanvasToolStore();
       <va-sidebar-item-content>
         <div class="toolbar-button">
           <va-badge :dot="showIndicator" overlap>
-            <va-icon name="splitscreen" rotation="90" size="large" color="primary" />
+            <DynamicPanelIcon :type="DynamicPanelModelTypes.LEFT" />
+            <DynamicPanelIcon :type="DynamicPanelModelTypes.RIGHT" />
           </va-badge>
 
           <span class="toolbar-button__content">Panels</span>
