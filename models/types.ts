@@ -636,13 +636,31 @@ export const isSceneElementCanvasObject = (
   return obj._type === 'canvas-object';
 };
 
+export interface CanvasObjectInteraction {
+  enabled: boolean
+  action: string
+  payload: unknown
+  tooltip: string | null
+}
+
+export interface SceneElementCanvasObjectInteractive {
+  interaction?: CanvasObjectInteraction
+}
+
+export interface CanvasObjectSceneMoveInteraction extends CanvasObjectInteraction {
+  action: 'scene-move'
+  payload: BaseScene
+}
+
 type SceneElementCanvasObjectAssetProperties = Omit<AssetProperties, 'preview'> &
 {
   id: string
   preview: PreviewProperties
 };
 
-export interface SceneElementCanvasObjectAsset extends SceneElementCanvasObject {
+export interface SceneElementCanvasObjectAsset extends
+  SceneElementCanvasObject,
+  SceneElementCanvasObjectInteractive {
   type: 'asset'
   asset: SceneElementCanvasObjectAssetProperties
   image?: Konva.ImageConfig

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const tableExplorerStore = useTableExplorerStore();
-const sceneStore = useSceneStore();
+const searchScene = useSearchSceneFn();
 </script>
 
 <template>
@@ -46,7 +46,7 @@ const sceneStore = useSceneStore();
             preset="plain"
             color="primary"
             size="medium"
-            @click="sceneStore.searchModalState = true"
+            @click="searchScene"
           >
             <div class="drive-node__icon">
               <va-icon

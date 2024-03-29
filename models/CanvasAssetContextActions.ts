@@ -1,4 +1,10 @@
-import type { ContextAction, SceneElement, SceneElementCanvasObjectAsset, SelectionGroup } from '~/models/types';
+import type {
+  CanvasObjectSceneMoveInteraction,
+  ContextAction,
+  SceneElement,
+  SceneElementCanvasObjectAsset,
+  SelectionGroup,
+} from '~/models/types';
 import { SelectionGroupNames, SelectionGroups, isSceneElementScreen } from '~/models/types';
 
 const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
@@ -27,6 +33,78 @@ const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
     pinned: false,
     alwaysVisible: false,
   });
+
+  return actions;
+};
+
+const InteractionActionsFactory = (element: SceneElementCanvasObjectAsset) => {
+  const sceneStore = useSceneStore();
+  const actions: ContextAction[] = [];
+
+  if (element.interaction?.enabled) {
+    actions.push({
+      id: 'trigger-interaction',
+      label: element.interaction.tooltip ?? 'Trigger Interaction',
+      icon: { name: 'touch_app' },
+      action: async () => {
+        if (element.interaction?.action !== 'scene-move') {
+          const notificationStore = useNotificationStore();
+          notificationStore.error(`Unsupported interaction: ${element.interaction?.action}`);
+          return;
+        }
+
+        const tableStore = useTableStore();
+        if (!tableStore.sessionId) {
+          return;
+        }
+
+        const sceneInteraction = element.interaction as CanvasObjectSceneMoveInteraction;
+        // this can move to a non-existent scene
+        await tableStore.setActiveScene(tableStore.sessionId, sceneInteraction.payload);
+      },
+      disabled: !element.interaction.enabled,
+      pinned: true,
+      alwaysVisible: false,
+    });
+  } else {
+    actions.push({
+      id: 'create-interaction',
+      label: 'Make interactive',
+      icon: { name: 'touch_app' },
+      action: async () => {
+        const sceneSearchStore = useSceneSearchStore();
+        try {
+          const scene = await sceneSearchStore.promptToSearch();
+
+          if (!isScene(scene)) {
+            return;
+          }
+
+          const interaction: CanvasObjectSceneMoveInteraction = {
+            action: 'scene-move',
+            enabled: true,
+            payload: {
+              id: scene.id,
+              path: scene.path.slice(),
+            },
+            tooltip: `Go to ${scene.title}`,
+          };
+
+          await sceneStore.updateElement<SceneElementCanvasObjectAsset>(element.id, {
+            interaction,
+          });
+        } catch (e) {
+          if (isObject(e) && typeof e.message === 'string') {
+            const notificationStore = useNotificationStore();
+            notificationStore.error(e.message);
+          }
+        }
+      },
+      disabled: false,
+      pinned: false,
+      alwaysVisible: false,
+    });
+  }
 
   return actions;
 };
@@ -63,6 +141,8 @@ const ImageKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
     pinned: false,
     alwaysVisible: false,
   });
+
+  actions.push(...InteractionActionsFactory(element));
 
   return actions;
 };

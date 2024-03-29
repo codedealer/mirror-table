@@ -10,9 +10,9 @@ const loading = ref(false);
 
 const { $db } = useNuxtApp();
 const tableStore = useTableStore();
-const sceneStore = useSceneStore();
+const sceneSearchStore = useSceneSearchStore();
 
-const { searchModalState: state } = storeToRefs(sceneStore);
+const { searchModalState: state } = storeToRefs(sceneSearchStore);
 
 const result = ref<Scene[]>([]);
 
@@ -58,18 +58,26 @@ const reset = () => {
   result.value = [];
 };
 
+const cancel = () => {
+  sceneSearchStore.reject();
+  reset();
+};
+
 watch(search, searchFn);
 
 watchEffect(() => {
-  if (tableStore.sessionId && selectedScene.value) {
-    tableStore.setActiveScene(tableStore.sessionId, selectedScene.value);
+  if (selectedScene.value) {
+    sceneSearchStore.resolve(selectedScene.value);
     reset();
     state.value = false;
   }
 });
 
+const searchScene = useSearchSceneFn();
+
 onKeyStroke(true, (e) => {
   if (
+    tableStore.mode !== TableModes.OWN ||
     e.code !== 'KeyS' ||
     !e.shiftKey ||
     (e.target && isEditableElement(e.target))
@@ -79,7 +87,7 @@ onKeyStroke(true, (e) => {
 
   e.preventDefault();
 
-  state.value = tableStore.mode === TableModes.OWN && !state.value;
+  searchScene();
 }, {
   dedupe: true,
 });
@@ -92,7 +100,7 @@ onKeyStroke(true, (e) => {
     without-transitions
     no-padding
     size="small"
-    @cancel="reset"
+    @cancel="cancel"
   >
     <va-card>
       <va-card-content>
