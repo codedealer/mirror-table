@@ -9,7 +9,9 @@ export const useHoverPanelStore = defineStore('hover-panel', () => {
   const mode = ref<HoverPanelMode>(HoverPanelModes.AUTO);
 
   const content = computed(() => {
-    return HoverPanelContentTypes.SESSION_CONTROL;
+    return tableStore.mode === TableModes.PRESENTATION
+      ? HoverPanelContentTypes.PRESENTATION_CONTROL
+      : HoverPanelContentTypes.SESSION_CONTROL;
   });
 
   const disabled = computed(() => {
@@ -17,7 +19,10 @@ export const useHoverPanelStore = defineStore('hover-panel', () => {
       return true;
     }
 
-    if (tableStore.mode !== TableModes.OWN) {
+    if (
+      tableStore.mode !== TableModes.OWN &&
+      tableStore.mode !== TableModes.PRESENTATION
+    ) {
       return true;
     }
 

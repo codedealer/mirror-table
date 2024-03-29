@@ -27,7 +27,7 @@ const togglePanelLocal = (type: DynamicPanelModelType) => {
     <va-card-content class="flex gap-05">
       <div class="flex gap-05">
         <va-button-group preset="primary">
-          <va-popover message="Show left panel to viewers">
+          <va-popover :hover-over-timeout="1000" message="Show left panel to viewers">
             <va-button
               class="dynamic-panel-button"
               @click="toggleTablePanelState(DynamicPanelModelTypes.LEFT)"
@@ -35,7 +35,7 @@ const togglePanelLocal = (type: DynamicPanelModelType) => {
               <DynamicPanelIcon :type="DynamicPanelModelTypes.LEFT" />
             </va-button>
           </va-popover>
-          <va-popover message="Show right panel to viewers">
+          <va-popover :hover-over-timeout="1000" message="Show right panel to viewers">
             <va-button
               class="dynamic-panel-button"
               @click="toggleTablePanelState(DynamicPanelModelTypes.RIGHT)"
@@ -47,7 +47,7 @@ const togglePanelLocal = (type: DynamicPanelModelType) => {
       </div>
       <div class="flex gap-05">
         <va-button-group preset="primary">
-          <va-popover message="Open left widget panel">
+          <va-popover :hover-over-timeout="1000" message="Open left widget panel">
             <va-button
               color="secondary"
               class="dynamic-panel-button"
@@ -56,7 +56,7 @@ const togglePanelLocal = (type: DynamicPanelModelType) => {
               <DynamicPanelIcon :type="DynamicPanelModelTypes.LEFT" />
             </va-button>
           </va-popover>
-          <va-popover message="Open right widget panel">
+          <va-popover :hover-over-timeout="1000" message="Open right widget panel">
             <va-button
               color="secondary"
               class="dynamic-panel-button"

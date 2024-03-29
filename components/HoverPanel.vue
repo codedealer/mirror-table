@@ -2,7 +2,7 @@
 import { useElementHover } from '@vueuse/core';
 import type { HoverPanelContentType } from '~/models/types';
 import { HoverPanelContentTypes, HoverPanelModes } from '~/models/types';
-import { SessionControlPanel } from '#components';
+import { HoverPanelPresentationMode, SessionControlPanel } from '#components';
 
 const panel = ref();
 const hoverPanelStore = useHoverPanelStore();
@@ -14,6 +14,7 @@ const isHovered = useElementHover(panel, {
 
 const availableComponents: Record<HoverPanelContentType, unknown> = {
   [HoverPanelContentTypes.SESSION_CONTROL]: SessionControlPanel,
+  [HoverPanelContentTypes.PRESENTATION_CONTROL]: HoverPanelPresentationMode,
 };
 
 watchEffect(() => {

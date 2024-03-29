@@ -317,6 +317,7 @@ export type DynamicPanelContentType = typeof DynamicPanelContentTypes[keyof type
 
 export const HoverPanelContentTypes = {
   SESSION_CONTROL: 'session-control',
+  PRESENTATION_CONTROL: 'presentation-control',
 } as const;
 
 export type HoverPanelContentType = typeof HoverPanelContentTypes[keyof typeof HoverPanelContentTypes];

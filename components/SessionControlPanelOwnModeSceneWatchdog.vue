@@ -77,6 +77,7 @@ const goToScene = () => {
         preset="primary"
       >
         <va-popover
+          :hover-over-timeout="1000"
           message="Bring everyone to this scene"
         >
           <va-button
@@ -87,6 +88,7 @@ const goToScene = () => {
         </va-popover>
 
         <va-popover
+          :hover-over-timeout="1000"
           message="Go to another scene"
         >
           <va-button

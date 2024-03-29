@@ -6,6 +6,7 @@
   <div class="ghost-container">
     <SessionControlPanelOwnModeSceneWatchdog />
     <SessionControlPanelOwnModePanelControl />
+    <SessionControlPanelOwnModeFullscreenControl />
   </div>
 </template>
 
