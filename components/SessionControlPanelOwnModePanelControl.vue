@@ -12,6 +12,12 @@ const toggleTablePanelState = (type: DynamicPanelModelType) => {
     [type]: !tableStore.table.panels[type],
   });
 };
+
+const dynamicPanelStore = useDynamicPanelStore();
+
+const togglePanelLocal = (type: DynamicPanelModelType) => {
+  dynamicPanelStore.open(type, DynamicPanelContentTypes.WIDGETS);
+};
 </script>
 
 <template>
@@ -19,24 +25,48 @@ const toggleTablePanelState = (type: DynamicPanelModelType) => {
     horizontal
   >
     <va-card-content class="flex gap-05">
-      <va-button-group preset="primary">
-        <va-popover message="Show left panel to viewers">
-          <va-button
-            class="dynamic-panel-button"
-            @click="toggleTablePanelState(DynamicPanelModelTypes.LEFT)"
-          >
-            <DynamicPanelIcon :type="DynamicPanelModelTypes.LEFT" />
-          </va-button>
-        </va-popover>
-        <va-popover message="Show right panel to viewers">
-          <va-button
-            class="dynamic-panel-button"
-            @click="toggleTablePanelState(DynamicPanelModelTypes.RIGHT)"
-          >
-            <DynamicPanelIcon :type="DynamicPanelModelTypes.RIGHT" />
-          </va-button>
-        </va-popover>
-      </va-button-group>
+      <div class="flex gap-05">
+        <va-button-group preset="primary">
+          <va-popover message="Show left panel to viewers">
+            <va-button
+              class="dynamic-panel-button"
+              @click="toggleTablePanelState(DynamicPanelModelTypes.LEFT)"
+            >
+              <DynamicPanelIcon :type="DynamicPanelModelTypes.LEFT" />
+            </va-button>
+          </va-popover>
+          <va-popover message="Show right panel to viewers">
+            <va-button
+              class="dynamic-panel-button"
+              @click="toggleTablePanelState(DynamicPanelModelTypes.RIGHT)"
+            >
+              <DynamicPanelIcon :type="DynamicPanelModelTypes.RIGHT" />
+            </va-button>
+          </va-popover>
+        </va-button-group>
+      </div>
+      <div class="flex gap-05">
+        <va-button-group preset="primary">
+          <va-popover message="Open left widget panel">
+            <va-button
+              color="secondary"
+              class="dynamic-panel-button"
+              @click="togglePanelLocal(DynamicPanelModelTypes.LEFT)"
+            >
+              <DynamicPanelIcon :type="DynamicPanelModelTypes.LEFT" />
+            </va-button>
+          </va-popover>
+          <va-popover message="Open right widget panel">
+            <va-button
+              color="secondary"
+              class="dynamic-panel-button"
+              @click="togglePanelLocal(DynamicPanelModelTypes.RIGHT)"
+            >
+              <DynamicPanelIcon :type="DynamicPanelModelTypes.RIGHT" />
+            </va-button>
+          </va-popover>
+        </va-button-group>
+      </div>
     </va-card-content>
   </va-card-block>
 </template>
