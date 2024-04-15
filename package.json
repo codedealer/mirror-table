@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.39.8",
-    "@babel/eslint-parser": "^7.23.3",
+    "@babel/eslint-parser": "^7.24.1",
     "@nuxtjs/eslint-config-typescript": "^12.1.0",
     "@types/gapi": "^0.0.47",
     "@types/gapi.client.drive-v3": "^0.0.4",
@@ -24,19 +24,19 @@
     "lint-staged": "^13.2.3",
     "material-design-icons-iconfont": "^6.7.0",
     "nuxt": "3.6.5",
-    "sass": "^1.64.1",
-    "sass-loader": "^13.3.2",
-    "typescript": "^5.1.6"
+    "sass": "^1.75.0",
+    "sass-loader": "^14.2.0",
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.5.1",
     "@traptitech/markdown-it-spoiler": "^1.1.6",
-    "@vuestic/nuxt": "^1.0.17",
-    "@vueuse/core": "^10.6.1",
-    "@vueuse/firebase": "^10.6.1",
-    "firebase": "^10.6.0",
-    "firebase-admin": "^11.11.1",
-    "google-auth-library": "^9.2.0",
+    "@vuestic/nuxt": "^1.0.19",
+    "@vueuse/core": "^10.9.0",
+    "@vueuse/firebase": "^10.9.0",
+    "firebase": "^10.11.0",
+    "firebase-admin": "^12.0.0",
+    "google-auth-library": "^9.7.0",
     "he-tree-vue": "3",
     "idb": "^8.0.0",
     "konva": "^9.2.3",
@@ -50,7 +50,7 @@
     "markdown-it-task-lists": "^2.1.1",
     "pinia": "^2.1.7",
     "vue-konva": "^3.0.2",
-    "vuestic-ui": "^1.8.7"
+    "vuestic-ui": "^1.9.8"
   },
   "lint-staged": {
     "*.{js,ts,vue}": "eslint --cache --fix"
