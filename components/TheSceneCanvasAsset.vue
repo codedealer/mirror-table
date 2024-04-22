@@ -7,7 +7,6 @@ import type {
   ElementContainerConfig,
   SceneElementCanvasObjectAsset,
 } from '~/models/types';
-import { isCanvasElementStateAsset } from '~/models/types';
 import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
 import { useCanvasAssetPointerEvents } from '~/composables/useCanvasAssetPointerEvents';
 
@@ -25,22 +24,19 @@ const updateState = (partialState: Partial<CanvasElementStateAsset>) => {
   );
 };
 
-const state = ref<CanvasElementStateAsset | undefined>(undefined);
-
-const { canvasElementsStateRegistry } = storeToRefs(canvasElementsStore);
-
-watch(() => canvasElementsStateRegistry.value[props.element.id], (stateObject) => {
-  if (!stateObject || !isCanvasElementStateAsset(stateObject)) {
-    canvasElementsStore.createAssetState(props.element.id);
-
-    state.value = undefined;
+const state = computed<CanvasElementStateAsset | undefined>(() => {
+  const s = canvasElementsStore.canvasElementsStateRegistry[props.element.id];
+  if (!s) {
     return;
   }
 
-  state.value = stateObject;
-}, {
-  immediate: true,
-  deep: true,
+  if (!isCanvasElementStateAsset(s)) {
+    // recreating the state will make it valid but won't reload drive files
+    canvasElementsStore.createAssetState(props.element.id);
+    return;
+  }
+
+  return s;
 });
 
 const layersStore = useLayersStore();
@@ -58,11 +54,15 @@ watch(() => props.element.selectionGroup, (group) => {
 const { file: imageFile } = useDriveFile<DriveImage>(
   toRef(() => props.element.asset.preview.id),
   {
-    strategy: DataRetrievalStrategies.LAZY,
+    strategy: DataRetrievalStrategies.PASSIVE,
   },
 );
 
-const { media: imageObject } = useDriveMedia(imageFile);
+const { media: imageObject } = useDriveMedia(
+  imageFile,
+  DataRetrievalStrategies.LAZY,
+  DataRetrievalStrategies.PASSIVE,
+);
 
 const { src } = useMediaImageSrc(imageObject);
 

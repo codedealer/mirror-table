@@ -22,7 +22,7 @@ export const useDriveFile = <T extends DriveFile>
   const error = shallowRef<unknown>(null);
 
   watch([isReady, idRef], async ([isReadyValue, idRefValue]) => {
-    if (!isReadyValue) {
+    if (!isReadyValue || options.strategy === DataRetrievalStrategies.PASSIVE) {
       return;
     }
 

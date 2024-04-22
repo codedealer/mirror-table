@@ -208,7 +208,7 @@ export interface DriveFile extends Omit<DriveFileRaw, 'appProperties'> {
 }
 
 export const isDriveFile = (obj: unknown): obj is DriveFile => {
-  return isObject(obj) && 'id' in obj && 'trashed' in obj && 'name' in obj && 'ownedByMe' in obj && 'originalFilename' in obj && 'loading' in obj;
+  return isObject(obj) && 'id' in obj && 'trashed' in obj && 'name' in obj && 'ownedByMe' in obj && 'loading' in obj;
 };
 
 export interface DriveAsset extends DriveFile {
@@ -330,6 +330,8 @@ export const HoverPanelModes = {
 export type HoverPanelMode = typeof HoverPanelModes[keyof typeof HoverPanelModes];
 
 export const DataRetrievalStrategies = {
+  // only listen for changes in in-memory cache passively
+  PASSIVE: 'passive',
   // only search the local cache, undefined if not found
   OPTIMISTIC_CACHE: 'cache-optimistic',
   // only search the local cache, throw if not found

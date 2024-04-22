@@ -75,7 +75,11 @@ export const useCacheStore = defineStore('cache', () => {
     }
 
     if (!db.value || cachedFiles.length === ids.length || options?.skipDisk) {
-      console.log('In memory Cache hit');
+      console.log(
+        '[MEMORY] File Cache:\n',
+        `Requested ${ids.join(', ')}\n`,
+        `Retrieved ${cachedFiles.map(file => file.id).join(', ')} (${cachedFiles.length}/${ids.length})\n`,
+      );
       return cachedFiles;
     }
 
@@ -88,7 +92,11 @@ export const useCacheStore = defineStore('cache', () => {
       _files.value[file.id] = file;
     });
 
-    console.log('Retrieved files from disk', result.length, '/', ids.length);
+    console.log(
+      '[DISK] File cache:\n',
+      `Requested ${ids.join(', ')}\n`,
+      `Retrieved ${result.map(file => file.id).join(', ')} (${result.length} / ${ids.length})\n`,
+    );
 
     return result;
   };

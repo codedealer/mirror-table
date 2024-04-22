@@ -23,7 +23,7 @@ export const useCanvasAssetLabelWatcher = (
   const { file } = useDriveFile<DriveAsset>(
     toRef(() => element.value.asset.id),
     {
-      strategy: DataRetrievalStrategies.LAZY,
+      strategy: DataRetrievalStrategies.PASSIVE,
       predicate: isDriveAsset,
     },
   );

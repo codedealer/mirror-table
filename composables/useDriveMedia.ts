@@ -1,7 +1,9 @@
-import type { DriveFile, RawMediaObject } from '~/models/types';
+import type { DataRetrievalStrategy, DriveFile, RawMediaObject } from '~/models/types';
 
 export const useDriveMedia = (
   file: Ref<DriveFile | undefined>,
+  mediaStrategy: DataRetrievalStrategy = DataRetrievalStrategies.LAZY,
+  fileStrategy: DataRetrievalStrategy = DataRetrievalStrategies.RECENT,
 ) => {
   const media = ref<RawMediaObject | undefined>();
   const error = ref<unknown>();
@@ -30,7 +32,11 @@ export const useDriveMedia = (
       console.log(`Downloading media for ${file.value.id}`);
       error.value = undefined;
 
-      const mediaObj = await driveFileStore.downloadMedia(file.value.id);
+      const mediaObj = await driveFileStore.downloadMedia(
+        file.value.id,
+        mediaStrategy,
+        fileStrategy,
+      );
 
       if (!mediaObj) {
         throw new Error('Could not download file');

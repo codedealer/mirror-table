@@ -68,6 +68,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     ids: string[],
     strategy: DataRetrievalStrategy = DataRetrievalStrategies.RECENT,
   ) => {
+    ids = Array.from(new Set(ids));
+
     let idsToLoad: string[] = [];
     let result: DriveFile[] = [];
 
@@ -77,6 +79,9 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       if (strategy === DataRetrievalStrategies.RECENT) {
         options.TTL = 60 * 1000;
         options.skipDisk = true;
+      } else if (strategy === DataRetrievalStrategies.PASSIVE) {
+        options.skipDisk = true;
+        strategy = DataRetrievalStrategies.CACHE_ONLY;
       }
       const cachedFiles = await cacheStore.getFiles(ids, options);
       const cachedFilesIds = cachedFiles.map(f => f.id);
