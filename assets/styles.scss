@@ -17,6 +17,7 @@ body {
   --hover-panel-z-index: 99;
   --dynamic-panel-z-index: 100;
   --window-z-index: 200;
+  --window-top-tier-z-index: 201;
 
   overflow-x: clip;
 }
@@ -127,10 +128,15 @@ small {
 
 /* fix for modals covering each other */
 .va-modal.top-tier-modal {
-  z-index: 1100;
+  z-index: var(--window-top-tier-z-index);
 }
 .va-modal__footer {
   gap: 1rem;
+}
+
+/* fix for dropdowns being with z-index 1 on 1.9.x */
+.va-dropdown__content-wrapper {
+  z-index: var(--va-dropdown-content-wrapper-z-index) !important;
 }
 
 /* fix for dropdown button being not aligned with other buttons */
