@@ -85,7 +85,7 @@
     display: flex;
     align-items: center;
     gap: var(--drive-node-gap);
-    overflow: clip;
+    overflow: hidden;
   }
   .drive-node__name {
     white-space: nowrap;
