@@ -4,6 +4,29 @@ import { bold, green, red, yellow } from 'ansi-colors';
 import type { CacheSchema, DriveFile, GetFilesOptions, RawMediaObject } from '~/models/types';
 import { isDriveFile } from '~/models/types';
 
+const formatIds = (
+  requested: string[] | number[],
+  retrieved: string[] | number[],
+) => {
+  let result = '';
+  const hitMsg = retrieved.length === requested.length
+    ? `${green('HIT')}`
+    : (retrieved.length > 0 ? `${yellow('PARTIAL HIT')}` : `${red('MISS')}`);
+  result += `[${bold(hitMsg)}] (${retrieved.length}/${requested.length}):\n`;
+
+  if (requested.length === retrieved.length) {
+    return result + retrieved.join(', ');
+  }
+  if (requested.length) {
+    result += `Requested: ${requested.join(', ')}`;
+  }
+  if (retrieved.length) {
+    result += `Retrieved: ${retrieved.join(', ')}`;
+  }
+
+  return result;
+};
+
 export const useCacheStore = defineStore('cache', () => {
   const schemaVersion = computed(() => 1);
   const isPersistenceSupported = computed(
@@ -80,10 +103,7 @@ export const useCacheStore = defineStore('cache', () => {
     }
 
     if (!db.value || cachedFiles.length === ids.length || options?.skipDisk) {
-      const hitMsg = cachedFiles.length === ids.length
-        ? `${green('HIT')}`
-        : (cachedFiles.length > 0 ? `${yellow('PARTIAL HIT')}` : `${red('MISS')}`);
-      memLog(`[${bold(hitMsg)}] (${cachedFiles.length}/${ids.length}):\nRequested:${ids.join(', ')}\nRetrieved:${cachedFiles.map(file => file.id).join(', ')}`);
+      memLog(formatIds(ids, cachedFiles.map(file => file.id)));
       return cachedFiles;
     }
 
@@ -96,10 +116,7 @@ export const useCacheStore = defineStore('cache', () => {
       _files.value[file.id] = file;
     });
 
-    const hitMsg = result.length === ids.length
-      ? `${green('HIT')}`
-      : (result.length > 0 ? `${yellow('PARTIAL HIT')}` : `${red('MISS')}`);
-    diskLog(`[${bold(hitMsg)}] (${result.length}/${ids.length}):\nRequested:\n${ids.join(', ')}\nRetrieved:\n${result.map(file => file.id).join(', ')}`);
+    diskLog(formatIds(ids, result.map(file => file.id)));
 
     return result;
   };
@@ -136,11 +153,11 @@ export const useCacheStore = defineStore('cache', () => {
     const media = await tx.store.get(id);
 
     if (!media || (md5Checksum && media.md5Checksum !== md5Checksum)) {
-      mediaLog(`[${red('MISS')}]: ${id}`);
+      mediaLog(`[${red('MISS')}]\n${id}`);
       return;
     }
 
-    mediaLog(`[${green('HIT')}]: ${id}`);
+    mediaLog(`[${green('HIT')}]\n${id}`);
 
     return media;
   };

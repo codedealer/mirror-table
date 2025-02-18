@@ -1,4 +1,4 @@
-import { bgWhite, blue, green, yellow } from 'ansi-colors';
+import { bgGreen, bgWhite, bgYellow } from 'ansi-colors';
 import { DataRetrievalStrategies, updateFieldMask } from '~/models/types';
 import type {
   AppProperties,
@@ -77,6 +77,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
     if (ids.length > 1) {
       fileLog(`${bgWhite.black.bold('BATCHING')}\n${ids.join(', ')}`);
+    } else {
+      fileLog(`GET\n${ids.join(', ')}`);
     }
 
     let idsToLoad: string[] = [];
@@ -84,6 +86,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
     if (strategy !== DataRetrievalStrategies.SOURCE) {
       // search the cache first
+      fileLog(`${bgYellow.black('CACHE CHECK')}: ${strategy}\n${ids.join(', ')}`);
       const options: GetFilesOptions = {};
       if (strategy === DataRetrievalStrategies.RECENT) {
         options.TTL = 60 * 1000;
@@ -117,7 +120,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       return result;
     }
 
-    fileLog(`${yellow('Pending')}:\n${idsToLoad.join(', ')}`);
+    fileLog(`${bgYellow.black('PENDING')}\n${idsToLoad.join(', ')}`);
 
     const driveStore = useDriveStore();
     const client = await driveStore.getClient();
@@ -139,7 +142,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       return result;
     }
 
-    fileLog(`${blue('Google Drive API')}:\n${unfulfilledIds.join(', ')}`);
+    fileLog(`${bgWhite.blue('GOOGLE DRIVE API')}\n${unfulfilledIds.join(', ')}`);
 
     const batch = client.newBatch();
     const pendingRequests: FileRequest[] = [];
@@ -157,7 +160,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
       result.push(...parseResponse(rawResult));
     } finally {
-      fileLog(`${green('Finished')}:\n${unfulfilledIds.join(', ')}`);
+      fileLog(`${bgGreen.black('FINISHED')}\n${unfulfilledIds.join(', ')}`);
 
       unfulfilledIds.forEach((id) => {
         fileRequestRegistry.delete(id);
@@ -376,7 +379,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     mediaStrategy: DataRetrievalStrategy = DataRetrievalStrategies.LAZY,
     fileStrategy: DataRetrievalStrategy = DataRetrievalStrategies.RECENT,
   ): Promise<RawMediaObject | undefined> => {
-    mediaLog(`Getting file descriptor for ${fileId}`);
+    mediaLog(`File get\n${fileId}`);
 
     const file = await getFile(fileId, fileStrategy);
 
@@ -410,6 +413,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     }
 
     if (mediaStrategy !== DataRetrievalStrategies.SOURCE) {
+      mediaLog(`${bgYellow.black('CACHE CHECK')}: ${mediaStrategy}\n${fileId}`);
       const cachedMedia = await cacheStore.getMedia(fileId, file.md5Checksum);
       if (cachedMedia) {
         return cachedMedia;
@@ -433,7 +437,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
         request = mediaRequestRegistry.get(fileId)!;
       } else {
-        mediaLog(`Downloading media for ${fileId}`);
+        mediaLog(`${bgWhite.blue('GOOGLE DRIVE API')}\n${fileId}`);
         request = loadMedia(fileId);
         mediaRequestRegistry.set(fileId, request);
       }
@@ -443,6 +447,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       file.loading = false;
 
       mediaRequestRegistry.delete(fileId);
+      mediaLog(`${bgGreen.black('FINISHED')}\n${fileId}`);
     }
 
     const media = parseMediaResponse(file, response);
