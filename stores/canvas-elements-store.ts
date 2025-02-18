@@ -140,12 +140,6 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
       return;
     }
 
-    console.log(
-      '------------------\n',
-      `Batching\n${batchedIds.join(', ')}\n`,
-      '------------------',
-    );
-
     try {
       await driveFileStore.getFiles(batchedIds, DataRetrievalStrategies.RECENT);
     } catch (e) {

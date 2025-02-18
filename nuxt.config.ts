@@ -29,6 +29,8 @@ export default {
       parentFolder: 'Mirror Table',
       rootFolder: 'root',
       searchFolder: '.search',
+      debugEnabled: process.env.LOG_ENABLED?.toLowerCase() === 'true',
+      debugNamespace: process.env.LOG_NAMESPACE ?? 'app:*',
     }
   },
   app: {

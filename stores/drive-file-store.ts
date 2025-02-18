@@ -1,3 +1,4 @@
+import { bgWhite, blue, green, yellow } from 'ansi-colors';
 import { DataRetrievalStrategies, updateFieldMask } from '~/models/types';
 import type {
   AppProperties,
@@ -27,6 +28,10 @@ type FileRequest = gapi.client.Request<gapi.client.drive.File>;
 type FileResponse = gapi.client.Response<gapi.client.drive.File>;
 
 export const useDriveFileStore = defineStore('drive-file', () => {
+  const { $logger } = useNuxtApp();
+  const fileLog = $logger['drive:file'];
+  const mediaLog = $logger['drive:media'];
+
   const cacheStore = useCacheStore();
 
   const fileRequestRegistry: Map<string, FileRequest> = new Map();
@@ -70,6 +75,10 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   ) => {
     ids = Array.from(new Set(ids));
 
+    if (ids.length > 1) {
+      fileLog(`${bgWhite.black.bold('BATCHING')}\n${ids.join(', ')}`);
+    }
+
     let idsToLoad: string[] = [];
     let result: DriveFile[] = [];
 
@@ -103,12 +112,12 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     }
 
     if (!idsToLoad.length) {
-      console.log('No files to load');
+      fileLog('No files to load');
 
       return result;
     }
 
-    console.log(`Preparing to load files: ${idsToLoad.join(', ')}`);
+    fileLog(`${yellow('Pending')}:\n${idsToLoad.join(', ')}`);
 
     const driveStore = useDriveStore();
     const client = await driveStore.getClient();
@@ -126,11 +135,11 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
     const unfulfilledIds = idsToLoad.filter(id => !pendingIds.includes(id));
     if (!unfulfilledIds.length) {
-      console.log('After pending requests are cleared there are no files to load');
+      fileLog('After pending requests are cleared there are no files to load');
       return result;
     }
 
-    console.log(`Loading files: ${unfulfilledIds.join(', ')}`);
+    fileLog(`${blue('Google Drive API')}:\n${unfulfilledIds.join(', ')}`);
 
     const batch = client.newBatch();
     const pendingRequests: FileRequest[] = [];
@@ -148,8 +157,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
       result.push(...parseResponse(rawResult));
     } finally {
-      console.log(`Finished loading files: ${unfulfilledIds.join(', ')}`);
-      console.log('Cleaning up file request registry');
+      fileLog(`${green('Finished')}:\n${unfulfilledIds.join(', ')}`);
 
       unfulfilledIds.forEach((id) => {
         fileRequestRegistry.delete(id);
@@ -368,6 +376,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     mediaStrategy: DataRetrievalStrategy = DataRetrievalStrategies.LAZY,
     fileStrategy: DataRetrievalStrategy = DataRetrievalStrategies.RECENT,
   ): Promise<RawMediaObject | undefined> => {
+    mediaLog(`Getting file descriptor for ${fileId}`);
+
     const file = await getFile(fileId, fileStrategy);
 
     if (!file) {
@@ -384,7 +394,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
     if (!file.size || Number(file.size) === 0) {
       // cut short and return a faux media object
-      console.log(`File ${fileId} appears to be empty`);
+      mediaLog(`File ${fileId} appears to be empty. Making a stub.`);
       const media: RawMediaObject = {
         id: file.id,
         name: file.name,
@@ -423,6 +433,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
         request = mediaRequestRegistry.get(fileId)!;
       } else {
+        mediaLog(`Downloading media for ${fileId}`);
         request = loadMedia(fileId);
         mediaRequestRegistry.set(fileId, request);
       }

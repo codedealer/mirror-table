@@ -29,7 +29,6 @@ export const useDriveMedia = (
     const driveFileStore = useDriveFileStore();
 
     try {
-      console.log(`Downloading media for ${file.value.id}`);
       error.value = undefined;
 
       const mediaObj = await driveFileStore.downloadMedia(

@@ -1,5 +1,6 @@
 import type { IDBPDatabase } from 'idb';
 import { openDB } from 'idb';
+import { bold, green, red, yellow } from 'ansi-colors';
 import type { CacheSchema, DriveFile, GetFilesOptions, RawMediaObject } from '~/models/types';
 import { isDriveFile } from '~/models/types';
 
@@ -9,6 +10,10 @@ export const useCacheStore = defineStore('cache', () => {
     () => typeof window !== 'undefined' && 'indexedDB' in window,
   );
   const db = shallowRef<IDBPDatabase<CacheSchema>>();
+  const { $logger } = useNuxtApp();
+  const memLog = $logger['cache:memory'];
+  const diskLog = $logger['cache:disk'];
+  const mediaLog = $logger['cache:media'];
 
   const upgrade = (db: IDBPDatabase<CacheSchema>, oldVersion: number) => {
     switch (oldVersion) {
@@ -75,11 +80,10 @@ export const useCacheStore = defineStore('cache', () => {
     }
 
     if (!db.value || cachedFiles.length === ids.length || options?.skipDisk) {
-      console.log(
-        '[MEMORY] File Cache:\n',
-        `Requested ${ids.join(', ')}\n`,
-        `Retrieved ${cachedFiles.map(file => file.id).join(', ')} (${cachedFiles.length}/${ids.length})\n`,
-      );
+      const hitMsg = cachedFiles.length === ids.length
+        ? `${green('HIT')}`
+        : (cachedFiles.length > 0 ? `${yellow('PARTIAL HIT')}` : `${red('MISS')}`);
+      memLog(`[${bold(hitMsg)}] (${cachedFiles.length}/${ids.length}):\nRequested:${ids.join(', ')}\nRetrieved:${cachedFiles.map(file => file.id).join(', ')}`);
       return cachedFiles;
     }
 
@@ -92,11 +96,10 @@ export const useCacheStore = defineStore('cache', () => {
       _files.value[file.id] = file;
     });
 
-    console.log(
-      '[DISK] File cache:\n',
-      `Requested ${ids.join(', ')}\n`,
-      `Retrieved ${result.map(file => file.id).join(', ')} (${result.length} / ${ids.length})\n`,
-    );
+    const hitMsg = result.length === ids.length
+      ? `${green('HIT')}`
+      : (result.length > 0 ? `${yellow('PARTIAL HIT')}` : `${red('MISS')}`);
+    diskLog(`[${bold(hitMsg)}] (${result.length}/${ids.length}):\nRequested:\n${ids.join(', ')}\nRetrieved:\n${result.map(file => file.id).join(', ')}`);
 
     return result;
   };
@@ -133,11 +136,11 @@ export const useCacheStore = defineStore('cache', () => {
     const media = await tx.store.get(id);
 
     if (!media || (md5Checksum && media.md5Checksum !== md5Checksum)) {
-      console.log('Media Cache miss', id);
+      mediaLog(`[${red('MISS')}]: ${id}`);
       return;
     }
 
-    console.log('Media Cache hit', id);
+    mediaLog(`[${green('HIT')}]: ${id}`);
 
     return media;
   };
