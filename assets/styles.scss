@@ -16,6 +16,7 @@ body {
   --screen-container-z-index: 2;
   --hover-panel-z-index: 99;
   --dynamic-panel-z-index: 100;
+  --va-modal-z-index: 110;
   --window-z-index: 200;
   --window-top-tier-z-index: 201;
 
@@ -127,6 +128,9 @@ small {
 }
 
 /* fix for modals covering each other */
+.va-modal {
+  z-index: var(--va-modal-z-index);
+}
 .va-modal.top-tier-modal {
   z-index: var(--window-top-tier-z-index);
 }
