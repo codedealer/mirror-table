@@ -10,6 +10,7 @@ import type {
   RawMediaObject,
 } from '~/models/types';
 
+import type { updateMetadataPayload } from '~/utils/driveOps';
 import {
   generateFileRequest,
   generateMediaRequest,
@@ -195,7 +196,18 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     } else if (appProperties) {
       const propertiesObject = serializeAppProperties(appProperties);
 
-      await uploadMedia(nameOrFile, parentId, propertiesObject);
+      const metadata: updateMetadataPayload = {
+        name: nameOrFile.name,
+        appProperties: propertiesObject,
+      };
+      // update the content hints for search
+      if (isAssetProperties(appProperties)) {
+        metadata.contentHints = {
+          indexableText: appProperties.title,
+        };
+      }
+
+      await uploadMedia(nameOrFile, parentId, metadata);
     } else {
       throw new Error('App Properties are not filled');
     }
@@ -257,17 +269,21 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     try {
       file.loading = true;
 
+      const metadata: updateMetadataPayload = {
+        name: typeof blobOrFilename === 'string' ? blobOrFilename : blobOrFilename.name,
+        appProperties: propertiesObject,
+      };
+      // update the content hints for search
+      if (isAssetProperties(appProperties)) {
+        metadata.contentHints = {
+          indexableText: appProperties.title,
+        };
+      }
       if (typeof blobOrFilename === 'string') {
-        updatedMetadata = await updateMetadata(
-          fileId,
-          {
-            name: blobOrFilename,
-            appProperties: propertiesObject,
-          },
-        );
+        updatedMetadata = await updateMetadata(fileId, metadata);
       } else {
         // in this case another request is needed to get the new metadata
-        await updateMedia(fileId, blobOrFilename, propertiesObject);
+        await updateMedia(fileId, blobOrFilename, metadata);
 
         updatedMetadata = await loadFile<DriveFileUpdateReturnType>(fileId, updateFieldMask);
       }

@@ -222,9 +222,9 @@ export const searchFiles = async (
   name = name.replace(/['"]+/g, '');
 
   const response = await client.drive.files.list({
-    q: `name contains '${name}' and trashed = false and appProperties has { key = 'type' and value = '${type}' }`,
+    q: `name contains '${name}' or fullText contains '${name}' and trashed = false and appProperties has { key = 'type' and value = '${type}' }`,
     fields: `files(${fieldMask})`,
-    orderBy: 'folder, name',
+    // orderBy: 'folder, name',
     pageSize: 10,
   });
 
@@ -255,9 +255,15 @@ export const deleteFile = async (id: string, restore: boolean) => {
   });
 };
 
+export type updateMetadataPayload = {
+  [key in keyof gapi.client.drive.File]?: string | {
+    [x: string]: string | null
+  };
+};
+
 export const updateMetadata = async (
   id: string,
-  metadata: { [key in keyof gapi.client.drive.File]?: string | { [x: string]: string | null } },
+  metadata: updateMetadataPayload,
 ) => {
   const driveStore = useDriveStore();
   const client = await driveStore.getClient();
@@ -280,14 +286,23 @@ const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=m
 
 const generateFileFormData = (
   file: File,
-  appProperties: Record<string, string | null>,
+  metadataPayload: updateMetadataPayload,
   parentId = '',
 ) => {
+  if (!metadataPayload.appProperties || typeof metadataPayload.appProperties !== 'object') {
+    const { $logger } = useNuxtApp();
+    $logger.drive('App properties %o', metadataPayload.appProperties);
+    throw new Error('App properties are empty or invalid when updating a file');
+  }
   const metadata: Record<string, any> = {
-    name: file.name,
+    name: file.name || 'Untitled',
     mimeType: file.type,
-    appProperties,
+    appProperties: metadataPayload.appProperties,
   };
+
+  if (typeof metadataPayload.contentHints === 'object' && metadataPayload.contentHints.indexableText) {
+    metadata.contentHints = metadataPayload.contentHints;
+  }
 
   if (parentId.length) {
     metadata.parents = [parentId];
@@ -308,13 +323,13 @@ const generateFileFormData = (
 export const updateMedia = async (
   fileId: string,
   file: File,
-  appProperties: Record<string, string | null>,
+  metadata: updateMetadataPayload,
 ) => {
   if (!fileId) {
     throw new Error('File ID is empty when updating a file');
   }
 
-  const form = generateFileFormData(file, appProperties);
+  const form = generateFileFormData(file, metadata);
   const updateUrl = new URL(uploadUrl);
   updateUrl.pathname = `/upload/drive/v3/files/${fileId}`;
 
@@ -337,13 +352,13 @@ export const updateMedia = async (
 export const uploadMedia = async (
   file: File,
   folderId: string,
-  appProperties: Record<string, string | null>,
+  metadata: updateMetadataPayload,
 ) => {
   if (!folderId) {
     throw new Error('Folder ID is empty when uploading a file');
   }
 
-  const form = generateFileFormData(file, appProperties, folderId);
+  const form = generateFileFormData(file, metadata, folderId);
 
   const googleStore = useGoogleAuthStore();
   if (!googleStore.client) {
