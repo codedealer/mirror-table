@@ -173,7 +173,7 @@ const submit = async () => {
     <va-form
       ref="windowForm"
       tag="form"
-      class="vertical-form markdown-form"
+      class="vertical-form window-form markdown-form"
       @submit.prevent="submit"
     >
       <div class="horizontal-control">
@@ -224,7 +224,7 @@ const submit = async () => {
         name="content"
         class="markdown-editor"
         placeholder="Enter markdown here"
-        resize
+        autosize
         :min-rows="5"
         :max-rows="25"
         :disabled="isLoading"
