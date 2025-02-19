@@ -222,9 +222,8 @@ export const searchFiles = async (
   name = name.replace(/['"]+/g, '');
 
   const response = await client.drive.files.list({
-    q: `name contains '${name}' or fullText contains '${name}' and trashed = false and appProperties has { key = 'type' and value = '${type}' }`,
+    q: `(name contains '${name}' or fullText contains '${name}') and trashed = false and appProperties has { key = 'type' and value = '${type}' }`,
     fields: `files(${fieldMask})`,
-    // orderBy: 'folder, name',
     pageSize: 10,
   });
 
