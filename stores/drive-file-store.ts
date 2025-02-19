@@ -129,7 +129,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     // check if there are any pending requests
     const pendingIds = idsToLoad.filter(id => fileRequestRegistry.has(id));
     if (pendingIds.length) {
-      console.warn(`Duplicate requests for files ${pendingIds.join(', ')}`);
+      console.warn(`Blocked duplicate requests for files ${pendingIds.join(', ')}`);
 
       const pendingRequests = pendingIds.map(id => fileRequestRegistry.get(id)) as FileRequest[];
       const pendingResults = await Promise.all(pendingRequests);
@@ -324,7 +324,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     const idsToLoad = files.filter(f => f).map(f => f.id);
     const pendingIds = idsToLoad.filter(id => mediaRequestRegistry.has(id));
     if (pendingIds.length) {
-      console.warn(`Duplicate media requests for files ${pendingIds.join(', ')}`);
+      console.warn(`Blocked duplicate media requests for files ${pendingIds.join(', ')}`);
 
       const pendingRequests = pendingIds.map(id => mediaRequestRegistry.get(id)) as FileRequest[];
       const pendingResults = await Promise.all(pendingRequests);
@@ -449,7 +449,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       file.loading = true;
 
       if (mediaRequestRegistry.has(fileId)) {
-        console.warn(`Duplicate media request for file ${fileId}`);
+        console.warn(`Blocked duplicate media request for file ${fileId}`);
 
         request = mediaRequestRegistry.get(fileId)!;
       } else {
