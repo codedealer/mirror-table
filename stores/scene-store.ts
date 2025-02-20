@@ -1,4 +1,4 @@
-import { collection, deleteDoc, doc, orderBy, query, setDoc, updateDoc, where } from '@firebase/firestore';
+import { collection, deleteDoc, doc, orderBy, query, setDoc, updateDoc, where, writeBatch } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 import type { DriveAsset, NestedPartial, Scene, SceneElement, SceneElementScreen } from '~/models/types';
 import { SceneElementCanvasObjectAssetFactory } from '~/models/SceneElementCanvasObjectAsset';
@@ -143,6 +143,20 @@ export const useSceneStore = defineStore('scene', () => {
     await deleteDoc(doc(sceneElementsRef.value, element.id));
   };
 
+  const removeElements = async (elements: SceneElement[]) => {
+    if (!sceneElementsRef.value) {
+      return;
+    }
+
+    const batch = writeBatch($db);
+
+    elements.forEach((element) => {
+      batch.delete(doc(sceneElementsRef.value!, element.id));
+    });
+
+    await batch.commit();
+  };
+
   return {
     scene,
     sceneElements,
@@ -151,6 +165,7 @@ export const useSceneStore = defineStore('scene', () => {
     addScreen,
     updateElement,
     removeElement,
+    removeElements,
   };
 });
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type Konva from 'konva';
+import { onKeyStroke } from '@vueuse/core';
 import type { KonvaComponent } from '~/models/types';
 import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
 
@@ -28,6 +29,39 @@ const imageTransformerConfig = ref<Konva.TransformerConfig>({
     }
     return newBox;
   },
+});
+
+onKeyStroke(['Backspace', 'Delete'], async (e) => {
+  // only process the event if the target is body or document
+  if (
+    e.target &&
+    'nodeName' in e.target &&
+    typeof e.target.nodeName === 'string' &&
+    !['BODY', 'HTML'].includes(e.target.nodeName)
+  ) {
+    return;
+  }
+  e.preventDefault();
+
+  const selectedElements = canvasElementsStore.selectedElements;
+  if (selectedElements.length === 0) {
+    return;
+  }
+
+  try {
+    const sceneStore = useSceneStore();
+    await sceneStore.removeElements(selectedElements);
+  } catch (e) {
+    console.error(e);
+    const notificationStore = useNotificationStore();
+    notificationStore.error('Failed to delete elements');
+  }
+
+  // we need to reset the context panel in case the element that triggered it is deleted
+  const contextPanelStore = useCanvasContextPanelStore();
+  contextPanelStore.hide();
+}, {
+  dedupe: true,
 });
 </script>
 
