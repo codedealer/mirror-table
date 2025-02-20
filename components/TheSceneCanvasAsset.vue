@@ -51,20 +51,38 @@ watch(() => props.element.selectionGroup, (group) => {
   });
 });
 
-const { file: imageFile } = useDriveFile<DriveImage>(
+const { file: imageFile, error: fileError } = useDriveFile<DriveImage>(
   toRef(() => props.element.asset.preview.id),
   {
     strategy: DataRetrievalStrategies.PASSIVE,
   },
 );
 
-const { media: imageObject } = useDriveMedia(
+const { media: imageObject, error: mediaError } = useDriveMedia(
   imageFile,
   DataRetrievalStrategies.LAZY,
   DataRetrievalStrategies.PASSIVE,
 );
 
-const { src } = useMediaImageSrc(imageObject);
+const { src, error: imageError } = useMediaImageSrc(imageObject);
+
+const assetError = computed(() => {
+  return fileError.value || mediaError.value || imageError.value;
+});
+
+watch(assetError, (error) => {
+  if (error) {
+    updateState({
+      loading: false,
+      loaded: false,
+      error,
+    });
+  } else {
+    updateState({
+      error: null,
+    });
+  }
+});
 
 watch(src, () => {
   if (!src.value) {
@@ -117,7 +135,7 @@ const loadingRect = computed(() => {
     y: 0,
     width: containerConfig.value.width,
     height: containerConfig.value.height,
-    fill: '#444',
+    fill: assetError.value ? '#844' : '#444',
     opacity: 0.5,
   };
 });
@@ -125,7 +143,7 @@ const loadingRect = computed(() => {
 const tableStore = useTableStore();
 
 const showLoading = computed(() => {
-  return tableStore.mode === TableModes.OWN && (!state.value || !state.value.loaded);
+  return assetError.value || (tableStore.mode === TableModes.OWN && (!state.value || !state.value.loaded));
 });
 
 onUnmounted(() => {
@@ -168,6 +186,22 @@ const onTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
     <v-rect v-if="showLoading" :config="loadingRect" />
 
     <v-image v-if="imageConfig" :config="imageConfig" />
+
+    <v-text
+      v-if="assetError"
+      :config="{
+        text: '\ue3ad', // broken image icon
+        fontFamily: 'Material Icons',
+        fontSize: 50,
+        fill: 'white',
+        x: containerConfig.width / 2,
+        y: containerConfig.height / 2,
+        offsetX: 25, // Half of the width
+        offsetY: 25, // Half of the height
+        align: 'center',
+        verticalAlign: 'middle',
+      }"
+    />
 
     <TheSceneCanvasAssetLabel
       v-if="imageConfig"
