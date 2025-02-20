@@ -71,6 +71,8 @@ onKeyStroke(['Backspace', 'Delete'], async (e) => {
     ref="stage"
     :config="canvasStageStore.stageConfig"
     @pointerdown="onKonvaEvent"
+    @pointerup="onKonvaEvent"
+    @pointermove="onKonvaEvent"
     @dragend="onNodeTransformEnd"
     @transformend="onNodeTransformEnd"
   >

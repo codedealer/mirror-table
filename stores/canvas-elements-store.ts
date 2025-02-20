@@ -99,6 +99,21 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     });
   };
 
+  const addToSelectedElements = (elementId: string) => {
+    const element = canvasElements.value.find(element => element.id === elementId);
+    if (
+      !element ||
+      !(element.id in canvasElementsStateRegistry.value) ||
+      !canvasElementsStateRegistry.value[element.id].selectable
+    ) {
+      return;
+    }
+
+    updateElementState(elementId, {
+      selected: true,
+    });
+  };
+
   const applyContainerTransforms = (
     elementId: string,
     transforms: Partial<ElementContainerConfig>,
@@ -179,6 +194,7 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     selectedElements,
     updateElementState,
     selectElement,
+    addToSelectedElements,
     deselectAll,
     createAssetState,
     deleteState,
