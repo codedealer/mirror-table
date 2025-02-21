@@ -1,8 +1,13 @@
 import type { IDBPDatabase } from 'idb';
 import { openDB } from 'idb';
-import { green, red, yellow } from 'ansi-colors';
+
+// eslint-disable-next-line import/default
+import colors from 'ansi-colors';
 import type { CacheSchema, DriveFile, GetFilesOptions, RawMediaObject } from '~/models/types';
 import { isDriveFile } from '~/models/types';
+
+// eslint-disable-next-line import/no-named-as-default-member
+const { green, red, yellow } = colors;
 
 const formatIds = (
   requested: string[] | number[],

@@ -1,4 +1,5 @@
-import { bgGreen, bgWhite, bgYellow } from 'ansi-colors';
+// eslint-disable-next-line import/default
+import colors from 'ansi-colors';
 import { DataRetrievalStrategies, updateFieldMask } from '~/models/types';
 import type {
   AppProperties,
@@ -24,6 +25,9 @@ import {
 import { serializeAppProperties } from '~/utils/appPropertiesSerializer';
 import { convertToDriveFile } from '~/models/DriveFile';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
+
+// eslint-disable-next-line import/no-named-as-default-member
+const { bgGreen, bgWhite, bgYellow } = colors;
 
 type FileRequest = gapi.client.Request<gapi.client.drive.File>;
 type FileResponse = gapi.client.Response<gapi.client.drive.File>;
