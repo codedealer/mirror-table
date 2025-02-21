@@ -47,6 +47,13 @@ export const TableSessionPresenceFactory = (
     groupId: groupId ?? null,
     groupLabel: groupLabel ?? '',
     color: '',
+    screen: {
+      enabled: true,
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+    },
   };
 
   if (groupId) {

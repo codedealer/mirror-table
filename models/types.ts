@@ -537,6 +537,13 @@ export interface SessionGroup {
 export interface TableSessionPresence extends SessionGroup {
   sessionId: string
   displayName: string
+  screen?: {
+    enabled: boolean
+    x: number
+    y: number
+    width: number
+    height: number
+  }
 }
 /**
  * Session object for a table.
