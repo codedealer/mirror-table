@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onKeyDown, onKeyUp, useEventListener, useResizeObserver } from '@vueuse/core';
+import { onKeyDown, onKeyUp, useDebounceFn, useEventListener, useResizeObserver } from '@vueuse/core';
 import TheSceneCanvasStage from '~/components/TheSceneCanvasStage.vue';
 import { isEditableElement } from '~/utils';
 
@@ -8,6 +8,7 @@ const canvasField = ref<HTMLDivElement | null>(null);
 
 const canvasStageStore = useCanvasStageStore();
 const canvasToolStore = useCanvasToolStore();
+const sessionStore = useSessionStore();
 
 const selectTool = useSelectTool();
 
@@ -24,14 +25,23 @@ const fieldDimensions = computed(() => {
   };
 });
 
-useResizeObserver(canvasContainer, (entries) => {
+const dbResizeHandler = useDebounceFn((entries) => {
   const entry = entries[0];
 
   canvasStageStore.applyConfig({
     width: entry.contentRect.width + canvasStageStore.fieldPadding * 2,
     height: entry.contentRect.height + canvasStageStore.fieldPadding * 2,
   });
-});
+
+  sessionStore.updateScreenFrame({
+    x: (canvasContainer.value?.scrollLeft ?? 0) - canvasStageStore.fieldPadding,
+    y: (canvasContainer.value?.scrollTop ?? 0) - canvasStageStore.fieldPadding,
+    width: entry.contentRect.width,
+    height: entry.contentRect.height,
+  });
+}, 1000);
+
+useResizeObserver(canvasContainer, dbResizeHandler);
 
 const repositionStage = () => {
   if (!canvasStageStore.stage || !canvasContainer.value) {
@@ -47,7 +57,16 @@ const repositionStage = () => {
     x: dx,
     y: dy,
   };
+
+  sessionStore.updateScreenFrame({
+    x: dx,
+    y: dy,
+    width: canvasContainer.value.clientWidth,
+    height: canvasContainer.value.clientHeight,
+  });
 };
+
+const dbRepositionStage = useDebounceFn(repositionStage, 1000);
 
 onMounted(() => {
   repositionStage();
@@ -56,7 +75,7 @@ onMounted(() => {
 useEventListener(
   canvasContainer,
   'scroll',
-  repositionStage,
+  dbRepositionStage,
   { passive: true },
 );
 

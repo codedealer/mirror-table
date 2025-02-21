@@ -139,6 +139,41 @@ export const useSessionStore = defineStore('session', () => {
     return viewerSessions.value.filter(session => session.groupId === groupId);
   };
 
+  const updateScreenFrame = async (box: { x: number; y: number; width: number; height: number }) => {
+    // only update private sessions for now
+    if (!tableStore.table || !activeSession.value || !privateSessions.value.some(session => session.sessionId === activeSessionId.value)) {
+      return;
+    }
+    // don't update if the box is empty
+    if (box.width <= 0 || box.height <= 0) {
+      return;
+    }
+
+    const newSessionPresence = structuredClone(toRaw(activeSession.value));
+    newSessionPresence.screen = {
+      enabled: newSessionPresence.screen?.enabled ?? true,
+      x: box.x,
+      y: box.y,
+      width: box.width,
+      height: box.height,
+    };
+
+    console.log(`x: ${box.x}, y: ${box.y}, width: ${box.width}, height: ${box.height}`);
+
+    if (newSessionPresence.screen.enabled) {
+      try {
+        await tableStore.updateSessionPresence(
+          tableStore.table.id,
+          {
+            [activeSession.value.sessionId]: newSessionPresence,
+          },
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
   return {
     ownSession,
     activeSessionId,
@@ -150,6 +185,7 @@ export const useSessionStore = defineStore('session', () => {
     createPrivateSession,
     launchPrivateSession,
     findSessionsByGroupId,
+    updateScreenFrame,
   };
 });
 
