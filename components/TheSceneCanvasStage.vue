@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type Konva from 'konva';
 import { onKeyStroke } from '@vueuse/core';
-import type { KonvaComponent } from '~/models/types';
+import type { KonvaComponent, SceneElementCanvasObjectAsset } from '~/models/types';
+import { TableModes } from '~/models/types';
 import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
+import TheSceneCanvasScreenFrame from '~/components/TheSceneCanvasScreenFrame.vue';
 
 const stage = ref<KonvaComponent<Konva.Node> | null>(null);
 const imageTransformer = ref<KonvaComponent<Konva.Transformer> | null>(null);
@@ -10,6 +12,12 @@ const selectionRect = ref<KonvaComponent<Konva.Rect> | null>(null);
 
 const canvasStageStore = useCanvasStageStore();
 const canvasElementsStore = useCanvasElementsStore();
+const sessionStore = useSessionStore();
+const tableStore = useTableStore();
+
+const showScreenFrames = computed(() => {
+  return tableStore.mode === TableModes.OWN;
+});
 
 onMounted(() => {
   canvasStageStore._stageNode = stage.value;
@@ -80,7 +88,7 @@ onKeyStroke(['Backspace', 'Delete'], async (e) => {
       <TheSceneCanvasAsset
         v-for="asset in canvasElementsStore.canvasElements"
         :key="asset.id"
-        :element="asset"
+        :element="asset as SceneElementCanvasObjectAsset"
       />
 
       <v-transformer
@@ -88,6 +96,14 @@ onKeyStroke(['Backspace', 'Delete'], async (e) => {
         :config="imageTransformerConfig"
       />
       <v-rect ref="selectionRect" :config="{ visible: false }" />
+
+      <v-group v-if="showScreenFrames">
+        <TheSceneCanvasScreenFrame
+          v-for="session in sessionStore.privateSessions"
+          :key="session.sessionId"
+          :session-presence="session"
+        />
+      </v-group>
     </v-layer>
   </v-stage>
 </template>

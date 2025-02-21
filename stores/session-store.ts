@@ -139,6 +139,9 @@ export const useSessionStore = defineStore('session', () => {
     return viewerSessions.value.filter(session => session.groupId === groupId);
   };
 
+  const { $logger } = useNuxtApp();
+  const log = $logger.session;
+
   const updateScreenFrame = async (box: { x: number; y: number; width: number; height: number }) => {
     // only update private sessions for now
     if (!tableStore.table || !activeSession.value || !privateSessions.value.some(session => session.sessionId === activeSessionId.value)) {
@@ -158,7 +161,7 @@ export const useSessionStore = defineStore('session', () => {
       height: box.height,
     };
 
-    console.log(`x: ${box.x}, y: ${box.y}, width: ${box.width}, height: ${box.height}`);
+    log(`[Updating position]:\nx: ${box.x}, y: ${box.y}, width: ${box.width}, height: ${box.height}`);
 
     if (newSessionPresence.screen.enabled) {
       try {

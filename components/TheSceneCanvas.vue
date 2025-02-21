@@ -34,8 +34,8 @@ const dbResizeHandler = useDebounceFn((entries) => {
   });
 
   sessionStore.updateScreenFrame({
-    x: (canvasContainer.value?.scrollLeft ?? 0) - canvasStageStore.fieldPadding,
-    y: (canvasContainer.value?.scrollTop ?? 0) - canvasStageStore.fieldPadding,
+    x: (canvasContainer.value?.scrollLeft ?? 0),
+    y: (canvasContainer.value?.scrollTop ?? 0),
     width: entry.contentRect.width,
     height: entry.contentRect.height,
   });
@@ -59,14 +59,14 @@ const repositionStage = () => {
   };
 
   sessionStore.updateScreenFrame({
-    x: dx,
-    y: dy,
+    x: canvasContainer.value.scrollLeft,
+    y: canvasContainer.value.scrollTop,
     width: canvasContainer.value.clientWidth,
     height: canvasContainer.value.clientHeight,
   });
 };
 
-const dbRepositionStage = useDebounceFn(repositionStage, 1000);
+const dbRepositionStage = useDebounceFn(repositionStage, 500);
 
 onMounted(() => {
   repositionStage();
