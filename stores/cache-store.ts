@@ -1,6 +1,6 @@
 import type { IDBPDatabase } from 'idb';
 import { openDB } from 'idb';
-import { bold, green, red, yellow } from 'ansi-colors';
+import { green, red, yellow } from 'ansi-colors';
 import type { CacheSchema, DriveFile, GetFilesOptions, RawMediaObject } from '~/models/types';
 import { isDriveFile } from '~/models/types';
 
@@ -12,7 +12,7 @@ const formatIds = (
   const hitMsg = retrieved.length === requested.length
     ? `${green('HIT')}`
     : (retrieved.length > 0 ? `${yellow('PARTIAL HIT')}` : `${red('MISS')}`);
-  result += `[${bold(hitMsg)}] (${retrieved.length}/${requested.length}):\n`;
+  result += `[${hitMsg}] (${retrieved.length}/${requested.length}):\n`;
 
   if (requested.length === retrieved.length) {
     return result + retrieved.join(', ');
