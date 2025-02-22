@@ -91,6 +91,15 @@ onKeyStroke(true, (e) => {
 }, {
   dedupe: true,
 });
+
+const hotkeyStore = useHotkeyStore();
+hotkeyStore.registerHotkey({
+  id: 'scene-search',
+  key: 'S',
+  modifiers: { shift: true },
+  description: 'Search for scenes',
+  namespace: 'Global',
+});
 </script>
 
 <template>

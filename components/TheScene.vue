@@ -20,6 +20,8 @@ const sceneStore = useSceneStore();
     <TheSceneCanvasAssetLabelModal />
 
     <TheSceneSearch />
+
+    <TheSceneHotkeyModal />
   </div>
 </template>
 

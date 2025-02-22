@@ -8,8 +8,16 @@ const canvasField = ref<HTMLDivElement | null>(null);
 const canvasStageStore = useCanvasStageStore();
 const canvasToolStore = useCanvasToolStore();
 const sessionStore = useSessionStore();
+const hotkeyStore = useHotkeyStore();
 
 const selectTool = useSelectTool();
+hotkeyStore.registerHotkey({
+  id: 'select-tool',
+  key: 'click',
+  description: 'Move all private session screens to the designated position',
+  namespace: 'Canvas',
+  modifiers: { shift: true },
+});
 
 canvasToolStore.setActiveTool(selectTool);
 

@@ -45,6 +45,14 @@ watchEffect(() => {
   }
 });
 
+const hotkeyStore = useHotkeyStore();
+hotkeyStore.registerHotkey({
+  id: 'drive-search',
+  key: 'F',
+  modifiers: { shift: true },
+  description: 'Search for assets',
+  namespace: 'Global',
+});
 onKeyStroke(true, (e) => {
   if (
     e.code !== 'KeyF' ||

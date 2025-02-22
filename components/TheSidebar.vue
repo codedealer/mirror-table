@@ -42,6 +42,10 @@ const openLayers = () => {
 };
 
 const canvasToolStore = useCanvasToolStore();
+const hotkeyStore = useHotkeyStore();
+const toggleHotkeyModal = () => {
+  hotkeyStore.isHotkeyModalVisible = !hotkeyStore.isHotkeyModalVisible;
+};
 </script>
 
 <template>
@@ -121,6 +125,17 @@ const canvasToolStore = useCanvasToolStore();
     </va-sidebar-item>
 
     <va-spacer />
+
+    <va-sidebar-item @click="toggleHotkeyModal">
+      <va-sidebar-item-content>
+        <va-button
+          preset="plain"
+          color="secondary-dark"
+          icon="keyboard"
+          size="large"
+        />
+      </va-sidebar-item-content>
+    </va-sidebar-item>
   </va-sidebar>
 </template>
 

@@ -329,6 +329,25 @@ export const HoverPanelModes = {
 
 export type HoverPanelMode = typeof HoverPanelModes[keyof typeof HoverPanelModes];
 
+export interface Hotkey {
+  id: string
+  key: string
+  code?: string
+  description: string
+  namespace?: string
+  modifiers: {
+    ctrl?: boolean
+    shift?: boolean
+    alt?: boolean
+    meta?: boolean
+  }
+}
+
+export interface HotkeyGroup {
+  namespace: string
+  hotkeys: Hotkey[]
+}
+
 export const DataRetrievalStrategies = {
   // only listen for changes in in-memory cache passively
   PASSIVE: 'passive',
