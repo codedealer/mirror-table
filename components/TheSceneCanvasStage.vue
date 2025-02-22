@@ -39,7 +39,7 @@ const imageTransformerConfig = ref<Konva.TransformerConfig>({
   },
 });
 
-onKeyStroke(['Backspace', 'Delete'], async (e) => {
+onKeyStroke(true, async (e) => {
   // only process the event if the target is body or document
   if (
     e.target &&
@@ -58,11 +58,18 @@ onKeyStroke(['Backspace', 'Delete'], async (e) => {
 
   try {
     const sceneStore = useSceneStore();
-    await sceneStore.removeElements(selectedElements);
+    if (['Backspace', 'Delete'].includes(e.code)) {
+      await sceneStore.removeElements(selectedElements);
+    } else if (e.code === 'KeyV') {
+      await sceneStore.updateElements(
+        selectedElements.map(e => e.id),
+        { enabled: !selectedElements[0].enabled },
+      );
+    }
   } catch (e) {
     console.error(e);
     const notificationStore = useNotificationStore();
-    notificationStore.error('Failed to delete elements');
+    notificationStore.error('Failed to process canvas operation');
   }
 
   // we need to reset the context panel in case the element that triggered it is deleted
@@ -70,6 +77,22 @@ onKeyStroke(['Backspace', 'Delete'], async (e) => {
   contextPanelStore.hide();
 }, {
   dedupe: true,
+});
+
+const hotkeyStore = useHotkeyStore();
+hotkeyStore.registerHotkey({
+  id: 'delete-element',
+  key: 'Del',
+  description: 'Delete selected elements',
+  modifiers: {},
+  namespace: 'Canvas',
+});
+hotkeyStore.registerHotkey({
+  id: 'toggle-element',
+  key: 'V',
+  description: 'Toggle selected elements',
+  modifiers: {},
+  namespace: 'Canvas',
 });
 </script>
 

@@ -135,12 +135,43 @@ export const useSceneStore = defineStore('scene', () => {
     }
   };
 
+  const updateElements = async <T extends SceneElement>(
+    ids: string[],
+    update: NestedPartial<T>,
+  ) => {
+    if (!sceneElementsRef.value) {
+      return;
+    }
+
+    const data = makeFirestoreUpdateData(update);
+    const batch = writeBatch($db);
+
+    ids.forEach((id) => {
+      const docRef = doc(sceneElementsRef.value!, id).withConverter(firestoreDataConverter<T>());
+      batch.update(docRef, data);
+    });
+
+    try {
+      await batch.commit();
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Failed to update scene elements.');
+      console.error(e);
+    }
+  };
+
   const removeElement = async (element: SceneElement) => {
     if (!sceneElementsRef.value) {
       return;
     }
 
-    await deleteDoc(doc(sceneElementsRef.value, element.id));
+    try {
+      await deleteDoc(doc(sceneElementsRef.value, element.id));
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Failed to remove scene element.');
+      console.error(e);
+    }
   };
 
   const removeElements = async (elements: SceneElement[]) => {
@@ -154,7 +185,13 @@ export const useSceneStore = defineStore('scene', () => {
       batch.delete(doc(sceneElementsRef.value!, element.id));
     });
 
-    await batch.commit();
+    try {
+      await batch.commit();
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Failed to remove scene elements.');
+      console.error(e);
+    }
   };
 
   return {
@@ -164,6 +201,7 @@ export const useSceneStore = defineStore('scene', () => {
     addAsset,
     addScreen,
     updateElement,
+    updateElements,
     removeElement,
     removeElements,
   };
