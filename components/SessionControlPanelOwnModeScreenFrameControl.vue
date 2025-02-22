@@ -46,6 +46,10 @@ hotkeyStore.registerHotkey({
 onKeyStroke(true, (e) => {
   if (
     e.code !== 'KeyF' ||
+    e.shiftKey ||
+    e.ctrlKey ||
+    e.altKey ||
+    e.metaKey ||
     (e.target && isEditableElement(e.target))
   ) {
     return;

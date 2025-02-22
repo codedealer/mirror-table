@@ -24,6 +24,9 @@ onKeyStroke(true, (e) => {
   if (e.target && isEditableElement(e.target)) {
     return;
   }
+  if (e.metaKey || e.ctrlKey) {
+    return;
+  }
 
   e.preventDefault();
 

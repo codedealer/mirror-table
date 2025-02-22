@@ -49,6 +49,11 @@ onKeyStroke(true, async (e) => {
   ) {
     return;
   }
+  // only process if no modifiers are pressed
+  if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) {
+    return;
+  }
+
   e.preventDefault();
 
   const selectedElements = canvasElementsStore.selectedElements;

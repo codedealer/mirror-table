@@ -52,6 +52,9 @@ onKeyStroke(true, (e) => {
   if (e.target && isEditableElement(e.target)) {
     return;
   }
+  if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) {
+    return;
+  }
 
   e.preventDefault();
 
