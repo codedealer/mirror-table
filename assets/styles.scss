@@ -129,10 +129,10 @@ small {
 
 /* fix for modals covering each other */
 .va-modal {
-  z-index: var(--va-modal-z-index);
+  z-index: var(--va-modal-z-index) !important;
 }
 .va-modal.top-tier-modal {
-  z-index: var(--window-top-tier-z-index);
+  z-index: var(--window-top-tier-z-index) !important;
 }
 .va-modal__footer {
   gap: 1rem;
