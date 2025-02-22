@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { onKeyDown, onKeyUp, useDebounceFn, useEventListener, useResizeObserver } from '@vueuse/core';
+import { useDebounceFn, useEventListener, useResizeObserver } from '@vueuse/core';
 import TheSceneCanvasStage from '~/components/TheSceneCanvasStage.vue';
-import { isEditableElement } from '~/utils';
 
 const canvasContainer = ref<HTMLDivElement | null>(null);
 const canvasField = ref<HTMLDivElement | null>(null);
@@ -94,30 +93,6 @@ useEventListener(
   dbRepositionStage,
   { passive: true },
 );
-
-onKeyDown(' ', (e) => {
-  if (e.target && isEditableElement(e.target)) {
-    return;
-  }
-
-  e.preventDefault();
-  if (!canvasStageStore.stage || canvasStageStore._stage.draggable) {
-    return;
-  }
-
-  canvasStageStore.applyConfig({ draggable: true });
-}, {
-  dedupe: false,
-});
-
-onKeyUp(' ', (e) => {
-  if (e.target && isEditableElement(e.target)) {
-    return;
-  }
-
-  e.preventDefault();
-  canvasStageStore.applyConfig({ draggable: false });
-});
 </script>
 
 <template>
