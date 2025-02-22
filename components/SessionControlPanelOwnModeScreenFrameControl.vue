@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { onKeyStroke } from '@vueuse/core';
 import type { TableSessionPresence } from '~/models/types';
 
 const sessionStore = useSessionStore();
 const tableStore = useTableStore();
 const { privateSessions } = storeToRefs(sessionStore);
+const hotkeyStore = useHotkeyStore();
 
 const toggleScreenFrames = async () => {
   if (!tableStore.table) {
@@ -33,6 +35,25 @@ const toggleScreenFrames = async () => {
     notificationStore.error('Failed to update screen frame');
   }
 };
+
+hotkeyStore.registerHotkey({
+  id: 'toggle-screen-frames',
+  key: 'F',
+  modifiers: {},
+  description: 'Toggle screen frames',
+  namespace: 'Canvas',
+});
+onKeyStroke(true, (e) => {
+  if (
+    e.code !== 'KeyF' ||
+    (e.target && isEditableElement(e.target))
+  ) {
+    return;
+  }
+
+  e.preventDefault();
+  toggleScreenFrames();
+});
 </script>
 
 <template>

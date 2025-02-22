@@ -1,9 +1,21 @@
 <script setup lang="ts">
+import { onKeyStroke } from '@vueuse/core';
 import DriveDirectoryTree from '~/components/DriveDirectoryTree.vue';
 
 const userStore = useUserStore();
 const rightPanelStore = useRightPanelStore();
 const { sideBarMinimized } = storeToRefs(rightPanelStore);
+
+onKeyStroke(true, (e) => {
+  if (e.target && isEditableElement(e.target)) {
+    return;
+  }
+
+  e.preventDefault();
+  if (e.code === 'KeyR') {
+    sideBarMinimized.value = !sideBarMinimized.value;
+  }
+});
 </script>
 
 <template>

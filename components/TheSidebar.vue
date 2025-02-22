@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onKeyStroke } from '@vueuse/core';
 import { DynamicPanelContentTypes } from '~/models/types';
 
 const dynamicPanelStore = useDynamicPanelStore();
@@ -46,6 +47,52 @@ const hotkeyStore = useHotkeyStore();
 const toggleHotkeyModal = () => {
   hotkeyStore.isHotkeyModalVisible = !hotkeyStore.isHotkeyModalVisible;
 };
+
+onKeyStroke(true, (e) => {
+  if (e.target && isEditableElement(e.target)) {
+    return;
+  }
+
+  e.preventDefault();
+
+  if (e.code === 'KeyW') {
+    openWidgets();
+  } else if (e.code === 'KeyS') {
+    openExplorer();
+  } else if (e.code === 'KeyL') {
+    openLayers();
+  } else if (e.code === 'KeyD') {
+    openSessions();
+  }
+});
+hotkeyStore.registerHotkey({
+  id: 'open-widgets',
+  key: 'W',
+  description: 'Toggle widget panels',
+  modifiers: {},
+  namespace: 'Widget panels',
+});
+hotkeyStore.registerHotkey({
+  id: 'open-sessions',
+  key: 'D',
+  description: 'Toggle session panels',
+  modifiers: {},
+  namespace: 'Global',
+});
+hotkeyStore.registerHotkey({
+  id: 'open-layers',
+  key: 'L',
+  description: 'Toggle layers panel',
+  modifiers: {},
+  namespace: 'Global',
+});
+hotkeyStore.registerHotkey({
+  id: 'open-explorer',
+  key: 'S',
+  description: 'Toggle scenes panel',
+  modifiers: {},
+  namespace: 'Global',
+});
 </script>
 
 <template>

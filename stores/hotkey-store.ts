@@ -7,7 +7,8 @@ export const useHotkeyStore = defineStore('hotkey', () => {
 
   const registerHotkey = (hotkey: Hotkey) => {
     if (hotkeys.value.some(h => h.id === hotkey.id)) {
-      throw new Error(`Hotkey with id ${hotkey.id} already exists`);
+      console.error(`Hotkey with id ${hotkey.id} already exists`);
+      return;
     }
 
     hotkeys.value.push(hotkey);
