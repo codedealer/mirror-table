@@ -151,17 +151,21 @@ export const useSessionStore = defineStore('session', () => {
     if (box.width <= 0 || box.height <= 0) {
       return;
     }
+    // don't update if no value has changed
+    if (activeSession.value.screen?.x === box.x && activeSession.value.screen?.y === box.y && activeSession.value.screen?.width === box.width && activeSession.value.screen?.height === box.height) {
+      return;
+    }
 
     const newSessionPresence = structuredClone(toRaw(activeSession.value));
     newSessionPresence.screen = {
       enabled: newSessionPresence.screen?.enabled ?? true,
-      x: box.x,
-      y: box.y,
-      width: box.width,
-      height: box.height,
+      x: Math.floor(box.x),
+      y: Math.floor(box.y),
+      width: Math.floor(box.width),
+      height: Math.floor(box.height),
     };
 
-    log(`[Updating position]:\nx: ${box.x}, y: ${box.y}, width: ${box.width}, height: ${box.height}`);
+    log(`[Updating position]:\nx: ${newSessionPresence.screen.x}\ny: ${newSessionPresence.screen.y}\nwidth: ${newSessionPresence.screen.width}\nheight: ${newSessionPresence.screen.height}`);
 
     if (newSessionPresence.screen.enabled) {
       try {

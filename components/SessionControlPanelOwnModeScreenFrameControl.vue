@@ -10,6 +10,10 @@ const toggleScreenFrames = async () => {
     return;
   }
   const newSessions = JSON.parse(JSON.stringify(toValue(privateSessions))) as unknown as TableSessionPresence[];
+  if (!newSessions) {
+    return;
+  }
+
   const sessions: { [sessionId: string]: TableSessionPresence } = {};
   newSessions.forEach((presence) => {
     if (!presence.screen) {

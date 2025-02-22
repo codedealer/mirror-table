@@ -68,8 +68,24 @@ const repositionStage = () => {
 
 const dbRepositionStage = useDebounceFn(repositionStage, 500);
 
+const tableStore = useTableStore();
+
 onMounted(() => {
   repositionStage();
+
+  const { activeSession } = storeToRefs(sessionStore);
+  watch(activeSession, (session) => {
+    if (tableStore.mode !== TableModes.PRESENTATION) {
+      return;
+    }
+    if (session?.screen) {
+      canvasContainer.value?.scrollTo({
+        left: session.screen.x,
+        top: session.screen.y,
+        behavior: 'smooth',
+      });
+    }
+  }, { deep: true });
 });
 
 useEventListener(

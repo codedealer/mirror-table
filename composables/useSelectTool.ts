@@ -1,18 +1,68 @@
 import Konva from 'konva';
-import type { CanvasTool } from '~/models/types';
+import type { CanvasTool, TableSessionPresence } from '~/models/types';
 
 export const useSelectTool = () => {
-  const store = useCanvasStageStore();
+  const stageStore = useCanvasStageStore();
   const elementsStore = useCanvasElementsStore();
+  const sessionStore = useSessionStore();
+  const tableStore = useTableStore();
+  const { privateSessions } = storeToRefs(sessionStore);
+
+  const moveFrame = async (event: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    if (!stageStore.stage || !tableStore.table || !privateSessions.value.length) {
+      return;
+    }
+
+    const { x, y } = event.target.getStage()?.getPointerPosition() ?? { x: 0, y: 0 };
+    const stageWidth = stageStore.stage.width();
+    const stageHeight = stageStore.stage.height();
+
+    const updates: { [sessionId: string]: TableSessionPresence } = {};
+
+    privateSessions.value.forEach((session) => {
+      if (!session.screen) {
+        return;
+      }
+
+      const { width, height } = session.screen;
+      if (width <= 0 || height <= 0) {
+        return;
+      }
+
+      // Calculate new coordinates to center the frame around the click point.
+      let newX = x - width / 2 + stageStore._scroll.x;
+      let newY = y - height / 2 + stageStore._scroll.y;
+
+      // Constrain within the stage boundaries.
+      newX = Math.floor(Math.max(0, Math.min(newX, stageWidth - width)));
+      newY = Math.floor(Math.max(0, Math.min(newY, stageHeight - height)));
+
+      const updatedSession = structuredClone(toRaw(session));
+      updatedSession.screen = { ...updatedSession.screen!, x: newX, y: newY };
+      updates[updatedSession.sessionId] = updatedSession;
+    });
+
+    try {
+      await tableStore.updateSessionPresence(tableStore.table.id, updates);
+    } catch (error) {
+      console.error(error);
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Failed to update screen frame');
+    }
+  };
 
   const onClick = (event: Konva.KonvaEventObject<unknown>) => {
-    if (!store.selectionRect || store.selectionRect.visible()) {
+    if (!stageStore.selectionRect || stageStore.selectionRect.visible()) {
       return;
     }
 
     const e = event as Konva.KonvaEventObject<MouseEvent | TouchEvent>;
 
-    const clickedOnEmpty = e.target === store.stage;
+    if (e.evt.shiftKey) {
+      return moveFrame(e);
+    }
+
+    const clickedOnEmpty = e.target === stageStore.stage;
 
     if (clickedOnEmpty) {
       if (!elementsStore.selectedElements.length) {
@@ -48,7 +98,7 @@ export const useSelectTool = () => {
     const container = getElementContainer(e.target as Konva.Shape);
     const elementState = container && elementsStore.canvasElementsStateRegistry[container.id()];
 
-    if (!store.stage || !store.selectionRect) {
+    if (!stageStore.stage || !stageStore.selectionRect) {
       return;
     }
     // reset the coordinate variables
@@ -63,10 +113,10 @@ export const useSelectTool = () => {
     }
 
     e.evt.preventDefault();
-    x2 = x1 = store.stage.getRelativePointerPosition()?.x;
-    y2 = y1 = store.stage.getRelativePointerPosition()?.y;
+    x2 = x1 = stageStore.stage.getRelativePointerPosition()?.x;
+    y2 = y1 = stageStore.stage.getRelativePointerPosition()?.y;
 
-    store.selectionRect.setAttrs({
+    stageStore.selectionRect.setAttrs({
       visible: true,
       width: 0,
       height: 0,
@@ -78,15 +128,15 @@ export const useSelectTool = () => {
   };
 
   const onSelectionDragMove = (event: Konva.KonvaEventObject<unknown>) => {
-    if (!store.stage || !store.selectionRect || !store.selectionRect.visible()) {
+    if (!stageStore.stage || !stageStore.selectionRect || !stageStore.selectionRect.visible()) {
       return;
     }
 
     const e = event as Konva.KonvaEventObject<MouseEvent | TouchEvent>;
 
     e.evt.preventDefault();
-    x2 = store.stage.getRelativePointerPosition()?.x;
-    y2 = store.stage.getRelativePointerPosition()?.y;
+    x2 = stageStore.stage.getRelativePointerPosition()?.x;
+    y2 = stageStore.stage.getRelativePointerPosition()?.y;
 
     if (
       x2 === undefined ||
@@ -94,11 +144,11 @@ export const useSelectTool = () => {
       x1 === undefined ||
       y1 === undefined
     ) {
-      store.selectionRect.visible(false);
+      stageStore.selectionRect.visible(false);
       return;
     }
 
-    store.selectionRect.setAttrs({
+    stageStore.selectionRect.setAttrs({
       x: Math.min(x1, x2),
       y: Math.min(y1, y2),
       width: Math.abs(x2 - x1),
@@ -108,18 +158,18 @@ export const useSelectTool = () => {
 
   const onSelectionDragEnd = (event: Konva.KonvaEventObject<unknown>) => {
     const e = event as Konva.KonvaEventObject<MouseEvent | TouchEvent>;
-    if (!store.stage || !store.selectionRect) {
+    if (!stageStore.stage || !stageStore.selectionRect) {
       return;
     }
 
     // simulate click event
     if (x1 !== undefined && y1 !== undefined && x1 === x2 && y1 === y2) {
-      store.selectionRect.visible(false);
-      onClick(e);
+      stageStore.selectionRect.visible(false);
+      void onClick(e);
       return;
     }
 
-    if (!store.selectionRect.visible()) {
+    if (!stageStore.selectionRect.visible()) {
       return;
     }
 
@@ -127,14 +177,14 @@ export const useSelectTool = () => {
     // hide the selection box in the next frame
     // in case click event is fired right after drag end
     requestAnimationFrame(() => {
-      store.selectionRect?.visible(false);
+      stageStore.selectionRect?.visible(false);
     });
 
-    const box = store.selectionRect.getClientRect();
-    const selectedShapes = store.selectionRect
+    const box = stageStore.selectionRect.getClientRect();
+    const selectedShapes = stageStore.selectionRect
       .getLayer()
       ?.find((shape: Konva.Node) => {
-        if (shape === store.selectionRect) {
+        if (shape === stageStore.selectionRect) {
           return false;
         }
         if (
