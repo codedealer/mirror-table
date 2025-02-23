@@ -198,7 +198,7 @@ const submit = async () => {
     >
       <va-form
         tag="form"
-        class="vertical-form mb"
+        class="vertical-form window-form"
         @submit.prevent="submit"
       >
         <div class="horizontal-control">
@@ -223,8 +223,8 @@ const submit = async () => {
           label="Content"
           required
           placeholder="Enter markdown here"
-          resize
-          :min-rows="5"
+          autosize
+          :min-rows="2"
           :max-rows="25"
           :disabled="isLoading"
         />
@@ -233,8 +233,8 @@ const submit = async () => {
           v-model="widgetModel.privateContent"
           label="Private Content"
           placeholder="This is only visible to the owner"
-          resize
-          :min-rows="5"
+          autosize
+          :min-rows="2"
           :max-rows="25"
           :disabled="isLoading"
         />
