@@ -644,6 +644,7 @@ export interface SceneElement {
   enabled: boolean
   selectionGroup: SelectionGroup
   defaultRank: number
+  owner: string
 }
 
 export type Stateful<T extends SceneElement, U extends CanvasElementState> = {

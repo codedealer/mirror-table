@@ -1,6 +1,12 @@
 import { collection, deleteDoc, doc, orderBy, query, setDoc, updateDoc, where, writeBatch } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
-import type { DriveAsset, NestedPartial, Scene, SceneElement, SceneElementScreen } from '~/models/types';
+import type {
+  DriveAsset,
+  NestedPartial,
+  Scene,
+  SceneElement,
+  SceneElementScreen,
+} from '~/models/types';
 import { SceneElementCanvasObjectAssetFactory } from '~/models/SceneElementCanvasObjectAsset';
 
 export const useSceneStore = defineStore('scene', () => {
@@ -33,7 +39,7 @@ export const useSceneStore = defineStore('scene', () => {
     return collection($db, 'tables', tableStore.table.id, 'scenes', scene.value.id, 'elements').withConverter(firestoreDataConverter<SceneElement>());
   });
   const sceneElementsQuery = computed(() => {
-    if (!sceneElementsRef.value) {
+    if (!sceneElementsRef.value || !scene.value) {
       return undefined;
     }
 
@@ -48,6 +54,7 @@ export const useSceneStore = defineStore('scene', () => {
 
     q = query(
       q,
+      where('owner', '==', scene.value.owner),
       orderBy('selectionGroup', 'asc'),
       orderBy('defaultRank', 'asc'),
     );
@@ -66,7 +73,7 @@ export const useSceneStore = defineStore('scene', () => {
   };
 
   const addAsset = async (asset: DriveAsset) => {
-    if (!sceneElementsRef.value) {
+    if (!sceneElementsRef.value || !scene.value) {
       return;
     }
 
@@ -77,6 +84,7 @@ export const useSceneStore = defineStore('scene', () => {
       const sceneElement = SceneElementCanvasObjectAssetFactory(
         docRef.id,
         asset,
+        scene.value.owner,
         stageStore.fitToStage,
       );
 
@@ -92,7 +100,7 @@ export const useSceneStore = defineStore('scene', () => {
     fileId: string,
     thumbnail?: string | null,
   ) => {
-    if (!sceneElementsRef.value) {
+    if (!sceneElementsRef.value || !scene.value) {
       return;
     }
 
@@ -105,6 +113,7 @@ export const useSceneStore = defineStore('scene', () => {
       thumbnail: thumbnail ?? null,
       selectionGroup: SelectionGroups.SCREEN,
       defaultRank: Date.now(),
+      owner: scene.value.owner,
     };
 
     try {

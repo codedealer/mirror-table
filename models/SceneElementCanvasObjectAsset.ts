@@ -3,6 +3,7 @@ import type { DriveAsset, ElementContainerConfig, SceneElementCanvasObjectAsset 
 export const SceneElementCanvasObjectAssetFactory = (
   id: string,
   asset: DriveAsset,
+  ownerId: string,
   fittingFunction?: (container: ElementContainerConfig) => ElementContainerConfig,
 ) => {
   if (!asset.appProperties.preview) {
@@ -32,6 +33,7 @@ export const SceneElementCanvasObjectAssetFactory = (
     enabled: false,
     selectionGroup: SelectionGroups.HIDDEN,
     defaultRank: Date.now(),
+    owner: ownerId,
   };
 
   if (fittingFunction) {
