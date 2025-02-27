@@ -1,4 +1,10 @@
-const generateFirestoreSearchIndex = (input: string) => {
+const generateFirestoreSearchIndex = (input: string | string[]): string[] => {
+  if (Array.isArray(input)) {
+    // Process each string in the array and flatten the results
+    const results = input.map(str => generateFirestoreSearchIndex(str));
+    return [...new Set(results.flat())];
+  }
+
   const str = input.toLowerCase().trim();
   const result: string[] = [];
 
