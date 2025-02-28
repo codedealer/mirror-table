@@ -8,7 +8,7 @@ const generateFirestoreSearchIndex = (input: string | string[]): string[] => {
   const str = input.toLowerCase().trim();
   const result: string[] = [];
 
-  for (let i = str.length - 1; i >= 0; i--) {
+  for (let i = str.length - 1; i >= 2; i--) {
     result.push(str.slice(0, i + 1));
   }
 
