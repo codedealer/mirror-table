@@ -1,4 +1,52 @@
-import type { DriveAsset, ElementContainerConfig, SceneElementCanvasObjectAsset } from '~/models/types';
+import type {
+  AssetProperties,
+  DriveAsset,
+  ElementContainerConfig,
+  SceneElementCanvasObjectAsset, SceneElementCanvasObjectAssetProperties,
+} from '~/models/types';
+
+export const SceneElementCanvasObjectAssetPropertiesFactory = (
+  id: string,
+  properties: AssetProperties,
+  searchIndex?: string[],
+  settings?: Record<string, unknown>,
+): SceneElementCanvasObjectAssetProperties => {
+  if (!properties.kind) {
+    throw new Error('Invalid object');
+  }
+  if (!id) {
+    throw new Error('Missing id');
+  }
+
+  const assetProperties: SceneElementCanvasObjectAssetProperties = {
+    id,
+    type: 'asset',
+    kind: properties.kind,
+    title: properties.title,
+    showTitle: properties.showTitle,
+    preview: {
+      id: properties.preview?.id ?? '',
+      nativeWidth: properties.preview?.nativeWidth ?? 0,
+      nativeHeight: properties.preview?.nativeHeight ?? 0,
+      rotation: properties.preview?.rotation ?? 0,
+      scaleX: properties.preview?.scaleX ?? 1,
+      scaleY: properties.preview?.scaleY ?? 1,
+    },
+  };
+
+  if (!assetProperties.title) {
+    assetProperties.showTitle = false;
+  }
+
+  if (searchIndex) {
+    assetProperties.searchIndex = searchIndex;
+  }
+  if (settings) {
+    assetProperties.settings = settings;
+  }
+
+  return assetProperties;
+};
 
 export const SceneElementCanvasObjectAssetFactory = (
   id: string,
@@ -14,11 +62,7 @@ export const SceneElementCanvasObjectAssetFactory = (
     _type: 'canvas-object',
     id,
     type: 'asset',
-    asset: {
-      id: asset.id,
-      ...asset.appProperties,
-      preview: asset.appProperties.preview,
-    },
+    asset: SceneElementCanvasObjectAssetPropertiesFactory(id, asset.appProperties),
     container: {
       id,
       name: 'element-container' as const,

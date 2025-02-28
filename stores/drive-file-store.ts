@@ -25,6 +25,7 @@ import {
 import { serializeAppProperties } from '~/utils/appPropertiesSerializer';
 import { convertToDriveFile } from '~/models/DriveFile';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
+import { SceneElementCanvasObjectAssetPropertiesFactory } from '~/models/SceneElementCanvasObjectAsset';
 
 // eslint-disable-next-line import/no-named-as-default-member
 const { bgGreen, bgWhite, bgYellow } = colors;
@@ -211,7 +212,28 @@ export const useDriveFileStore = defineStore('drive-file', () => {
         };
       }
 
-      await uploadMedia(nameOrFile, parentId, metadata);
+      const result = await uploadMedia(nameOrFile, parentId, metadata);
+      if (!result.id) {
+        throw new Error('Failed to upload file to Drive');
+      }
+      // handle the case of complex assets: their properties are stored in firestore
+      if (
+        isAssetProperties(appProperties) &&
+        appProperties.kind === AssetPropertiesKinds.COMPLEX
+      ) {
+        const canvasElementsStore = useCanvasElementsStore();
+        const complexAssetProperties = SceneElementCanvasObjectAssetPropertiesFactory(
+          result.id,
+          appProperties,
+          generateFirestoreSearchIndex(
+            [
+              appProperties.title,
+              stripFileExtension(nameOrFile.name),
+            ],
+          ),
+        );
+        await canvasElementsStore.addComplexAssetProperties(complexAssetProperties);
+      }
     } else {
       throw new Error('App Properties are not filled');
     }
@@ -223,6 +245,24 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     }
 
     await deleteFile(id, restore);
+
+    // handle the case of complex assets: their properties are stored in firestore
+    const properties = files.value[id].appProperties;
+    if (
+      isAssetProperties(properties) &&
+      properties.kind === AssetPropertiesKinds.COMPLEX
+    ) {
+      const canvasElementsStore = useCanvasElementsStore();
+      if (!restore) {
+        await canvasElementsStore.removeComplexAssetProperties(id);
+      } else {
+        const complexAssetProperties = SceneElementCanvasObjectAssetPropertiesFactory(
+          id,
+          properties,
+        );
+        await canvasElementsStore.addComplexAssetProperties(complexAssetProperties);
+      }
+    }
 
     files.value[id].trashed = !restore;
     void cacheFile(files.value[id]);
@@ -302,6 +342,27 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       console.error(e);
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
+    }
+
+    // Handle complex assets: update their properties in Firestore
+    if (isAssetProperties(appProperties) && appProperties.kind === AssetPropertiesKinds.COMPLEX) {
+      const canvasElementsStore = useCanvasElementsStore();
+      const filename = typeof blobOrFilename === 'string' ? blobOrFilename : blobOrFilename.name;
+      const complexAssetProperties = SceneElementCanvasObjectAssetPropertiesFactory(
+        fileId,
+        appProperties,
+        generateFirestoreSearchIndex([
+          appProperties.title,
+          typeof blobOrFilename === 'string' ? filename : stripFileExtension(filename),
+        ]),
+      );
+      try {
+        await canvasElementsStore.addComplexAssetProperties(complexAssetProperties);
+      } catch (e) {
+        console.error(e);
+        const notificationStore = useNotificationStore();
+        notificationStore.error(extractErrorMessage(e));
+      }
     }
 
     void cacheFile(file);

@@ -681,10 +681,12 @@ export interface CanvasObjectSceneMoveInteraction extends CanvasObjectInteractio
   payload: BaseScene
 }
 
-type SceneElementCanvasObjectAssetProperties = Omit<AssetProperties, 'preview'> &
+export type SceneElementCanvasObjectAssetProperties = Omit<AssetProperties, 'preview'> &
 {
   id: string
   preview: PreviewProperties
+  settings?: Record<string, unknown>
+  searchIndex?: string[]
 };
 
 export interface SceneElementCanvasObjectAsset extends
