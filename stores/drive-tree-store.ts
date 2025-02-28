@@ -204,6 +204,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     } catch (e) {
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
+      console.error(e);
     } finally {
       setNodeLoading(parent, false);
     }
@@ -226,6 +227,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     } catch (e) {
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
+      console.error(e);
     } finally {
       setNodeLoading(node, false);
     }

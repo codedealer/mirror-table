@@ -12,7 +12,7 @@ export const generateSelectOptions = (): SelectOption[] => {
     {
       text: 'Image template',
       value: 'image',
-      description: 'Independent image with optional caption. Each new image in a scene behaves like a separate entity and can have its own caption with the original caption only serving as a template. Think markers on a map: the image for a marker is the same but they are different entities.',
+      description: 'Independent image with optional caption. Each new image in a scene behaves like a separate entity and can have its own caption with the original caption only serving as a default value. Think markers on a map: the image for a marker is the same but all the markers are separate entities.',
     },
     {
       text: 'Asset with preview',

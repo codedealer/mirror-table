@@ -348,6 +348,13 @@ export const updateMedia = async (
   });
 };
 
+interface UploadMediaReturnType {
+  id: string
+  name: string
+  mimeType: string
+  kind: string
+}
+
 export const uploadMedia = async (
   file: File,
   folderId: string,
@@ -366,11 +373,13 @@ export const uploadMedia = async (
 
   const authInfo = await googleStore.client.requestToken();
 
-  void await $fetch(uploadUrl, {
+  const response = await $fetch(uploadUrl, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${authInfo.accessToken}`,
     },
     body: form,
   });
+
+  return response as UploadMediaReturnType;
 };

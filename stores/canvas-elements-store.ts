@@ -1,14 +1,31 @@
 import type { ComputedRef } from 'vue';
-import { TableModes, isSceneElementCanvasObject, isSceneElementCanvasObjectAsset } from '~/models/types';
+import { collection, deleteDoc, doc, setDoc } from '@firebase/firestore';
+import {
+  TableModes,
+  isSceneElementCanvasObject,
+  isSceneElementCanvasObjectAsset,
+} from '~/models/types';
 import type {
   CanvasElementState, CanvasElementStateAsset,
   ElementContainerConfig,
   SceneElementCanvasObject,
+  SceneElementCanvasObjectAssetProperties,
+
   SceneElementScreen,
 } from '~/models/types';
 
 export const useCanvasElementsStore = defineStore('canvas-elements', () => {
   const sceneStore = useSceneStore();
+  const userStore = useUserStore();
+  const { $db } = useNuxtApp();
+
+  const assetPropertiesRef = computed(() => {
+    if (!userStore.user) {
+      return undefined;
+    }
+
+    return collection($db, 'users', userStore.user.uid, 'asset_properties').withConverter(firestoreDataConverter<SceneElementCanvasObjectAssetProperties>());
+  });
 
   const screenElements: ComputedRef<SceneElementScreen[]> = computed(() => {
     if (!sceneStore.sceneElements) {
@@ -41,6 +58,22 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
 
   const { activeGroups } = storeToRefs(layersStore);
   const { mode } = storeToRefs(tableStore);
+
+  const addComplexAssetProperties = async (properties: SceneElementCanvasObjectAssetProperties) => {
+    if (!assetPropertiesRef.value) {
+      return;
+    }
+
+    await setDoc(doc(assetPropertiesRef.value, properties.id), properties);
+  };
+
+  const removeComplexAssetProperties = async (id: string) => {
+    if (!assetPropertiesRef.value || !id) {
+      return;
+    }
+
+    await deleteDoc(doc(assetPropertiesRef.value, id));
+  };
 
   const createAssetState = (elementId: string) => {
     const element = canvasElements.value.find(element => element.id === elementId);
@@ -192,6 +225,8 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     canvasElements,
     canvasElementsStateRegistry,
     selectedElements,
+    addComplexAssetProperties,
+    removeComplexAssetProperties,
     updateElementState,
     selectElement,
     addToSelectedElements,
