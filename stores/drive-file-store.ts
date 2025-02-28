@@ -207,7 +207,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       // update the content hints for search
       if (isAssetProperties(appProperties)) {
         metadata.contentHints = {
-          indexableText: appProperties.title,
+          indexableText: generateFirestoreSearchIndex(appProperties.title).join(' '),
         };
       }
 
@@ -280,7 +280,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       // update the content hints for search
       if (isAssetProperties(appProperties)) {
         metadata.contentHints = {
-          indexableText: appProperties.title,
+          indexableText: generateFirestoreSearchIndex(appProperties.title).join(' '),
         };
       }
       if (typeof blobOrFilename === 'string') {
