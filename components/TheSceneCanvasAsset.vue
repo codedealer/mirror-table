@@ -9,10 +9,13 @@ import type {
 } from '~/models/types';
 import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
 import { useCanvasAssetPointerEvents } from '~/composables/useCanvasAssetPointerEvents';
+import { useCanvasAssetProperties } from '~/composables/useCanvasAssetProperties';
 
 const props = defineProps<{
   element: SceneElementCanvasObjectAsset
 }>();
+
+const { properties } = useCanvasAssetProperties(toRef(() => props.element));
 
 // create a stateful object
 const canvasElementsStore = useCanvasElementsStore();
@@ -52,7 +55,7 @@ watch(() => props.element.selectionGroup, (group) => {
 });
 
 const { file: imageFile, error: fileError } = useDriveFile<DriveImage>(
-  toRef(() => props.element.asset.preview.id),
+  toRef(() => properties.value.preview.id),
   {
     strategy: DataRetrievalStrategies.PASSIVE,
   },
@@ -119,12 +122,12 @@ const imageConfig: ComputedRef<Konva.ImageConfig | null> = computed(() => {
 
   return {
     image: state.value.imageElement,
-    width: props.element.asset.preview.nativeWidth,
-    height: props.element.asset.preview.nativeHeight,
+    width: properties.value.preview.nativeWidth,
+    height: properties.value.preview.nativeHeight,
     x: containerConfig.value.width / 2,
     y: containerConfig.value.height / 2,
-    offsetX: props.element.asset.preview.nativeWidth / 2,
-    offsetY: props.element.asset.preview.nativeHeight / 2,
+    offsetX: properties.value.preview.nativeWidth / 2,
+    offsetY: properties.value.preview.nativeHeight / 2,
     opacity: props.element.enabled ? 1 : 0.5,
   };
 });
@@ -155,8 +158,6 @@ onUnmounted(() => {
 
   canvasElementsStore.deleteState(props.element.id);
 });
-
-useCanvasAssetLabelWatcher(toRef(() => props.element));
 
 const { onNodeTransformEnd } = useCanvasTransformEvents();
 

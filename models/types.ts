@@ -686,6 +686,7 @@ export type SceneElementCanvasObjectAssetProperties = Omit<AssetProperties, 'pre
   id: string
   preview: PreviewProperties
   settings?: Record<string, unknown>
+  // currently not used, search is done via Drive API
   searchIndex?: string[]
 };
 
