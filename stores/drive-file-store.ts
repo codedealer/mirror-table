@@ -225,12 +225,6 @@ export const useDriveFileStore = defineStore('drive-file', () => {
         const complexAssetProperties = SceneElementCanvasObjectAssetPropertiesFactory(
           result.id,
           appProperties,
-          generateFirestoreSearchIndex(
-            [
-              appProperties.title,
-              stripFileExtension(nameOrFile.name),
-            ],
-          ),
         );
         await canvasElementsStore.addComplexAssetProperties(complexAssetProperties);
       }
@@ -347,14 +341,9 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     // Handle complex assets: update their properties in Firestore
     if (isAssetProperties(appProperties) && appProperties.kind === AssetPropertiesKinds.COMPLEX) {
       const canvasElementsStore = useCanvasElementsStore();
-      const filename = typeof blobOrFilename === 'string' ? blobOrFilename : blobOrFilename.name;
       const complexAssetProperties = SceneElementCanvasObjectAssetPropertiesFactory(
         fileId,
         appProperties,
-        generateFirestoreSearchIndex([
-          appProperties.title,
-          typeof blobOrFilename === 'string' ? filename : stripFileExtension(filename),
-        ]),
       );
       try {
         await canvasElementsStore.addComplexAssetProperties(complexAssetProperties);
