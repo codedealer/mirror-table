@@ -1,5 +1,6 @@
 import type { ComputedRef } from 'vue';
-import { collection, deleteDoc, doc, setDoc } from '@firebase/firestore';
+import { collection, deleteDoc, doc, query, setDoc, where } from '@firebase/firestore';
+import { useFirestore } from '@vueuse/firebase/useFirestore';
 import {
   TableModes,
   isSceneElementCanvasObject,
@@ -10,7 +11,6 @@ import type {
   ElementContainerConfig,
   SceneElementCanvasObject,
   SceneElementCanvasObjectAssetProperties,
-
   SceneElementScreen,
 } from '~/models/types';
 
@@ -51,6 +51,54 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
         canvasElementsStateRegistry.value[element.id].selected &&
         canvasElementsStateRegistry.value[element.id].selectable;
     });
+  });
+
+  const complexAssetIds = computed(() => {
+    return canvasElements.value
+      .filter(isSceneElementCanvasObjectAsset)
+      .filter(asset => asset.asset.kind === AssetPropertiesKinds.COMPLEX && asset.asset.id)
+      .map(asset => asset.asset.id);
+  });
+
+  const assetPropertiesQuery = computed(() => {
+    if (!assetPropertiesRef.value || complexAssetIds.value.length === 0) {
+      return undefined;
+    }
+
+    /*
+     Limited to 30 IDs (Firestore limitation)
+     this should be acceptable for now since there aren't that many complex assets in a scene and making individual listeners incur additional rule evaluation costs and js overhead. In case the properties aren't fetched for the asset, it falls back to the saved on creation copy of the properties.
+    */
+    if (complexAssetIds.value.length > 30) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Too many complex assets in the scene. Performance may degrade.');
+      console.warn('Too many complex assets in the scene. Performance may degrade.');
+    }
+    return query(
+      assetPropertiesRef.value,
+      where('id', 'in', complexAssetIds.value.slice(0, 30)),
+    );
+  });
+
+  const assetPropertiesArray = useFirestore(assetPropertiesQuery, []);
+
+  const assetPropertiesRegistry = computed<Record<string, SceneElementCanvasObjectAssetProperties>>(() => {
+    return assetPropertiesArray.value.reduce((acc, property) => {
+      if (property && property.id) {
+        acc[property.id] = property;
+      }
+      return acc;
+    }, {} as Record<string, SceneElementCanvasObjectAssetProperties>);
+  });
+
+  const complexAssetsReady = computed(() => {
+    // Only check the first 30 IDs that would be in the query
+    const queryableIds = complexAssetIds.value.slice(0, 30);
+
+    return queryableIds.length === 0 ||
+           queryableIds.every(id =>
+             assetPropertiesRegistry.value[id]?.preview?.id !== undefined,
+           );
   });
 
   const layersStore = useLayersStore();
@@ -162,28 +210,26 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
   };
 
   const driveFileStore = useDriveFileStore();
-  // create states for all new elements
-  watch(canvasElements, async (elements) => {
-    const missingElements = elements.filter(element => !(element.id in canvasElementsStateRegistry.value));
-
-    missingElements.forEach((element) => {
-      // assumes all elements are assets
-      createAssetState(element.id);
-    });
-
-    // get all the drive file ids that should be batched
-    const batchedIds = missingElements
+  const batchLoadPreviewImages = async () => {
+    // Only proceed with asset elements that have preview IDs
+    const assetElements = canvasElements.value
+      .filter(element => element.id in canvasElementsStateRegistry.value)
       .filter(isSceneElementCanvasObjectAsset)
-      .map(asset => asset.asset.preview.id);
-    // for the owner also include asset ids for label watcher
-    if (tableStore.mode === TableModes.OWN) {
-      batchedIds.push(
-        ...missingElements
-          .filter(isSceneElementCanvasObjectAsset)
-          .filter(asset => asset.asset.kind === AssetPropertiesKinds.COMPLEX)
-          .map(asset => asset.asset.id),
-      );
-    }
+      .filter((asset) => {
+        if (asset.asset.kind === AssetPropertiesKinds.COMPLEX) {
+          const registryProps = assetPropertiesRegistry.value[asset.asset.id];
+          return registryProps?.preview?.id !== undefined;
+        }
+        return true;
+      });
+
+    const batchedIds = assetElements.map((asset) => {
+      if (asset.asset.kind === AssetPropertiesKinds.COMPLEX) {
+        return assetPropertiesRegistry.value[asset.asset.id]?.preview?.id;
+      }
+      return asset.asset.preview.id;
+    }).filter(Boolean);
+
     if (!batchedIds.length) {
       return;
     }
@@ -193,6 +239,7 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     } catch (e) {
       const notificationStore = useNotificationStore();
       notificationStore.error('Failed to fetch asset previews.');
+      console.error('Failed to fetch asset previews.', e);
 
       // set the state of the failed elements to error
       batchedIds.forEach((id) => {
@@ -202,6 +249,39 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
           error: e,
         });
       });
+    }
+  };
+
+  const readyToLoadPreviews = computed(() => {
+    // First ensure all elements have states
+    const allElementsHaveStates = canvasElements.value.every(
+      element => element.id in canvasElementsStateRegistry.value,
+    );
+
+    // Then check if complex assets are ready
+    return allElementsHaveStates && complexAssetsReady.value;
+  });
+
+  const { $logger } = useNuxtApp();
+  const log = $logger['canvas:elements'];
+  /*
+   Watch the elements on the canvas and load the previews in a single batch, accounting for the fact that the preview data for complex assets is stored in a separate collection
+  */
+  watch([canvasElements, readyToLoadPreviews], ([elements, ready]) => {
+    log(`Canvas elements watcher activated\nElements: ${elements.length}\nReady: ${ready}`);
+
+    // First create missing states
+    const missingElements = elements.filter(
+      element => !(element.id in canvasElementsStateRegistry.value),
+    );
+
+    log(`Missing elements: ${missingElements.length}`);
+
+    missingElements.forEach(element => createAssetState(element.id));
+
+    if (ready) {
+      log('Ready to load previews');
+      void batchLoadPreviewImages();
     }
   }, { immediate: true });
 
@@ -221,6 +301,7 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
   });
 
   return {
+    assetPropertiesRegistry,
     screenElements,
     canvasElements,
     canvasElementsStateRegistry,

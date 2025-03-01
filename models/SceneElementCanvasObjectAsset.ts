@@ -62,7 +62,7 @@ export const SceneElementCanvasObjectAssetFactory = (
     _type: 'canvas-object',
     id,
     type: 'asset',
-    asset: SceneElementCanvasObjectAssetPropertiesFactory(id, asset.appProperties),
+    asset: SceneElementCanvasObjectAssetPropertiesFactory(asset.id, asset.appProperties),
     container: {
       id,
       name: 'element-container' as const,
