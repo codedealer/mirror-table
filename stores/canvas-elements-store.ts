@@ -209,11 +209,22 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     });
   };
 
+  const { $logger } = useNuxtApp();
+  const log = $logger['canvas:elements'];
   const driveFileStore = useDriveFileStore();
   const batchLoadPreviewImages = async () => {
-    // Only proceed with asset elements that have preview IDs
+    // Only proceed with asset elements that have preview IDs and weren't loaded yet
     const assetElements = canvasElements.value
-      .filter(element => element.id in canvasElementsStateRegistry.value)
+      .filter((element) => {
+        if (!(element.id in canvasElementsStateRegistry.value)) {
+          return false;
+        }
+        const state = canvasElementsStateRegistry.value[element.id];
+        if (!isCanvasElementStateAsset(state)) {
+          return false;
+        }
+        return !state.loaded && !state.loading;
+      })
       .filter(isSceneElementCanvasObjectAsset)
       .filter((asset) => {
         if (asset.asset.kind === AssetPropertiesKinds.COMPLEX) {
@@ -262,25 +273,24 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     return allElementsHaveStates && complexAssetsReady.value;
   });
 
-  const { $logger } = useNuxtApp();
-  const log = $logger['canvas:elements'];
   /*
    Watch the elements on the canvas and load the previews in a single batch, accounting for the fact that the preview data for complex assets is stored in a separate collection
   */
   watch([canvasElements, readyToLoadPreviews], ([elements, ready]) => {
-    log(`Canvas elements watcher activated\nElements: ${elements.length}\nReady: ${ready}`);
+    if (!elements.length) {
+      return;
+    }
 
     // First create missing states
     const missingElements = elements.filter(
       element => !(element.id in canvasElementsStateRegistry.value),
     );
 
-    log(`Missing elements: ${missingElements.length}`);
+    log(`Canvas elements watcher activated\nElements: ${elements.length}\nMissing: ${missingElements.length}\nReady: ${ready}`);
 
     missingElements.forEach(element => createAssetState(element.id));
 
     if (ready) {
-      log('Ready to load previews');
       void batchLoadPreviewImages();
     }
   }, { immediate: true });

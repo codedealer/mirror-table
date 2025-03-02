@@ -104,6 +104,52 @@ watch(src, () => {
   immediate: true,
 });
 
+const sceneStore = useSceneStore();
+const { $logger } = useNuxtApp();
+const log = $logger['canvas:elements'];
+// Watcher for complex assets to handle an edge case
+// where the preview changes while the elements are on the scene
+watch(() => properties.value.preview?.id, (newPreviewId, oldPreviewId) => {
+  // Only proceed if we have a complex asset with changed preview
+  if (
+    props.element.asset.kind !== AssetPropertiesKinds.COMPLEX ||
+    !newPreviewId ||
+    newPreviewId === props.element.asset.preview.id ||
+    !oldPreviewId
+  ) {
+    return;
+  }
+
+  log(`Preview changed for ${props.element.id}:\n${props.element.asset.preview.id} → ${newPreviewId}`);
+
+  // reset the state of the preview
+  updateState({
+    loaded: false,
+  });
+
+  const tableStore = useTableStore();
+  if (tableStore.mode !== TableModes.OWN) {
+    return;
+  }
+
+  // this will make every OWNER to update the same object
+  log(`Updating ${props.element.id} on the scene`);
+  sceneStore.updateElement<SceneElementCanvasObjectAsset>(props.element.id, {
+    container: {
+      width: properties.value.preview.nativeWidth,
+      height: properties.value.preview.nativeHeight,
+      rotation: properties.value.preview.rotation,
+      scaleX: properties.value.preview.scaleX,
+      scaleY: properties.value.preview.scaleY,
+    },
+    asset: {
+      preview: {
+        id: properties.value.preview.id,
+      },
+    },
+  });
+}, { immediate: true });
+
 const containerConfig: ComputedRef<ElementContainerConfig> = computed(() => {
   if (!state.value) {
     return props.element.container;
