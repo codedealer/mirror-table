@@ -214,36 +214,42 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
   const driveFileStore = useDriveFileStore();
   const batchLoadPreviewImages = async () => {
     // Only proceed with asset elements that have preview IDs and weren't loaded yet
-    const assetElements = canvasElements.value
-      .filter((element) => {
-        if (!(element.id in canvasElementsStateRegistry.value)) {
-          return false;
-        }
-        const state = canvasElementsStateRegistry.value[element.id];
-        if (!isCanvasElementStateAsset(state)) {
-          return false;
-        }
-        return !state.loaded && !state.loading;
-      })
-      .filter(isSceneElementCanvasObjectAsset)
-      .filter((asset) => {
-        if (asset.asset.kind === AssetPropertiesKinds.COMPLEX) {
-          const registryProps = assetPropertiesRegistry.value[asset.asset.id];
-          return registryProps?.preview?.id !== undefined;
-        }
-        return true;
-      });
-
-    const batchedIds = assetElements.map((asset) => {
-      if (asset.asset.kind === AssetPropertiesKinds.COMPLEX) {
-        return assetPropertiesRegistry.value[asset.asset.id]?.preview?.id;
+    const batchedIds = canvasElements.value.reduce<string[]>((ids, element) => {
+      // Check if element has a valid state
+      if (!(element.id in canvasElementsStateRegistry.value)) {
+        return ids;
       }
-      return asset.asset.preview.id;
-    }).filter(Boolean);
+
+      const state = canvasElementsStateRegistry.value[element.id];
+      if (!isCanvasElementStateAsset(state) || state.loaded || state.loading) {
+        return ids;
+      }
+
+      if (!isSceneElementCanvasObjectAsset(element)) {
+        return ids;
+      }
+
+      // Get the preview ID based on asset type
+      let previewId: undefined | string;
+      if (element.asset.kind === AssetPropertiesKinds.COMPLEX) {
+        const registryProps = assetPropertiesRegistry.value[element.asset.id];
+        previewId = registryProps?.preview?.id;
+      } else {
+        previewId = element.asset.preview.id;
+      }
+
+      if (previewId) {
+        ids.push(previewId);
+      }
+
+      return ids;
+    }, []);
 
     if (!batchedIds.length) {
       return;
     }
+
+    log(`Loading ${batchedIds.length} asset previews`);
 
     try {
       await driveFileStore.getFiles(batchedIds, DataRetrievalStrategies.RECENT);
