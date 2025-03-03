@@ -1,4 +1,5 @@
 import type {
+  AssetProperties,
   CanvasObjectSceneMoveInteraction,
   ContextAction,
   SceneElement,
@@ -6,20 +7,21 @@ import type {
   SelectionGroup,
 } from '~/models/types';
 import { SelectionGroupNames, SelectionGroups, isSceneElementScreen } from '~/models/types';
+import updateComplexAssetProperties from '~/utils/updateComplexAssetProperties';
 
 const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
   const actions: ContextAction[] = [];
-
-  const windowStore = useWindowStore();
+  const { properties } = useCanvasAssetProperties(ref(element));
 
   actions.push({
     id: 'open-window',
     label: 'Open in window',
     icon: { name: 'open_in_new' },
     action: () => {
+      const windowStore = useWindowStore();
       const window = WindowFactory(
-        element.asset.id,
-        element.asset.title,
+        properties.value.id,
+        properties.value.title,
         {
           type: 'markdown',
           editing: false,
@@ -28,6 +30,38 @@ const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
       );
 
       windowStore.toggleOrAdd(window);
+    },
+    disabled: false,
+    pinned: false,
+    alwaysVisible: false,
+  });
+
+  actions.push({
+    id: 'toggle-label',
+    label: properties.value.showTitle ? 'Hide Label' : 'Show Label',
+    icon: { name: properties.value.showTitle ? 'label_off' : 'label' },
+    action: async () => {
+      const payload: AssetProperties = {
+        type: properties.value.type,
+        title: properties.value.title,
+        showTitle: !properties.value.showTitle,
+        kind: properties.value.kind,
+        preview: properties.value.preview,
+      };
+      await updateComplexAssetProperties(properties.value.id, payload);
+    },
+    disabled: false,
+    pinned: true,
+    alwaysVisible: false,
+  });
+
+  actions.push({
+    id: 'edit-label',
+    label: 'Edit Label',
+    icon: { name: 'edit' },
+    action: () => {
+      const canvasContextPanelStore = useCanvasContextPanelStore();
+      canvasContextPanelStore.modalShow();
     },
     disabled: false,
     pinned: false,

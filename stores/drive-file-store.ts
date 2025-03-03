@@ -290,15 +290,29 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   const saveFile = async (
     fileId: string,
     appProperties: AppProperties,
-    blobOrFilename: File | string,
+    blobOrFilename?: File | string,
   ) => {
+    let file: DriveFile | undefined;
     if (!files.value[fileId]) {
-      throw new Error('File not found');
+      file = await getFile(fileId, DataRetrievalStrategies.SOURCE);
+    } else {
+      file = files.value[fileId];
     }
 
-    const file = files.value[fileId];
+    if (!file) {
+      throw new Error(`File ${fileId} not found`);
+    }
+
     if (file.mimeType === DriveMimeTypes.FOLDER) {
       throw new Error('Cannot save folder');
+    }
+
+    if (!blobOrFilename) {
+      // assume the filename doesn't change
+      blobOrFilename = file.name;
+      if (!blobOrFilename) {
+        throw new Error('Filename is not provided');
+      }
     }
 
     const propertiesObject = serializeAppProperties(appProperties);

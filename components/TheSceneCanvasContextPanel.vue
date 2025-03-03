@@ -13,6 +13,7 @@ const menuOptions = ref<ContextAction[]>([]);
 
 watchEffect(() => {
   if (!elementId.value) {
+    store.visible = false;
     return;
   }
 

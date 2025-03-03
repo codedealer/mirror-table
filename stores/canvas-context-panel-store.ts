@@ -1,4 +1,5 @@
-import type { SceneElementCanvasObjectAsset } from '~/models/types';
+import type { AssetProperties, SceneElementCanvasObjectAsset } from '~/models/types';
+import updateComplexAssetProperties from '~/utils/updateComplexAssetProperties';
 
 export const useCanvasContextPanelStore = defineStore('canvas-context-panel', () => {
   const visible = ref(false);
@@ -61,9 +62,11 @@ export const useCanvasContextPanelStore = defineStore('canvas-context-panel', ()
       return;
     }
 
+    const { properties } = useCanvasAssetProperties(ref(element));
+
     modalContent.value = {
-      title: element.asset.title,
-      showTitle: element.asset.showTitle,
+      title: properties.value.title,
+      showTitle: properties.value.showTitle,
     };
 
     modalState.value = true;
@@ -77,26 +80,34 @@ export const useCanvasContextPanelStore = defineStore('canvas-context-panel', ()
       return;
     }
 
-    if (element.asset.kind !== AssetPropertiesKinds.IMAGE) {
-      const notificationStore = useNotificationStore();
-      notificationStore.error('Only images are supported for now');
-      modalHide();
-      return;
-    }
-
     if (!modalContent.value.title) {
       modalContent.value.showTitle = false;
     }
 
     modalLoading.value = true;
 
-    const sceneStore = useSceneStore();
-    await sceneStore.updateElement<SceneElementCanvasObjectAsset>(element.id, {
-      asset: {
-        showTitle: modalContent.value.showTitle,
+    if (element.asset.kind === AssetPropertiesKinds.IMAGE) {
+      const sceneStore = useSceneStore();
+      await sceneStore.updateElement<SceneElementCanvasObjectAsset>(element.id, {
+        asset: {
+          showTitle: modalContent.value.showTitle,
+          title: modalContent.value.title,
+        },
+      });
+    } else if (element.asset.kind === AssetPropertiesKinds.COMPLEX) {
+      const { properties } = useCanvasAssetProperties(ref(element));
+      const payload: AssetProperties = {
+        type: properties.value.type,
         title: modalContent.value.title,
-      },
-    });
+        showTitle: modalContent.value.showTitle,
+        kind: properties.value.kind,
+        preview: properties.value.preview,
+      };
+      await updateComplexAssetProperties(properties.value.id, payload);
+    } else {
+      const notificationStore = useNotificationStore();
+      notificationStore.error(`The type of the asset is not supported: ${element.asset.kind}`);
+    }
 
     modalLoading.value = false;
     modalHide();
