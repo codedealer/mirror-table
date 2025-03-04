@@ -38,6 +38,7 @@ export const useCanvasContextPanelStore = defineStore('canvas-context-panel', ()
       title: '',
       showTitle: false,
     };
+    hide();
   };
 
   const getCanvasAsset = (): SceneElementCanvasObjectAsset | undefined => {
@@ -55,7 +56,14 @@ export const useCanvasContextPanelStore = defineStore('canvas-context-panel', ()
     return element;
   };
 
-  const modalShow = () => {
+  const modalShow = (id: string) => {
+    if (!id) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Unsafe open of the modal. Id might not be set.');
+      return;
+    }
+
+    elementId.value = id;
     const element = getCanvasAsset();
     if (!element) {
       modalHide();

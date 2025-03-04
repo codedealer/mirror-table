@@ -61,7 +61,7 @@ const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
     icon: { name: 'edit' },
     action: () => {
       const canvasContextPanelStore = useCanvasContextPanelStore();
-      canvasContextPanelStore.modalShow();
+      canvasContextPanelStore.modalShow(element.id);
     },
     disabled: false,
     pinned: false,
@@ -169,7 +169,7 @@ const ImageKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
     icon: { name: 'edit' },
     action: () => {
       const canvasContextPanelStore = useCanvasContextPanelStore();
-      canvasContextPanelStore.modalShow();
+      canvasContextPanelStore.modalShow(element.id);
     },
     disabled: false,
     pinned: false,

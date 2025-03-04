@@ -7,6 +7,7 @@ const canvasContextPanelStore = useCanvasContextPanelStore();
     v-model="canvasContextPanelStore.modalState"
     hide-default-actions
     size="small"
+    @cancel="canvasContextPanelStore.hide"
   >
     <va-form
       tag="form"
