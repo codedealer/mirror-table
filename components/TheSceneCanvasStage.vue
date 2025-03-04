@@ -40,12 +40,9 @@ const imageTransformerConfig = ref<Konva.TransformerConfig>({
 });
 
 onKeyStroke(true, async (e) => {
-  // only process the event if the target is body or document
   if (
-    e.target &&
-    'nodeName' in e.target &&
-    typeof e.target.nodeName === 'string' &&
-    !['BODY', 'HTML'].includes(e.target.nodeName)
+    (e.target && isEditableElement(e.target)) ||
+    !['Backspace', 'Delete', 'KeyV'].includes(e.code)
   ) {
     return;
   }
