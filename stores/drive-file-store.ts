@@ -3,12 +3,13 @@ import colors from 'ansi-colors';
 import { DataRetrievalStrategies, updateFieldMask } from '~/models/types';
 import type {
   AppProperties,
+  AppPropertiesType,
+  AssetPropertiesKind,
   DataRetrievalStrategy,
-  DriveFile,
-  DriveFileRaw,
-  DriveFileUpdateObject, DriveFileUpdateReturnType,
-  GetFilesOptions,
-  RawMediaObject,
+  DriveFile, DriveFileRaw,
+  DriveFileUpdateObject,
+  DriveFileUpdateReturnType,
+  GetFilesOptions, RawMediaObject,
 } from '~/models/types';
 
 import type { updateMetadataPayload } from '~/utils/driveOps';
@@ -540,14 +541,14 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     return media;
   };
 
-  const search = async (name: string) => {
+  const search = async (name: string, type?: AppPropertiesType, kind?: AssetPropertiesKind) => {
     if (!name.length) {
       return [];
     }
 
     let result: DriveFileRaw[] = [];
     try {
-      result = await searchFiles(name);
+      result = await searchFiles(name, type, kind);
     } catch (e) {
       console.error(e);
       const notificationStore = useNotificationStore();

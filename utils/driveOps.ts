@@ -1,5 +1,5 @@
 import type {
-  AppPropertiesType,
+  AppPropertiesType, AssetPropertiesKind,
   DriveFile,
   DriveFileRaw,
   DriveFileUpdateReturnType,
@@ -214,6 +214,7 @@ export const listFiles = async (folderId: string) => {
 export const searchFiles = async (
   name: string,
   type: AppPropertiesType = AppPropertiesTypes.ASSET,
+  kind?: AssetPropertiesKind,
 ) => {
   // search just assets for now
   const driveStore = useDriveStore();
@@ -221,8 +222,13 @@ export const searchFiles = async (
 
   name = name.replace(/['"]+/g, '');
 
+  let q = `(name contains '${name}' or fullText contains '${name}') and trashed = false and appProperties has { key = 'type' and value = '${type}' }`;
+  if (kind) {
+    q += ` and appProperties has { key = 'kind' and value = '${kind}' }`;
+  }
+
   const response = await client.drive.files.list({
-    q: `(name contains '${name}' or fullText contains '${name}') and trashed = false and appProperties has { key = 'type' and value = '${type}' }`,
+    q,
     fields: `files(${fieldMask})`,
     pageSize: 10,
   });

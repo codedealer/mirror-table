@@ -68,7 +68,7 @@ const { actions } = useDriveFolderContextActions(
             preset="plain"
             color="primary"
             size="medium"
-            @click="driveTreeStore.searchModalState = true"
+            @click="driveTreeStore.showSearchModal()"
           >
             <div class="drive-node__icon">
               <va-icon

@@ -29,11 +29,10 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
   const driveStore = useDriveStore();
   const userStore = useUserStore();
+  const driveSearchStore = useDriveSearchStore();
 
   const { isReady } = storeToRefs(driveStore);
   const { profile } = storeToRefs(userStore);
-
-  const searchModalState = ref(false);
 
   const isRootFolder = computed(() => {
     if (!rootNode.value || !profile.value) {
@@ -335,7 +334,6 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
   };
 
   return {
-    searchModalState,
     nodes,
     rootNode,
     isRootFolder,
@@ -348,6 +346,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     setNodeLoading,
     setNodeLabel,
     importImages,
+    showSearchModal: driveSearchStore.showSearchModal,
   };
 });
 
