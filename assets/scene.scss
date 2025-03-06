@@ -73,6 +73,10 @@
     "title-screen__controls title-screen__controls title-screen__controls title-screen__controls title-screen__controls title-screen__controls"
     "title-screen__content title-screen__content title-screen__content title-screen__content title-screen__content title-screen__content"
     "title-screen__status title-screen__status title-screen__status title-screen__status title-screen__status title-screen__status";
+
+  &--hidden {
+    opacity: 0.7;
+  }
 }
 
 .title-screen__status { grid-area: title-screen__status; }

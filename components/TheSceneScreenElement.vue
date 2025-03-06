@@ -50,7 +50,7 @@ const toggleEnabled = () => {
 </script>
 
 <template>
-  <div class="title-screen">
+  <div class="title-screen" :class="item.enabled ? '' : 'title-screen--hidden'">
     <div class="title-screen__controls">
       <div class="title-screen__controls__status">
         <va-icon
