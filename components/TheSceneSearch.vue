@@ -12,9 +12,17 @@ const { $db } = useNuxtApp();
 const tableStore = useTableStore();
 const sceneSearchStore = useSceneSearchStore();
 
-const { searchModalState: state } = storeToRefs(sceneSearchStore);
+const { searchModalState: state, recentSelected } = storeToRefs(sceneSearchStore);
 
 const result = ref<Scene[]>([]);
+
+const displayResults = computed(() => {
+  if (search.value.length > 0) {
+    return result.value;
+  }
+
+  return recentSelected.value;
+});
 
 const searchFn = useDebounceFn(async (value: string) => {
   if (!tableStore.table || value.length < 3) {
@@ -68,6 +76,7 @@ watch(search, searchFn);
 watchEffect(() => {
   if (selectedScene.value) {
     sceneSearchStore.resolve(selectedScene.value);
+    sceneSearchStore.addRecentSelected(selectedScene.value);
     reset();
     state.value = false;
   }
@@ -116,11 +125,20 @@ hotkeyStore.registerHotkey({
         <ItemSelector
           v-model="search"
           v-model:selected="selectedScene"
-          :options="result"
+          :options="displayResults"
           :loading="loading"
           placeholder="Search scenes"
           autofocus
         >
+          <template #header>
+            <div v-if="!search && recentSelected.length > 0" class="mb-05 text-secondary">
+              Recent scenes
+            </div>
+            <div v-else-if="search.length > 0 && result.length > 0" class="mb-05 text-secondary">
+              Search results
+            </div>
+          </template>
+
           <template #default="{ option: scene }">
             <va-list-item-section>
               <va-list-item-label caption>

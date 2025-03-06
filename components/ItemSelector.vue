@@ -102,6 +102,8 @@ onKeyStroke(['ArrowUp', 'ArrowDown', 'Enter'], (event) => {
       class="item-selector__input"
     />
 
+    <slot name="header" />
+
     <va-inner-loading :loading="loading">
       <div
         v-show="!showNoResults"
@@ -148,9 +150,13 @@ onKeyStroke(['ArrowUp', 'ArrowDown', 'Enter'], (event) => {
 <style scoped lang="scss">
 .item-selector__input {
   width: 100%;
+  margin-bottom: 1rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 .item-selector__result {
-  margin-top: 2rem;
   height: min(var(--va-modal-dialog-max-height), 45vh);
 
   &--empty {

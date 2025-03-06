@@ -6,13 +6,24 @@ const driveStore = useDriveStore();
 const driveSearchStore = useDriveSearchStore();
 const driveFileStore = useDriveFileStore();
 
-const { searchModalState: state, searchModalMode: mode } = storeToRefs(driveSearchStore);
+const { searchModalState: state, searchModalMode: mode, recentSelected } = storeToRefs(driveSearchStore);
 
 const search = ref('');
 const selectedFile = ref<DriveFile>();
 const loading = ref(false);
 
 const result = ref<DriveFile[]>([]);
+const selectorOptions = computed(() => {
+  if (!driveStore.isReady) {
+    return [];
+  }
+
+  if (!search.value) {
+    return recentSelected.value;
+  }
+
+  return result.value;
+});
 
 const modalTitle = computed(() => {
   if (mode.value === 'assets') {
@@ -55,6 +66,7 @@ watch(search, searchFn);
 watchEffect(() => {
   if (selectedFile.value) {
     toggleFile(selectedFile.value, selectedFile.value.name);
+    driveSearchStore.addRecentSelected(selectedFile.value);
     reset();
     state.value = false;
   }
@@ -148,11 +160,20 @@ onKeyStroke(true, (e) => {
         <ItemSelector
           v-model="search"
           v-model:selected="selectedFile"
-          :options="result"
+          :options="selectorOptions"
           :loading="loading"
           :placeholder="modalTitle"
           autofocus
         >
+          <template #header>
+            <div v-if="!search && recentSelected.length > 0" class="mb-05 text-secondary">
+              Recent files
+            </div>
+            <div v-else-if="search.length > 0 && result.length > 0" class="mb-05 text-secondary">
+              Search results
+            </div>
+          </template>
+
           <template #default="{ option }">
             <va-list-item-section>
               <va-list-item-label caption>
