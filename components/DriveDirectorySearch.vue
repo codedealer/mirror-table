@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onKeyStroke, useDebounceFn } from '@vueuse/core';
-import type { DriveAsset, DriveFile } from '~/models/types';
+import type { DriveFile } from '~/models/types';
 
 const driveStore = useDriveStore();
 const driveSearchStore = useDriveSearchStore();
@@ -11,6 +11,21 @@ const { searchModalState: state, searchModalMode: mode, recentSelected } = store
 const search = ref('');
 const selectedFile = ref<DriveFile>();
 const loading = ref(false);
+
+const getFileContextActions = (file: DriveFile) => {
+  if (!file) {
+    return [];
+  }
+
+  if (isDriveAsset(file)) {
+    return AssetContextActionsFactory(file);
+  }
+  if (isDriveWidget(file)) {
+    return WidgetContextActionsFactory(file);
+  }
+
+  return [];
+};
 
 const result = ref<DriveFile[]>([]);
 const selectorOptions = computed(() => {
@@ -177,13 +192,13 @@ onKeyStroke(true, (e) => {
           <template #default="{ option }">
             <va-list-item-section>
               <va-list-item-label caption>
-                {{ stripFileExtension((option as DriveFile).name) }}
+                {{ stripFileExtension(option.name) }}
               </va-list-item-label>
             </va-list-item-section>
 
             <va-list-item-section icon class="selector-actions">
               <ContextPanel
-                :actions="AssetContextActionsFactory(option as DriveAsset)"
+                :actions="getFileContextActions(option)"
               />
             </va-list-item-section>
           </template>

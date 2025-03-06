@@ -142,7 +142,7 @@ hotkeyStore.registerHotkey({
           <template #default="{ option: scene }">
             <va-list-item-section>
               <va-list-item-label caption>
-                {{ (scene as Scene).title }}
+                {{ scene.title }}
               </va-list-item-label>
             </va-list-item-section>
 
@@ -154,7 +154,7 @@ hotkeyStore.registerHotkey({
                 icon="system_update_alt"
                 size="small"
                 round
-                @click.stop="tableStore.moveAllViewersToScene(scene as Scene)"
+                @click.stop="tableStore.moveAllViewersToScene(scene)"
               />
             </va-list-item-section>
           </template>

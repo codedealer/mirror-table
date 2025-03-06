@@ -1,9 +1,9 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends ItemSelectorOption">
 import { onKeyStroke } from '@vueuse/core';
 import type { ItemSelectorOption } from '~/models/types';
 
 const props = withDefaults(defineProps<{
-  options: ItemSelectorOption[]
+  options: T[]
   loading?: boolean
 }>(), {
   loading: false,
@@ -13,7 +13,7 @@ const inputModel = defineModel<string>({
   required: true,
 });
 
-const selected = defineModel<ItemSelectorOption>('selected', {
+const selected = defineModel<T>('selected', {
   required: false,
 });
 
@@ -21,7 +21,7 @@ const showNoResults = computed(() => {
   return props.options.length === 0 && !props.loading && inputModel.value.length > 0;
 });
 
-const active = ref<ItemSelectorOption>();
+const active = ref<T>();
 
 watchEffect(() => {
   if (props.options.length === 0) {
@@ -67,7 +67,7 @@ const moveDown = () => {
   active.value = props.options[index + 1];
 };
 
-const select = (option: ItemSelectorOption) => {
+const select = (option: T) => {
   selected.value = option;
 };
 
