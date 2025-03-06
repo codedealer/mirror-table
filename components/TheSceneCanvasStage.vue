@@ -65,7 +65,10 @@ onKeyStroke(true, async (e) => {
     } else if (e.code === 'KeyV') {
       await sceneStore.updateElements(
         selectedElements.map(e => e.id),
-        { enabled: !selectedElements[0].enabled },
+        {
+          enabled: !selectedElements[0].enabled,
+          selectionGroup: selectedElements[0].enabled ? SelectionGroups.HIDDEN : SelectionGroups.ELEMENT,
+        },
       );
     }
   } catch (e) {
