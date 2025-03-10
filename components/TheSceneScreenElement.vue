@@ -8,6 +8,7 @@ const props = defineProps<{
 
 const tableStore = useTableStore();
 const sceneStore = useSceneStore();
+const layersStore = useLayersStore();
 
 const isEditable = computed(() => {
   return tableStore.mode === TableModes.OWN;
@@ -50,7 +51,11 @@ const toggleEnabled = () => {
 </script>
 
 <template>
-  <div class="title-screen" :class="item.enabled ? '' : 'title-screen--hidden'">
+  <div
+    v-show="layersStore.hideHiddenElements ? item.enabled : true"
+    class="title-screen"
+    :class="item.enabled ? '' : 'title-screen--hidden'"
+  >
     <div class="title-screen__controls">
       <div class="title-screen__controls__status">
         <va-icon

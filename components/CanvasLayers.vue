@@ -6,7 +6,7 @@ const layersStore = useLayersStore();
 
 <template>
   <div class="layers-container">
-    <div class="layers-controls mb">
+    <div class="layers-controls mb flex">
       <va-button-group
         preset="primary"
       >
@@ -20,6 +20,17 @@ const layersStore = useLayersStore();
           @click="layersStore.toggleGroup(group)"
         />
       </va-button-group>
+
+      <va-spacer />
+
+      <va-button
+        preset="primary"
+        :color="layersStore.hideHiddenElements ? 'primary' : 'primary-dark'"
+        :class="layersStore.hideHiddenElements ? 'a-pulse' : ''"
+        icon="disabled_visible"
+        title="Toggle hidden elements"
+        @click="layersStore.toggleHiddenElements"
+      />
     </div>
 
     <va-list class="layers-list">

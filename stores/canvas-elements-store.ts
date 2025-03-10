@@ -292,7 +292,7 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
       element => !(element.id in canvasElementsStateRegistry.value),
     );
 
-    log(`Canvas elements watcher activated\nElements: ${elements.length}\nMissing: ${missingElements.length}\nReady: ${ready}`);
+    log(`Elements: ${elements.length}\nMissing: ${missingElements.length}\nReady: ${ready}`);
 
     missingElements.forEach(element => createAssetState(element.id));
 
@@ -300,21 +300,6 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
       void batchLoadPreviewImages();
     }
   }, { immediate: true });
-
-  watch([mode, activeGroups], () => {
-    Object.values(canvasElementsStateRegistry.value).forEach((state) => {
-      const element = canvasElements.value.find(element => element.id === state.id);
-      if (!element) {
-        return;
-      }
-
-      state.selectable = tableStore.mode === TableModes.OWN && layersStore.activeGroups[element.selectionGroup] === true;
-      state.selected = state.selected && state.selectable;
-    });
-  }, {
-    immediate: true,
-    deep: true,
-  });
 
   return {
     assetPropertiesRegistry,

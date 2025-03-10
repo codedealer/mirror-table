@@ -43,17 +43,34 @@ const state = computed<CanvasElementStateAsset | undefined>(() => {
   return s;
 });
 
+const tableStore = useTableStore();
 const layersStore = useLayersStore();
-watch(() => props.element.selectionGroup, (group) => {
-  if (!state.value) {
-    return;
-  }
+const { hideHiddenElements, activeGroups } = storeToRefs(layersStore);
+const { mode } = storeToRefs(tableStore);
+watch(
+  [() => props.element.selectionGroup, hideHiddenElements, mode, activeGroups],
+  ([group, hide, mode]) => {
+    if (!state.value) {
+      return;
+    }
+    if (mode !== TableModes.OWN) {
+      updateState({
+        selectable: false,
+        selected: false,
+      });
 
-  updateState({
-    selectable: layersStore.activeGroups[group] === true,
-    selected: false,
-  });
-});
+      return;
+    }
+
+    const isActiveGroup = layersStore.activeGroups[group] === true;
+
+    updateState({
+      selectable: hide ? (isActiveGroup && props.element.enabled) : isActiveGroup,
+      selected: false,
+    });
+  },
+  { deep: true, immediate: true },
+);
 
 const { file: imageFile, error: fileError } = useDriveFile<DriveImage>(
   toRef(() => properties.value.preview.id),
@@ -119,6 +136,8 @@ const containerConfig: ComputedRef<ElementContainerConfig> = computed(() => {
   return {
     ...props.element.container,
     draggable: state.value?.selectable && state.value?.selected,
+    visible: layersStore.hideHiddenElements ? props.element.enabled : true,
+    listening: layersStore.hideHiddenElements ? props.element.enabled : true,
   };
 });
 
@@ -149,8 +168,6 @@ const loadingRect = computed(() => {
     opacity: 0.5,
   };
 });
-
-const tableStore = useTableStore();
 
 const showLoading = computed(() => {
   return assetError.value || (tableStore.mode === TableModes.OWN && (!state.value || !state.value.loaded));

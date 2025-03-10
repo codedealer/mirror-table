@@ -12,6 +12,9 @@ import {
 export const useLayersStore = defineStore('layers', () => {
   const sceneStore = useSceneStore();
 
+  // by default OWNER can see hidden elements
+  const hideHiddenElements = ref(false);
+
   const layers = computed(() => {
     const layers: LayerItem<SceneElement | LayerGroup>[] = [];
 
@@ -58,10 +61,34 @@ export const useLayersStore = defineStore('layers', () => {
     activeGroups.value[group] = !activeGroups.value[group];
   };
 
+  const toggleHiddenElements = () => {
+    hideHiddenElements.value = !hideHiddenElements.value;
+
+    // update the selectable state of elements on the hidden layer
+    /* const canvasElementsStore = useCanvasElementsStore(); // get the store here to avoid cyclical ref
+    const hiddenElements = sceneStore.sceneElements.filter(element => element.selectionGroup === SelectionGroups.HIDDEN);
+    if (hideHiddenElements.value) {
+      hiddenElements.forEach((element) => {
+        canvasElementsStore.updateElementState(element.id, {
+          selectable: false,
+          selected: false,
+        });
+      });
+    } else if (activeGroups.value[SelectionGroups.HIDDEN]) {
+      hiddenElements.forEach((element) => {
+        canvasElementsStore.updateElementState(element.id, {
+          selectable: true,
+        });
+      });
+    } */
+  };
+
   return {
     layers,
     activeGroups,
     toggleGroup,
+    hideHiddenElements,
+    toggleHiddenElements,
   };
 });
 
