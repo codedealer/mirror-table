@@ -66,10 +66,10 @@ onKeyStroke(true, (e) => {
   >
     <va-card-content class="flex gap-05">
       <va-popover
-        message="Toggle screen frames"
+        message="Toggle screen frames (F)"
       >
         <va-button
-          icon="visibility"
+          icon="crop_square"
           color="primary"
           preset="primary"
           @click="toggleScreenFrames"

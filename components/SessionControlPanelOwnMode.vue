@@ -6,6 +6,7 @@ const sessionStore = useSessionStore();
   <div class="ghost-container">
     <SessionControlPanelOwnModeSceneWatchdog />
     <SessionControlPanelOwnModeScreenFrameControl v-if="!sessionStore.emptyTable" />
+    <SessionControlPanelOwnModeHiddenLayerControl />
     <SessionControlPanelOwnModePanelControl />
     <SessionControlPanelOwnModeFullscreenControl />
   </div>
