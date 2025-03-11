@@ -13,16 +13,14 @@ const sceneMismatch = computed(() => {
 
 watchEffect(() => {
   if (sceneMismatch.value) {
-    hoverPanelStore.show(true);
+    hoverPanelStore.requestManual('scene-watchdog');
   } else {
-    hoverPanelStore.hide(true);
+    hoverPanelStore.dismissManual('scene-watchdog');
   }
 });
 
-onMounted(() => {
-  if (!sceneMismatch.value) {
-    hoverPanelStore.hide(true);
-  }
+onUnmounted(() => {
+  hoverPanelStore.dismissManual('scene-watchdog');
 });
 
 const moveAllHere = () => {

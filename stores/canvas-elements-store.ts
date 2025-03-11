@@ -292,7 +292,7 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
       element => !(element.id in canvasElementsStateRegistry.value),
     );
 
-    log(`Elements: ${elements.length}\nMissing: ${missingElements.length}\nReady: ${ready}`);
+    log(`\nElements: ${elements.length}\nMissing: ${missingElements.length}\nReady: ${ready}`);
 
     missingElements.forEach(element => createAssetState(element.id));
 

@@ -1,5 +1,22 @@
 <script setup lang="ts">
 const hoverPanelStore = useHoverPanelStore();
+const sessionStore = useSessionStore();
+
+let isPrompted = 0;
+
+watchEffect(() => {
+  if (!sessionStore.activeSessionId || !sessionStore.emptyTable || isPrompted > 0) {
+    return;
+  }
+
+  // show the panel with the prompt to create a session
+  hoverPanelStore.requestManual('invite-prompt');
+  isPrompted++;
+});
+
+onUnmounted(() => {
+  hoverPanelStore.dismissManual('invite-prompt');
+});
 
 const openSessionExplorer = () => {
   const dynamicPanelStore = useDynamicPanelStore();
@@ -9,7 +26,7 @@ const openSessionExplorer = () => {
     true,
   );
 
-  hoverPanelStore.hide(true);
+  hoverPanelStore.forceAuto();
 };
 </script>
 
@@ -43,7 +60,7 @@ const openSessionExplorer = () => {
         <va-button
           preset="plain"
           color="text-primary"
-          @click="hoverPanelStore.hide(true)"
+          @click="hoverPanelStore.forceAuto()"
         >
           Dismiss
         </va-button>

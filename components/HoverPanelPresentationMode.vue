@@ -3,7 +3,11 @@ const sessionStore = useSessionStore();
 const hoverPanelStore = useHoverPanelStore();
 
 onMounted(() => {
-  hoverPanelStore.show(true);
+  hoverPanelStore.requestManual('presentation-mode');
+});
+
+onUnmounted(() => {
+  hoverPanelStore.dismissManual('presentation-mode');
 });
 </script>
 
@@ -24,7 +28,7 @@ onMounted(() => {
         <va-button
           preset="plain"
           color="text-primary"
-          @click="hoverPanelStore.hide(true)"
+          @click="hoverPanelStore.forceAuto()"
         >
           Dismiss
         </va-button>

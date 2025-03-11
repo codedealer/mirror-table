@@ -17,24 +17,16 @@ const availableComponents: Record<HoverPanelContentType, unknown> = {
   [HoverPanelContentTypes.PRESENTATION_CONTROL]: HoverPanelPresentationMode,
 };
 
-watchEffect(() => {
+const isActive = computed(() => {
   if (hoverPanelStore.mode === HoverPanelModes.MANUAL) {
-    return;
+    return true;
   }
 
-  hoverPanelStore.panelState = isHovered.value;
+  return hoverPanelStore.isInteractive && isHovered.value;
 });
 
 const translateVar = computed(() => {
-  return `--translate: ${hoverPanelStore.panelState ? '0' : '1'}`;
-});
-
-const isActive = computed(() => {
-  if (hoverPanelStore.mode === HoverPanelModes.MANUAL) {
-    return hoverPanelStore.panelState;
-  }
-
-  return isHovered.value;
+  return `--translate: ${isActive.value ? '0' : '1'}`;
 });
 </script>
 

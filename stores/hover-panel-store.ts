@@ -4,9 +4,13 @@ import { HoverPanelContentTypes, HoverPanelModes } from '~/models/types';
 
 export const useHoverPanelStore = defineStore('hover-panel', () => {
   const tableStore = useTableStore();
-  const panelState = ref(false);
+  const isInteractive = ref(true);
   const _disabled = ref(false);
-  const mode = ref<HoverPanelMode>(HoverPanelModes.AUTO);
+  const manualRequests = ref(new Set<string>());
+
+  const mode = computed<HoverPanelMode>(() => {
+    return manualRequests.value.size > 0 ? HoverPanelModes.MANUAL : HoverPanelModes.AUTO;
+  });
 
   const content = computed(() => {
     return tableStore.mode === TableModes.PRESENTATION
@@ -29,31 +33,40 @@ export const useHoverPanelStore = defineStore('hover-panel', () => {
     return _disabled.value;
   });
 
-  const show = (forceManual = false) => {
-    if (forceManual) {
-      mode.value = HoverPanelModes.MANUAL;
-    }
-
-    panelState.value = true;
+  // Children call this with their own unique identifier to request manual mode.
+  const requestManual = (childId: string) => {
+    manualRequests.value.add(childId);
   };
 
-  const hide = (forceAuto = false) => {
-    panelState.value = false;
-
-    if (forceAuto) {
-      setTimeout(() => {
-        mode.value = HoverPanelModes.AUTO;
-      }, 5000);
+  // When a child dismisses its manual mode, its request is removed.
+  // If no manual requests remain, panelState remains false unless hovering.
+  const dismissManual = (childId: string) => {
+    if (!manualRequests.value.has(childId)) {
+      return;
     }
+
+    manualRequests.value.delete(childId);
+  };
+
+  // Hide the panel and set it to auto mode.
+  const forceAuto = () => {
+    manualRequests.value.clear();
+
+    isInteractive.value = false;
+    setTimeout(() => {
+      isInteractive.value = true;
+    }, 1000);
   };
 
   return {
-    panelState,
+    isInteractive,
+    manualRequests,
     content,
     mode,
     disabled,
-    show,
-    hide,
+    requestManual,
+    dismissManual,
+    forceAuto,
   };
 });
 
