@@ -4,7 +4,7 @@ import { useFirestore } from '@vueuse/firebase/useFirestore';
 import {
   TableModes,
   isSceneElementCanvasObject,
-  isSceneElementCanvasObjectAsset,
+  isSceneElementCanvasObjectAsset, isSceneElementCanvasObjectText,
 } from '~/models/types';
 import type {
   CanvasElementState, CanvasElementStateAsset,
@@ -104,9 +104,6 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
   const layersStore = useLayersStore();
   const tableStore = useTableStore();
 
-  const { activeGroups } = storeToRefs(layersStore);
-  const { mode } = storeToRefs(tableStore);
-
   const addComplexAssetProperties = async (properties: SceneElementCanvasObjectAssetProperties) => {
     if (!assetPropertiesRef.value) {
       return;
@@ -123,22 +120,31 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     await deleteDoc(doc(assetPropertiesRef.value, id));
   };
 
-  const createAssetState = (elementId: string) => {
+  const createElementState = (elementId: string) => {
     const element = canvasElements.value.find(element => element.id === elementId);
     if (!element) {
       console.warn(`Trying to create a state for a non-existent asset: ${elementId}`);
       return;
     }
 
-    canvasElementsStateRegistry.value[elementId] = {
-      _type: 'asset',
-      id: elementId,
-      loading: false,
-      loaded: false,
-      selected: false,
-      selectable: tableStore.mode === TableModes.OWN && layersStore.activeGroups[element.selectionGroup] === true,
-      error: null,
-    } as CanvasElementStateAsset;
+    let state: CanvasElementState;
+    if (isSceneElementCanvasObjectAsset(element)) {
+      state = CanvasAssetStateFactory(elementId);
+    } else if (isSceneElementCanvasObjectText(element)) {
+      state = CanvasTextStateFactory(elementId);
+    } else {
+      console.error(`Trying to create a state for an unsupported element type: ${elementId}`);
+      return;
+    }
+
+    // set the initial selectable state
+    const isActiveGroup = layersStore.activeGroups[element.selectionGroup] === true;
+    const hideHidden = layersStore.hideHiddenElements;
+    const selectable = tableStore.mode === TableModes.OWN &&
+      (hideHidden ? (isActiveGroup && element.enabled) : isActiveGroup);
+    state.selectable = selectable;
+
+    canvasElementsStateRegistry.value[elementId] = state;
   };
 
   const updateElementState = <T extends CanvasElementState>(elementId: string, state: Partial<T>) => {
@@ -294,7 +300,7 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
 
     log(`\nElements: ${elements.length}\nMissing: ${missingElements.length}\nReady: ${ready}`);
 
-    missingElements.forEach(element => createAssetState(element.id));
+    missingElements.forEach(element => createElementState(element.id));
 
     if (ready) {
       void batchLoadPreviewImages();
@@ -313,7 +319,7 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     selectElement,
     addToSelectedElements,
     deselectAll,
-    createAssetState,
+    createElementState,
     deleteState,
     applyContainerTransforms,
   };

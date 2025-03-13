@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type Konva from 'konva';
 import { onKeyStroke } from '@vueuse/core';
-import type { KonvaComponent, SceneElementCanvasObjectAsset } from '~/models/types';
+import type { KonvaComponent } from '~/models/types';
 import { TableModes } from '~/models/types';
 import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
 import TheSceneCanvasScreenFrame from '~/components/TheSceneCanvasScreenFrame.vue';
@@ -113,11 +113,16 @@ hotkeyStore.registerHotkey({
     @transformend="onNodeTransformEnd"
   >
     <v-layer>
-      <TheSceneCanvasAsset
-        v-for="asset in canvasElementsStore.canvasElements"
-        :key="asset.id"
-        :element="asset as SceneElementCanvasObjectAsset"
-      />
+      <template v-for="element in canvasElementsStore.canvasElements" :key="element.id">
+        <TheSceneCanvasAsset
+          v-if="isSceneElementCanvasObjectAsset(element)"
+          :element="element"
+        />
+        <TheSceneCanvasText
+          v-else-if="isSceneElementCanvasObjectText(element)"
+          :element="element"
+        />
+      </template>
 
       <v-transformer
         ref="imageTransformer"

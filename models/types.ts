@@ -466,8 +466,16 @@ export interface CanvasElementStateAsset extends CanvasElementStateLoadable {
   imageElement?: HTMLImageElement
 }
 
+export interface CanvasElementStateText extends CanvasElementState {
+  _type: 'text'
+}
+
 export const isCanvasElementStateAsset = (obj: CanvasElementState): obj is CanvasElementStateAsset => {
   return '_type' in obj && obj._type === 'asset';
+};
+
+export const isCanvasElementStateText = (obj: CanvasElementState): obj is CanvasElementStateText => {
+  return '_type' in obj && obj._type === 'text';
 };
 
 export interface CanvasTool {
@@ -702,6 +710,19 @@ export const isSceneElementCanvasObjectAsset = (
   obj: SceneElementCanvasObject,
 ): obj is SceneElementCanvasObjectAsset => {
   return obj.type === 'asset';
+};
+
+export interface SceneElementCanvasObjectText extends
+  SceneElementCanvasObject,
+  SceneElementCanvasObjectInteractive {
+  type: 'text'
+  text: Konva.TextConfig
+}
+
+export const isSceneElementCanvasObjectText = (
+  obj: SceneElementCanvasObject,
+): obj is SceneElementCanvasObjectText => {
+  return obj.type === 'text';
 };
 
 export const isStateful = <T extends SceneElementCanvasObject, U extends CanvasElementState>(

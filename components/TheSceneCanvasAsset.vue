@@ -36,7 +36,7 @@ const state = computed<CanvasElementStateAsset | undefined>(() => {
 
   if (!isCanvasElementStateAsset(s)) {
     // recreating the state will make it valid but won't reload drive files
-    canvasElementsStore.createAssetState(props.element.id);
+    canvasElementsStore.createElementState(props.element.id);
     return;
   }
 
@@ -45,31 +45,10 @@ const state = computed<CanvasElementStateAsset | undefined>(() => {
 
 const tableStore = useTableStore();
 const layersStore = useLayersStore();
-const { hideHiddenElements, activeGroups } = storeToRefs(layersStore);
-const { mode } = storeToRefs(tableStore);
-watch(
-  [() => props.element.selectionGroup, hideHiddenElements, mode, activeGroups],
-  ([group, hide, mode]) => {
-    if (!state.value) {
-      return;
-    }
-    if (mode !== TableModes.OWN) {
-      updateState({
-        selectable: false,
-        selected: false,
-      });
-
-      return;
-    }
-
-    const isActiveGroup = layersStore.activeGroups[group] === true;
-
-    updateState({
-      selectable: hide ? (isActiveGroup && props.element.enabled) : isActiveGroup,
-      selected: false,
-    });
-  },
-  { deep: true, immediate: true },
+useSelectableStateWatcher(
+  toRef(() => props.element),
+  state,
+  updateState,
 );
 
 const { file: imageFile, error: fileError } = useDriveFile<DriveImage>(
