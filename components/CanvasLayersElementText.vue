@@ -8,8 +8,8 @@ const props = defineProps<{
 const canvasElementsStore = useCanvasElementsStore();
 
 const label = computed(() => {
-  return props.item.item.text.length > 0
-    ? props.item.item.text.substring(0, 20)
+  return props.item.item.text.text
+    ? props.item.item.text.text.substring(0, 20)
     : '<no text>';
 });
 
@@ -35,8 +35,8 @@ const select = () => {
     <va-list-item-section avatar>
       <va-icon
         name="text_fields"
-        size="48"
         color="primary"
+        :size="32"
       />
     </va-list-item-section>
     <va-list-item-section>

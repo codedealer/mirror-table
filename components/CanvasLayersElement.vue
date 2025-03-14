@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import type { LayerItem, SceneElement, SceneElementCanvasObjectAsset, SceneElementScreen } from '~/models/types';
+import type {
+  LayerItem,
+  SceneElement,
+  SceneElementCanvasObjectAsset,
+  SceneElementCanvasObjectText,
+  SceneElementScreen,
+} from '~/models/types';
 import CanvasLayersElementAsset from '~/components/CanvasLayersElementAsset.vue';
 
 defineProps<{
@@ -12,6 +18,10 @@ defineProps<{
     <CanvasLayersElementAsset
       v-if="isSceneElementCanvasObject(item.item) && isSceneElementCanvasObjectAsset(item.item)"
       :item="item as LayerItem<SceneElementCanvasObjectAsset>"
+    />
+    <CanvasLayersElementText
+      v-else-if="isSceneElementCanvasObject(item.item) && isSceneElementCanvasObjectText(item.item)"
+      :item="item as LayerItem<SceneElementCanvasObjectText>"
     />
     <CanvasLayersElementScreen
       v-else-if="isSceneElementScreen(item.item)"
