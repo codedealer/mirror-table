@@ -2,7 +2,7 @@ import type {
   AssetProperties,
   CanvasObjectSceneMoveInteraction,
   ContextAction,
-  SceneElement,
+  SceneElement, SceneElementCanvasObject,
   SceneElementCanvasObjectAsset,
   SelectionGroup,
 } from '~/models/types';
@@ -233,7 +233,7 @@ const hierarchyActionsFactory = (element: SceneElement) => {
   return actions;
 };
 
-const groupActionsFactory = (element: SceneElementCanvasObjectAsset) => {
+const groupActionsFactory = (element: SceneElementCanvasObject) => {
   const sceneStore = useSceneStore();
   const actions: ContextAction[] = [];
 
@@ -269,7 +269,6 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
   const actions: ContextAction[] = [];
 
   if (!element) {
-    // non-assets aren't supported for now
     return actions;
   }
 
@@ -312,19 +311,6 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
     return actions;
   }
 
-  if (!isSceneElementCanvasObjectAsset(element)) {
-    return actions;
-  }
-
-  switch (element.asset.kind) {
-    case AssetPropertiesKinds.COMPLEX:
-      actions.push(...ComplexKindActionsFactory(element));
-      break;
-    case AssetPropertiesKinds.IMAGE:
-      actions.push(...ImageKindActionsFactory(element));
-      break;
-  }
-
   actions.push({
     id: 'toggle-visibility',
     label: element.enabled ? 'Hide' : 'Show',
@@ -337,8 +323,15 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
     pinned: true,
     alwaysVisible: false,
   });
+  actions.push(...groupActionsFactory(element));
+  actions.push(...hierarchyActions);
+  actions.push(deleteAction);
 
-  actions.push({
+  if (!isSceneElementCanvasObjectAsset(element)) {
+    return actions;
+  }
+
+  actions.unshift({
     id: 'restore-size',
     label: 'Restore Native Size',
     icon: { name: 'aspect_ratio' },
@@ -353,7 +346,7 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
     alwaysVisible: false,
   });
 
-  actions.push({
+  actions.unshift({
     id: 'fit-to-stage',
     label: 'Fit to Stage',
     icon: { name: 'crop_free' },
@@ -370,11 +363,14 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
     alwaysVisible: false,
   });
 
-  actions.push(...groupActionsFactory(element));
-  actions.push(...hierarchyActions);
-  actions.push(deleteAction);
-
-  actions.push();
+  switch (element.asset.kind) {
+    case AssetPropertiesKinds.COMPLEX:
+      actions.unshift(...ComplexKindActionsFactory(element));
+      break;
+    case AssetPropertiesKinds.IMAGE:
+      actions.unshift(...ImageKindActionsFactory(element));
+      break;
+  }
 
   return actions;
 };

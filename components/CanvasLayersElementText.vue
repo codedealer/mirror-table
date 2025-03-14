@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ContextAction, LayerItem, SceneElementCanvasObjectText } from '~/models/types';
+import type { LayerItem, SceneElementCanvasObjectText } from '~/models/types';
 
 const props = defineProps<{
   item: LayerItem<SceneElementCanvasObjectText>
@@ -17,7 +17,9 @@ const isSelected = computed(() => {
   return canvasElementsStore.selectedElements.findIndex(e => e.id === props.item.id) !== -1;
 });
 
-const contextActions = ref<ContextAction[]>([]);
+const contextActions = computed(() => {
+  return CanvasAssetContextActionsFactory(props.item.id);
+});
 
 const select = () => {
   canvasElementsStore.selectElement(props.item.id);

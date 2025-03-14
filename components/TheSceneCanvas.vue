@@ -18,6 +18,7 @@ hotkeyStore.registerHotkey({
   namespace: 'Canvas',
   modifiers: { shift: true },
 });
+useTextTool();
 
 canvasToolStore.setActiveTool(selectTool);
 
@@ -108,7 +109,6 @@ useEventListener(
     <component
       :is="canvasToolStore.activeTool.component"
       v-if="canvasToolStore.activeTool"
-      v-once
     />
 
     <div

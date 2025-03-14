@@ -62,7 +62,7 @@ const textConfig = computed(() => {
   }
 
   return {
-    text: props.element.text.content,
+    text: props.element.text.text,
     fontSize: props.element.text.fontSize,
     fontFamily: props.element.text.fontFamily,
     fill: props.element.text.fill,
