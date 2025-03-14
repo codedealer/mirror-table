@@ -8,6 +8,7 @@ import type {
   SceneElementScreen,
 } from '~/models/types';
 import { SceneElementCanvasObjectAssetFactory } from '~/models/SceneElementCanvasObjectAsset';
+import type { WithIdPlaceholders } from '~/utils/replaceIdPlaceholder';
 
 export const useSceneStore = defineStore('scene', () => {
   const { $db } = useNuxtApp();
@@ -64,31 +65,38 @@ export const useSceneStore = defineStore('scene', () => {
 
   const sceneElements = useFirestore(sceneElementsQuery, []);
 
-  const addElement = async (element: SceneElement) => {
+  const addElement = async (payload: WithIdPlaceholders<SceneElement>) => {
     if (!sceneElementsRef.value) {
       return;
     }
+    const docRef = doc(sceneElementsRef.value);
+    const element: SceneElement = replaceIdPlaceholder(payload, docRef.id);
 
-    await setDoc(doc(sceneElementsRef.value, element.id), element);
+    try {
+      await setDoc(docRef, element);
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Failed to add scene element.');
+      console.error(e);
+    }
   };
 
   const addAsset = async (asset: DriveAsset) => {
-    if (!sceneElementsRef.value || !scene.value) {
+    if (!scene.value) {
       return;
     }
 
-    const docRef = doc(sceneElementsRef.value);
     const stageStore = useCanvasStageStore();
 
     try {
       const sceneElement = SceneElementCanvasObjectAssetFactory(
-        docRef.id,
+        ID_PLACEHOLDER,
         asset,
         scene.value.owner,
         stageStore.fitToStage,
       );
 
-      await setDoc(docRef, sceneElement);
+      await addElement(sceneElement);
     } catch (error) {
       const notificationStore = useNotificationStore();
       notificationStore.error('Failed to add asset to the scene.');
@@ -100,13 +108,12 @@ export const useSceneStore = defineStore('scene', () => {
     fileId: string,
     thumbnail?: string | null,
   ) => {
-    if (!sceneElementsRef.value || !scene.value) {
+    if (!scene.value) {
       return;
     }
 
-    const docRef = doc(sceneElementsRef.value);
-    const screenElement: SceneElementScreen = {
-      id: docRef.id,
+    const screenElement: WithIdPlaceholders<SceneElementScreen> = {
+      id: ID_PLACEHOLDER,
       _type: 'screen',
       enabled: false,
       file: fileId,
@@ -116,13 +123,7 @@ export const useSceneStore = defineStore('scene', () => {
       owner: scene.value.owner,
     };
 
-    try {
-      await setDoc(docRef, screenElement);
-    } catch (error) {
-      const notificationStore = useNotificationStore();
-      notificationStore.error('Failed to add screen to the scene.');
-      console.error(error);
-    }
+    await addElement(screenElement);
   };
 
   const updateElement = async <T extends SceneElement>(

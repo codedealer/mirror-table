@@ -4,6 +4,7 @@ import type {
   ElementContainerConfig,
   SceneElementCanvasObjectAsset, SceneElementCanvasObjectAssetProperties,
 } from '~/models/types';
+import type { IdPlaceholder, WithIdPlaceholders } from '~/utils/replaceIdPlaceholder';
 
 export const SceneElementCanvasObjectAssetPropertiesFactory = (
   id: string,
@@ -49,16 +50,16 @@ export const SceneElementCanvasObjectAssetPropertiesFactory = (
 };
 
 export const SceneElementCanvasObjectAssetFactory = (
-  id: string,
+  id: string | IdPlaceholder,
   asset: DriveAsset,
   ownerId: string,
-  fittingFunction?: (container: ElementContainerConfig) => ElementContainerConfig,
+  fittingFunction?: (container: WithIdPlaceholders<ElementContainerConfig>) => WithIdPlaceholders<ElementContainerConfig>,
 ) => {
   if (!asset.appProperties.preview) {
     throw new Error('Asset without preview cannot be added to the scene.');
   }
 
-  const element: SceneElementCanvasObjectAsset = {
+  const element: WithIdPlaceholders<SceneElementCanvasObjectAsset> = {
     _type: 'canvas-object',
     id,
     type: 'asset',

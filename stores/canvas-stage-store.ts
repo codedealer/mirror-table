@@ -1,5 +1,6 @@
 import type Konva from 'konva';
 import type { ElementContainerConfig, KonvaComponent } from '~/models/types';
+import type { WithIdPlaceholders } from '~/utils/replaceIdPlaceholder';
 
 export const useCanvasStageStore = defineStore('canvas-stage', () => {
   const _stageNode = ref<KonvaComponent<Konva.Node> | null>(null);
@@ -44,15 +45,17 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     Object.assign(_stage.value, config);
   };
 
-  const fitToStage = (container: ElementContainerConfig) => {
+  const fitToStage = <T extends ElementContainerConfig>(container: WithIdPlaceholders<T> | T): T => {
     if (
       !stageConfig.value ||
       !stageConfig.value.width ||
       !stageConfig.value.height ||
+      typeof container.width !== 'number' ||
       container.width <= 0 ||
+      typeof container.height !== 'number' ||
       container.height <= 0
     ) {
-      return container;
+      return container as T;
     }
 
     const labelPadding = 100;
@@ -79,7 +82,7 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
       scaleY: scale,
       x: stageCenter.x - (container.width * scale) / 2,
       y: stageCenter.y - ((container.height + labelPadding) * scale) / 2,
-    } as ElementContainerConfig;
+    } as T;
 
     return scaledContainer;
   };
