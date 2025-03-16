@@ -75,26 +75,10 @@ const groupConfig = computed<Konva.GroupConfig>(() => {
   };
 });
 
-const canvasStageStore = useCanvasStageStore();
-
 watch(labelTextConfig, async () => {
   await nextTick();
   labelWidth.value = (labelText.value?.getNode().getTextWidth() ?? 0) + 2 * paddingSize;
 }, { immediate: true });
-
-// because of the reverse scaling, we need to force update the transformer
-watch(groupConfig, async () => {
-  if (
-    !canvasStageStore.imageTransformer ||
-    canvasStageStore.imageTransformer.nodes().length === 0
-  ) {
-    return;
-  }
-  await nextTick();
-  await nextTick();
-  await nextTick();
-  canvasStageStore.imageTransformer?.forceUpdate();
-});
 </script>
 
 <template>

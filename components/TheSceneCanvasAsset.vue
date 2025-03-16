@@ -162,13 +162,17 @@ onUnmounted(() => {
 });
 
 const { onHover, onHoverOut } = useCanvasAssetPointerEvents(state);
+const { onNodeTransformEnd } = useCanvasTransformEvents();
 
 const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
   onHover(e);
+  // transform handled by the stage after event bubbling
 };
-
-const onTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
+const canvasStageStore = useCanvasStageStore();
+const onTransformEnd = async (e: Konva.KonvaEventObject<DragEvent>) => {
   onHover(e);
+  await onNodeTransformEnd(e);
+  canvasStageStore.imageTransformer?.forceUpdate();
 };
 </script>
 

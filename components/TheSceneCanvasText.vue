@@ -105,7 +105,7 @@ const onHoverOut = (e: Konva.KonvaEventObject<PointerEvent>) => {
 const canvasStageStore = useCanvasStageStore();
 const onTransformEnd = async (e: Konva.KonvaEventObject<DragEvent>) => {
   // special case for text to avoid scaling
-  // don't let stage event handle ruin this
+  // apparently, transform events don't bubble, but just in case
   e.cancelBubble = true;
 
   const node = e.target as Konva.Node;
