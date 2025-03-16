@@ -78,6 +78,9 @@ export const useTextTool = () => {
     const isClick = Math.abs(pos.x - startX) < 5 && Math.abs(pos.y - startY) < 5;
     const width = isClick ? 200 : Math.abs(pos.x - startX);
     const height = isClick ? 100 : Math.abs(pos.y - startY);
+    // Calculate the top-left position for the text element
+    const elementX = isClick ? startX : Math.min(startX, pos.x);
+    const elementY = isClick ? startY : Math.min(startY, pos.y);
 
     const textElement = SceneElementCanvasObjectTextFactory(
       ID_PLACEHOLDER,
@@ -88,7 +91,7 @@ export const useTextTool = () => {
         fill: '#000000',
       },
       { width, height },
-      { x: pos.x, y: pos.y },
+      { x: elementX, y: elementY },
       sceneStore.scene.owner,
     );
 
