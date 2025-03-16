@@ -2,7 +2,11 @@
 import type Konva from 'konva';
 import type { ComputedRef } from 'vue';
 import { computed, toRef } from 'vue';
-import type { CanvasElementStateText, ElementContainerConfig, SceneElementCanvasObjectText } from '~/models/types';
+import type {
+  CanvasElementStateText,
+  ElementContainerConfig,
+  SceneElementCanvasObjectText,
+} from '~/models/types';
 import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
 
 const props = defineProps<{
@@ -55,6 +59,18 @@ const containerConfig: ComputedRef<ElementContainerConfig> = computed(() => {
   };
 });
 
+// Backdrop configuration
+const backdropConfig = computed(() => {
+  return {
+    width: props.element.container.width,
+    height: props.element.container.height,
+    fill: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white background
+    opacity: props.element.enabled ? 1 : 0.5,
+    x: 0,
+    y: 0,
+  };
+});
+
 // Text configuration
 const textConfig = computed(() => {
   if (!state.value) {
@@ -84,12 +100,24 @@ const onHover = (e: Konva.KonvaEventObject<PointerEvent>) => {
 const onHoverOut = (e: Konva.KonvaEventObject<PointerEvent>) => {
 };
 
-const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-  onNodeTransformEnd(e);
-};
+const canvasStageStore = useCanvasStageStore();
+const onTransformEnd = async (e: Konva.KonvaEventObject<DragEvent>) => {
+  // special case for text to avoid scaling
+  // don't let stage event handle ruin this
+  e.cancelBubble = true;
 
-const onTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-  onNodeTransformEnd(e);
+  const node = e.target as Konva.Node;
+
+  node.setAttrs({
+    scaleX: 1,
+    scaleY: 1,
+    width: Math.max(32, node.width() * node.scaleX()),
+    height: Math.max(32, node.height() * node.scaleY()),
+  });
+
+  await onNodeTransformEnd(e);
+
+  canvasStageStore.imageTransformer?.forceUpdate();
 };
 </script>
 
@@ -97,12 +125,12 @@ const onTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
   <v-group
     :config="containerConfig"
     @dragstart="onHoverOut"
-    @dragend="onDragEnd"
     @transformend="onTransformEnd"
     @transformstart="onHoverOut"
     @pointerover="onHover"
     @pointerout="onHoverOut"
   >
+    <v-rect :config="backdropConfig" />
     <v-text v-if="textConfig" :config="textConfig" />
   </v-group>
 </template>

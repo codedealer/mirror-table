@@ -14,11 +14,15 @@ export const useCanvasTransformEvents = () => {
     canvasToolStore.handleToolEvent(e.type, e);
   };
 
-  const onNodeTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
+  const onNodeTransformEnd = async (e: Konva.KonvaEventObject<DragEvent>) => {
     onKonvaEvent(e);
 
     const node = e.target as Konva.Node;
     const id = node.id();
+    if (!id) {
+      // if the node doesn't have an id, we don't touch it (likely a transformer or utility node)
+      return;
+    }
 
     const transforms: Partial<ElementContainerConfig> = {
       scaleX: node.scaleX(),
@@ -38,9 +42,11 @@ export const useCanvasTransformEvents = () => {
       // so we save the node's position as well
       transforms.x = node.x();
       transforms.y = node.y();
+      transforms.width = node.width();
+      transforms.height = node.height();
 
       try {
-        canvasElementsStore.applyContainerTransforms(id, transforms);
+        await canvasElementsStore.applyContainerTransforms(id, transforms);
       } catch (e) {
         console.error(e);
       }

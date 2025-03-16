@@ -201,16 +201,17 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     });
   };
 
-  const applyContainerTransforms = (
+  const applyContainerTransforms = async (
     elementId: string,
     transforms: Partial<ElementContainerConfig>,
   ) => {
     const element = canvasElements.value.find(element => element.id === elementId);
     if (!element) {
+      console.warn(`Trying to apply transforms to a non-existent element: ${elementId}`);
       return;
     }
 
-    void sceneStore.updateElement<SceneElementCanvasObject>(elementId, {
+    await sceneStore.updateElement<SceneElementCanvasObject>(elementId, {
       container: transforms,
     });
   };
