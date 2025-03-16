@@ -7,7 +7,6 @@ import type {
   ElementContainerConfig,
   SceneElementCanvasObjectAsset,
 } from '~/models/types';
-import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
 import { useCanvasAssetPointerEvents } from '~/composables/useCanvasAssetPointerEvents';
 import { useCanvasAssetProperties } from '~/composables/useCanvasAssetProperties';
 import { useComplexAssetPreviewWatcher } from '~/composables/useComplexAssetPreviewWatcher';
@@ -162,17 +161,13 @@ onUnmounted(() => {
   canvasElementsStore.deleteState(props.element.id);
 });
 
-const { onNodeTransformEnd } = useCanvasTransformEvents();
-
 const { onHover, onHoverOut } = useCanvasAssetPointerEvents(state);
 
 const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-  onNodeTransformEnd(e);
   onHover(e);
 };
 
 const onTransformEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-  onNodeTransformEnd(e);
   onHover(e);
 };
 </script>
