@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Fold, Tree as NakedTree } from 'he-tree-vue';
 import { DriveDirectoryTreeFile, DriveDirectoryTreeFolder } from '#components';
+import { Fold, Tree as NakedTree } from 'he-tree-vue';
 
 const Tree = NakedTree.mixPlugins([
   Fold,

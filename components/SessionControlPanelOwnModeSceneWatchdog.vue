@@ -38,8 +38,8 @@ const moveAllHere = () => {
 
 const goToScene = () => {
   if (
-    !sessionStore.viewerSessions.length ||
-    !sessionStore.activeSessionId
+    !sessionStore.viewerSessions.length
+    || !sessionStore.activeSessionId
   ) {
     return;
   }

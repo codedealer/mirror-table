@@ -2,7 +2,8 @@ import type {
   AssetProperties,
   DriveAsset,
   ElementContainerConfig,
-  SceneElementCanvasObjectAsset, SceneElementCanvasObjectAssetProperties,
+  SceneElementCanvasObjectAsset,
+  SceneElementCanvasObjectAssetProperties,
 } from '~/models/types';
 import type { IdPlaceholder, WithIdPlaceholders } from '~/utils/replaceIdPlaceholder';
 

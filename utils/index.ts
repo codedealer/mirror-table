@@ -17,11 +17,11 @@ export const idToSlug = (id: string): string => {
 
 export const aspectRatio = (width?: number | string, height?: number | string): number => {
   if (
-    !width ||
-    !height ||
-    Number.isNaN(Number(width)) ||
-    Number.isNaN(Number(height)) ||
-    Number(height) === 0
+    !width
+    || !height
+    || Number.isNaN(Number(width))
+    || Number.isNaN(Number(height))
+    || Number(height) === 0
   ) {
     return 1;
   }
@@ -31,11 +31,11 @@ export const aspectRatio = (width?: number | string, height?: number | string): 
 
 export const calculateNumberOfElements = (containerWidth: unknown, elementWidth: unknown): number => {
   if (
-    !containerWidth ||
-    !elementWidth ||
-    Number.isNaN(Number(containerWidth)) ||
-    Number.isNaN(Number(elementWidth)) ||
-    Number(elementWidth) === 0
+    !containerWidth
+    || !elementWidth
+    || Number.isNaN(Number(containerWidth))
+    || Number.isNaN(Number(elementWidth))
+    || Number(elementWidth) === 0
   ) {
     return 1;
   }
@@ -60,10 +60,10 @@ export const nameValidationsRules = [
 export const isEditableElement = (target: EventTarget) => {
   return (
     (
-      'nodeName' in target &&
-      ['INPUT', 'TEXTAREA'].includes(target.nodeName as string)
-    ) ||
-    ('isContentEditable' in target && target.isContentEditable)
+      'nodeName' in target
+      && ['INPUT', 'TEXTAREA'].includes(target.nodeName as string)
+    )
+    || ('isContentEditable' in target && target.isContentEditable)
   );
 };
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onKeyStroke } from '@vueuse/core';
 import type { TableSessionPresence } from '~/models/types';
+import { onKeyStroke } from '@vueuse/core';
 
 const sessionStore = useSessionStore();
 const tableStore = useTableStore();
@@ -45,12 +45,12 @@ hotkeyStore.registerHotkey({
 });
 onKeyStroke(true, (e) => {
   if (
-    e.code !== 'KeyF' ||
-    e.shiftKey ||
-    e.ctrlKey ||
-    e.altKey ||
-    e.metaKey ||
-    (e.target && isEditableElement(e.target))
+    e.code !== 'KeyF'
+    || e.shiftKey
+    || e.ctrlKey
+    || e.altKey
+    || e.metaKey
+    || (e.target && isEditableElement(e.target))
   ) {
     return;
   }

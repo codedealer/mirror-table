@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onKeyStroke, useElementSize } from '@vueuse/core';
-import { useWindowStore } from '~/stores/window-store';
 import TheWindowManagerTab from '~/components/TheWindowManagerTab.vue';
+import { useWindowStore } from '~/stores/window-store';
 import { calculateNumberOfElements, isEditableElement } from '~/utils';
 
 const container = ref(null);

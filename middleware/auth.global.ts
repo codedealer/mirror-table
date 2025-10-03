@@ -1,4 +1,4 @@
-export default defineNuxtRouteMiddleware((to, from) => {
+export default defineNuxtRouteMiddleware(async (to, _from) => {
   const userStore = useUserStore();
 
   const publicRoutes = ['/', '/d'];

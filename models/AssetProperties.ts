@@ -1,6 +1,6 @@
 import type { AssetProperties, AssetPropertiesKind, SelectOption } from '~/models/types';
-import { AppPropertiesTypes } from '~/models/types';
 import { PreviewPropertiesFactory, serializePreviewProperties } from '~/models/PreviewProprerties';
+import { AppPropertiesTypes } from '~/models/types';
 
 export const generateSelectOptions = (): SelectOption[] => {
   return [
@@ -24,9 +24,9 @@ export const generateSelectOptions = (): SelectOption[] => {
 
 export const AssetPropertiesFactory = (obj: Record<string, string>): AssetProperties => {
   if (
-    !Object.hasOwn(obj, 'type') ||
-    obj.type !== 'asset' ||
-    !Object.hasOwn(obj, 'kind')
+    !Object.hasOwn(obj, 'type')
+    || obj.type !== 'asset'
+    || !Object.hasOwn(obj, 'kind')
   ) {
     throw new Error('Invalid object');
   }

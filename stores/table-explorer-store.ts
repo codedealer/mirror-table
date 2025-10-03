@@ -1,19 +1,24 @@
 import type {
-  CollectionReference, DocumentData,
+  CollectionReference,
+  DocumentData,
   Query,
   WithFieldValue,
 } from '@firebase/firestore';
+import type { Category, Scene, TreeNode } from '~/models/types';
 import {
   collection,
-  doc, getDoc,
+  doc,
+  getDoc,
   getDocs,
   limit,
   orderBy,
-  query, serverTimestamp, setDoc,
+  query,
+  serverTimestamp,
+  setDoc,
   updateDoc,
-  where, writeBatch,
+  where,
+  writeBatch,
 } from '@firebase/firestore';
-import type { Category, Scene, TreeNode } from '~/models/types';
 
 export const useTableExplorerStore = defineStore('table-explorer', () => {
   const tableStore = useTableStore();
@@ -118,9 +123,9 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
 
   watchEffect(() => {
     if (
-      !tableStore.table ||
-      !tableStore.permissions.isOwner ||
-      rootNode.value
+      !tableStore.table
+      || !tableStore.permissions.isOwner
+      || rootNode.value
     ) {
       return;
     }
@@ -137,13 +142,13 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
   });
 
   let rootLoadTries = 0;
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   watchEffect(async () => {
     if (
-      !rootNode.value ||
-      rootNode.value.loading ||
-      rootNode.value.loaded ||
-      rootLoadTries > 0
+      !rootNode.value
+      || rootNode.value.loading
+      || rootNode.value.loaded
+      || rootLoadTries > 0
     ) {
       return;
     }

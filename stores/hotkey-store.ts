@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia';
 import type { Hotkey, HotkeyGroup } from '~/models/types';
+import { defineStore } from 'pinia';
 
 export const useHotkeyStore = defineStore('hotkey', () => {
   const hotkeys = ref<Hotkey[]>([]);

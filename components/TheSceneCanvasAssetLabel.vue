@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type Konva from 'konva';
 import type { KonvaComponent, SceneElementCanvasObjectAsset } from '~/models/types';
-import { TableModes } from '~/models/types';
 import { useCanvasElementAssetLabel } from '~/composables/useCanvasElementAssetLabel';
+import { TableModes } from '~/models/types';
 
 const props = defineProps<{
-  element: SceneElementCanvasObjectAsset
+  element: SceneElementCanvasObjectAsset;
 }>();
 
 const { label: elementLabel, isVisible } = useCanvasElementAssetLabel(

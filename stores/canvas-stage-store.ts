@@ -47,13 +47,13 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
 
   const fitToStage = <T extends ElementContainerConfig>(container: WithIdPlaceholders<T> | T): T => {
     if (
-      !stageConfig.value ||
-      !stageConfig.value.width ||
-      !stageConfig.value.height ||
-      typeof container.width !== 'number' ||
-      container.width <= 0 ||
-      typeof container.height !== 'number' ||
-      container.height <= 0
+      !stageConfig.value
+      || !stageConfig.value.width
+      || !stageConfig.value.height
+      || typeof container.width !== 'number'
+      || container.width <= 0
+      || typeof container.height !== 'number'
+      || container.height <= 0
     ) {
       return container as T;
     }

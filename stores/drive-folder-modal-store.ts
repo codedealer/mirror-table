@@ -3,8 +3,8 @@ import { acceptHMRUpdate, defineStore } from 'pinia';
 export const useDriveFolderModalStore = defineStore('drive-folder-modal', () => {
   const parentFolderModalModel = ref(false);
 
-  let resolveHook = (_: unknown) => {};
-  let rejectHook = (_: unknown) => {};
+  let resolveHook = (_value: unknown) => {};
+  let rejectHook = (_reason: unknown) => {};
 
   const promptToCreateParentFolder = () => {
     parentFolderModalModel.value = true;

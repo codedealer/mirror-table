@@ -3,8 +3,8 @@ import type { DriveFile } from '~/models/types';
 import { AssetPropertiesKinds, isDriveAsset, isDriveWidget } from '~/models/types';
 
 const props = defineProps<{
-  file?: DriveFile
-  error: unknown
+  file?: DriveFile;
+  error: unknown;
 }>();
 
 const iconName = computed(() => {

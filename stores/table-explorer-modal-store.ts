@@ -1,5 +1,5 @@
-import { acceptHMRUpdate } from 'pinia';
 import type { TreeNode } from '~/models/types';
+import { acceptHMRUpdate } from 'pinia';
 
 export const useTableExplorerModalStore = defineStore('table-explorer-modal', () => {
   const modalState = ref(false);

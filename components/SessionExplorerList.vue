@@ -24,7 +24,7 @@ const sessionStore = useSessionStore();
 </template>
 
 <style scoped lang="scss">
-.session-tree-group{
+.session-tree-group {
   margin-inline: calc(-1 * var(--va-tree-view-padding));
 }
 .session-tree-group__title {

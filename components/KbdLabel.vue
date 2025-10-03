@@ -1,8 +1,8 @@
 <script setup lang="ts">
 withDefaults(defineProps<{
-  button: string | number
-  modifiers?: string[]
-  size?: 'small' | 'large'
+  button: string | number;
+  modifiers?: string[];
+  size?: 'small' | 'large';
 }>(), {
   modifiers: () => [] as string[],
   size: 'small',

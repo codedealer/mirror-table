@@ -6,7 +6,7 @@ const props = defineProps<{ table: TableCard }>();
 const notificationStore = useNotificationStore();
 const tableStore = useTableStore();
 
-const removeTable = async () => {
+const _removeTable = async () => {
   // eslint-disable-next-line no-alert
   const confirmed = confirm('Are you sure you want to delete this table?');
   if (!confirmed) {

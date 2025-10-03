@@ -9,9 +9,9 @@ const driveWorkspaceSentinel = async () => {
   const driveStore = useDriveStore();
 
   if (
-    !driveStore.isReady ||
-    !userStore.isAuthenticated ||
-    !userStore.profile
+    !driveStore.isReady
+    || !userStore.isAuthenticated
+    || !userStore.profile
   ) {
     throw new Error('Calling Drive API when the API is not ready or user is not authenticated');
   }
@@ -28,8 +28,8 @@ const driveWorkspaceSentinel = async () => {
     await checkWorkspaceFolder(settings.driveFolderId);
   } catch (e) {
     if (
-      !isDriveInvalidParentFolderError(e) &&
-      !isDriveInvalidSearchFolderError(e)
+      !isDriveInvalidParentFolderError(e)
+      && !isDriveInvalidSearchFolderError(e)
     ) {
       throw e;
     }

@@ -26,12 +26,12 @@ hotkeyStore.registerHotkey({
 });
 onKeyStroke(true, (e) => {
   if (
-    e.code !== 'KeyH' ||
-    e.shiftKey ||
-    e.ctrlKey ||
-    e.altKey ||
-    e.metaKey ||
-    (e.target && isEditableElement(e.target))
+    e.code !== 'KeyH'
+    || e.shiftKey
+    || e.ctrlKey
+    || e.altKey
+    || e.metaKey
+    || (e.target && isEditableElement(e.target))
   ) {
     return;
   }

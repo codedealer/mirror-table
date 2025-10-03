@@ -3,16 +3,16 @@ import type Konva from 'konva';
 import type { TableSessionPresence } from '~/models/types';
 
 const props = defineProps<{
-  sessionPresence: TableSessionPresence
+  sessionPresence: TableSessionPresence;
 }>();
 const strokeWidth = 2;
 
 const showScreenFrame = computed(() => {
   if (
-    !props.sessionPresence.screen ||
-    !props.sessionPresence.screen.enabled ||
-    props.sessionPresence.screen.width <= 0 ||
-    props.sessionPresence.screen.height <= 0
+    !props.sessionPresence.screen
+    || !props.sessionPresence.screen.enabled
+    || props.sessionPresence.screen.width <= 0
+    || props.sessionPresence.screen.height <= 0
   ) {
     return false;
   }

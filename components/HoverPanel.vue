@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useElementHover } from '@vueuse/core';
 import type { HoverPanelContentType } from '~/models/types';
-import { HoverPanelContentTypes, HoverPanelModes } from '~/models/types';
 import { HoverPanelPresentationMode, SessionControlPanel } from '#components';
+import { useElementHover } from '@vueuse/core';
+import { HoverPanelContentTypes, HoverPanelModes } from '~/models/types';
 
 const panel = ref();
 const hoverPanelStore = useHoverPanelStore();

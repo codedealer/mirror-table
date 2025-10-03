@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { DriveWidget, ModalWindow, WidgetTemplate } from '~/models/types';
-import { WidgetTemplates } from '~/models/types';
 import { WindowContainerWidgetCandelaPlayer, WindowContainerWidgetMarkdown } from '#components';
+import { WidgetTemplates } from '~/models/types';
 
 const props = defineProps<{
-  window: ModalWindow
+  window: ModalWindow;
 }>();
 
 const { file, error } = useDriveFile<DriveWidget>(

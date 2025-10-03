@@ -1,5 +1,5 @@
-import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 import type { AuthorizationInfo } from '~/models/types';
+import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 
 export const useGoogleAuthStore = defineStore('google-auth', () => {
   const authorizationInfo = useCookie('authorizationInfo', {

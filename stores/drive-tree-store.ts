@@ -1,16 +1,16 @@
-import { acceptHMRUpdate, defineStore } from 'pinia';
-import { DriveFileExtensions } from '~/models/types';
 import type {
   AppProperties,
   AssetPropertiesKind,
   DriveFile,
   DriveTreeNode,
 } from '~/models/types';
-
-import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
-import { buildNodes } from '~/utils/driveOps';
-import { extractErrorMessage } from '~/utils/extractErrorMessage';
+import { acceptHMRUpdate, defineStore } from 'pinia';
 import { PreviewPropertiesFactory } from '~/models/PreviewProprerties';
+
+import { DriveFileExtensions } from '~/models/types';
+import { buildNodes } from '~/utils/driveOps';
+import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
+import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
 export const useDriveTreeStore = defineStore('drive-tree', () => {
   const rootNode = ref<DriveTreeNode>({
@@ -317,8 +317,8 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
         allowUpload: true,
         callback: (result) => {
           if (
-            result.action === google.picker.Action.PICKED &&
-            result.docs.length > 0
+            result.action === google.picker.Action.PICKED
+            && result.docs.length > 0
           ) {
             const ids = result.docs.map(d => d.id);
 

@@ -1,5 +1,4 @@
 import type { UpdateData, WithFieldValue } from '@firebase/firestore';
-import { collection, doc, serverTimestamp, updateDoc, writeBatch } from '@firebase/firestore';
 import type {
   Category,
   DriveFile,
@@ -9,6 +8,7 @@ import type {
   TableCard,
   TableSession,
 } from '~/models/types';
+import { collection, doc, serverTimestamp, updateDoc, writeBatch } from '@firebase/firestore';
 import { idToSlug } from '~/utils';
 
 export const useFirestoreTable = () => {

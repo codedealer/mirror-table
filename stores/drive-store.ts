@@ -1,5 +1,5 @@
-import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 import type { AuthorizationInfo } from '~/models/types';
+import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 
 export const useDriveStore = defineStore('drive', () => {
   const { isLoading, isReady: libLoaded, client } = useDrive();
@@ -10,10 +10,10 @@ export const useDriveStore = defineStore('drive', () => {
   void cacheStore.open();
 
   const isReady = computed(() => (
-    libLoaded.value &&
-    !!client.value &&
-    !!googleStore.client &&
-    (cacheStore.isPersistenceSupported ? !!cacheStore.db : true)
+    libLoaded.value
+    && !!client.value
+    && !!googleStore.client
+    && (cacheStore.isPersistenceSupported ? !!cacheStore.db : true)
   ),
   );
 

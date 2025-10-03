@@ -1,6 +1,6 @@
 import type { Timestamp } from '@firebase/firestore-types';
-import type Konva from 'konva';
 import type { DBSchema } from 'idb';
+import type Konva from 'konva';
 import type { DefineComponent } from 'vue';
 
 export type NestedPartial<T> = {
@@ -8,17 +8,17 @@ export type NestedPartial<T> = {
 };
 
 export interface AuthorizationInfo {
-  accessToken: string
-  expiry: number
+  accessToken: string;
+  expiry: number;
 }
 
 export interface UniversalAuthClient {
-  requestToken: () => Promise<AuthorizationInfo>
+  requestToken: () => Promise<AuthorizationInfo>;
 }
 
 export interface UniversalAuthClientParams {
-  clientId: string
-  scope?: string
+  clientId: string;
+  scope?: string;
 }
 
 export const PickerViewTemplates = {
@@ -30,24 +30,24 @@ export const PickerViewTemplates = {
 export type PickerViewTemplate = typeof PickerViewTemplates[keyof typeof PickerViewTemplates];
 
 export interface BuildPickerOptions {
-  parentId: string
-  uploadParentId?: string
-  template?: PickerViewTemplate
-  allowMultiSelect?: boolean
-  allowUpload?: boolean
-  uploadOnly?: boolean
-  callback?: (result: google.picker.ResponseObject) => void
+  parentId: string;
+  uploadParentId?: string;
+  template?: PickerViewTemplate;
+  allowMultiSelect?: boolean;
+  allowUpload?: boolean;
+  uploadOnly?: boolean;
+  callback?: (result: google.picker.ResponseObject) => void;
 }
 
 export interface Profile {
   settings: {
-    driveFolderId: string
-    searchFolderId: string
-  }
+    driveFolderId: string;
+    searchFolderId: string;
+  };
 }
 
 export interface DriveInvalidParentFolderError extends Error {
-  code: 'drive_invalid_parent_folder'
+  code: 'drive_invalid_parent_folder';
 }
 
 export const isObject = (obj: unknown): obj is Record<string, unknown> => {
@@ -59,7 +59,7 @@ export const isDriveInvalidParentFolderError = (err: unknown): err is DriveInval
 };
 
 export interface DriveInvalidPermissionsError extends Error {
-  code: 'drive_invalid_permissions'
+  code: 'drive_invalid_permissions';
 }
 
 export const isDriveInvalidPermissionsError = (err: unknown): err is DriveInvalidPermissionsError => {
@@ -67,7 +67,7 @@ export const isDriveInvalidPermissionsError = (err: unknown): err is DriveInvali
 };
 
 export interface DriveInvalidSearchFolderError extends Error {
-  code: 'drive_invalid_search_folder'
+  code: 'drive_invalid_search_folder';
 }
 
 export const isDriveInvalidSearchFolderError = (err: unknown): err is DriveInvalidSearchFolderError => {
@@ -76,14 +76,14 @@ export const isDriveInvalidSearchFolderError = (err: unknown): err is DriveInval
 
 export interface GapiErrorResponseResult {
   error: {
-    code: number
-    message: string
+    code: number;
+    message: string;
     errors: {
-      domain: string
-      reason: string
-      message: string
-    }
-  }
+      domain: string;
+      reason: string;
+      message: string;
+    };
+  };
 }
 
 export const isGapiErrorResponseResult = (obj: unknown): obj is GapiErrorResponseResult => {
@@ -103,21 +103,21 @@ export const DriveFileExtensions = {
 } as const;
 
 export interface Notification {
-  id: string
-  icon?: string
-  title?: string
-  message: string
-  type?: 'success' | 'info' | 'warning' | 'error'
-  duration?: number
-  color?: string
+  id: string;
+  icon?: string;
+  title?: string;
+  message: string;
+  type?: 'success' | 'info' | 'warning' | 'error';
+  duration?: number;
+  color?: string;
 }
 
 export interface AccessTokenReturnType {
-  accessToken?: string
-  expiry?: number
-  valid: boolean
-  reason?: string
-  needsConsent?: boolean
+  accessToken?: string;
+  expiry?: number;
+  valid: boolean;
+  reason?: string;
+  needsConsent?: boolean;
 }
 
 export const fieldMask = 'id, trashed, name, ownedByMe, originalFilename, mimeType, shared, iconLink, imageMediaMetadata, createdTime, modifiedTime, fileExtension, properties, appProperties, md5Checksum, version, videoMediaMetadata, thumbnailLink, thumbnailVersion, size, quotaBytesUsed, parents, capabilities/canEdit, capabilities/canCopy, capabilities/canDelete, capabilities/canListChildren, capabilities/canAddChildren, capabilities/canShare, capabilities/canDownload' as const;
@@ -135,7 +135,7 @@ export const AppPropertiesTypes = {
 export type AppPropertiesType = typeof AppPropertiesTypes[keyof typeof AppPropertiesTypes];
 
 export interface AppProperties {
-  type: AppPropertiesType
+  type: AppPropertiesType;
 }
 
 export type DriveFileUpdateObject = Omit<DriveFileUpdateReturnType, 'appProperties'> & { appProperties?: AppProperties };
@@ -149,20 +149,20 @@ export const AssetPropertiesKinds = {
 export type AssetPropertiesKind = typeof AssetPropertiesKinds[keyof typeof AssetPropertiesKinds];
 
 export interface PreviewProperties {
-  id: string // drive file id of an image
-  nativeWidth: number
-  nativeHeight: number
-  scaleX: number
-  scaleY: number
-  rotation?: number
+  id: string; // drive file id of an image
+  nativeWidth: number;
+  nativeHeight: number;
+  scaleX: number;
+  scaleY: number;
+  rotation?: number;
 }
 
 export interface AssetProperties extends AppProperties {
-  type: 'asset'
-  kind: AssetPropertiesKind
-  title: string
-  showTitle: boolean
-  preview?: PreviewProperties | null // null is for the api to remove the property
+  type: 'asset';
+  kind: AssetPropertiesKind;
+  title: string;
+  showTitle: boolean;
+  preview?: PreviewProperties | null; // null is for the api to remove the property
 }
 
 export const isAssetProperties = (obj: unknown): obj is AssetProperties => {
@@ -177,10 +177,10 @@ export const WidgetTemplates = {
 export type WidgetTemplate = typeof WidgetTemplates[keyof typeof WidgetTemplates];
 
 export interface WidgetProperties extends AppProperties {
-  type: 'widget'
-  template: WidgetTemplate
-  firestoreId?: string
-  title?: string
+  type: 'widget';
+  template: WidgetTemplate;
+  firestoreId?: string;
+  title?: string;
 }
 
 export const isWidgetProperties = (obj: unknown): obj is WidgetProperties => {
@@ -188,13 +188,13 @@ export const isWidgetProperties = (obj: unknown): obj is WidgetProperties => {
 };
 
 export interface DriveFileCapabilities {
-  canEdit?: boolean
-  canCopy?: boolean
-  canDelete?: boolean
-  canListChildren?: boolean
-  canAddChildren?: boolean
-  canShare?: boolean
-  canDownload?: boolean
+  canEdit?: boolean;
+  canCopy?: boolean;
+  canDelete?: boolean;
+  canListChildren?: boolean;
+  canAddChildren?: boolean;
+  canShare?: boolean;
+  canDownload?: boolean;
 }
 
 type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' | 'ownedByMe' | 'originalFilename' | 'mimeType' | 'shared' | 'iconLink' | 'imageMediaMetadata' | 'createdTime' | 'modifiedTime' | 'size' | 'fileExtension' | 'properties' | 'appProperties' | 'md5Checksum' | 'version' | 'videoMediaMetadata' | 'thumbnailLink' | 'thumbnailVersion' | 'quotaBytesUsed' | 'parents'> & { capabilities?: DriveFileCapabilities };
@@ -202,9 +202,9 @@ type OptionalDriveFile = Pick<gapi.client.drive.File, 'id' | 'trashed' | 'name' 
 export type DriveFileRaw = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | 'name' | 'originalFilename' | 'shared' | 'ownedByMe'>> & OptionalDriveFile;
 
 export interface DriveFile extends Omit<DriveFileRaw, 'appProperties'> {
-  appProperties?: AppProperties
-  loading: boolean
-  loadedAt: number
+  appProperties?: AppProperties;
+  loading: boolean;
+  loadedAt: number;
 }
 
 export const isDriveFile = (obj: unknown): obj is DriveFile => {
@@ -212,7 +212,7 @@ export const isDriveFile = (obj: unknown): obj is DriveFile => {
 };
 
 export interface DriveAsset extends DriveFile {
-  appProperties: AssetProperties
+  appProperties: AssetProperties;
 }
 
 export const isDriveAsset = (file: DriveFile): file is DriveAsset => {
@@ -220,7 +220,7 @@ export const isDriveAsset = (file: DriveFile): file is DriveAsset => {
 };
 
 export interface DriveWidget extends DriveFile {
-  appProperties: WidgetProperties
+  appProperties: WidgetProperties;
 }
 
 export const isDriveWidget = (file: DriveFile): file is DriveWidget => {
@@ -230,45 +230,45 @@ export const isDriveWidget = (file: DriveFile): file is DriveWidget => {
 export type DriveImage = DriveFile & Required<Pick<gapi.client.drive.File, 'imageMediaMetadata'>>;
 
 export interface ContextAction {
-  id: string
-  label: string
-  icon?: { name: string; color?: string }
-  action: (...args: unknown[]) => PromiseLike<void> | void
-  disabled: boolean
-  pinned: boolean
-  alwaysVisible: boolean
+  id: string;
+  label: string;
+  icon?: { name: string; color?: string };
+  action: (...args: unknown[]) => PromiseLike<void> | void;
+  disabled: boolean;
+  pinned: boolean;
+  alwaysVisible: boolean;
 }
 
 export interface TreeNode {
-  $folded: boolean
-  id: string
-  label: string
-  isFolder: boolean
-  loaded: boolean
-  loading: boolean
-  disabled: boolean
-  icon?: string
-  children?: TreeNode[]
+  $folded: boolean;
+  id: string;
+  label: string;
+  isFolder: boolean;
+  loaded: boolean;
+  loading: boolean;
+  disabled: boolean;
+  icon?: string;
+  children?: TreeNode[];
 }
 
 export interface DriveTreeNode extends TreeNode {
-  id: string // coincides with DriveFile.id
-  children?: DriveTreeNode[]
+  id: string; // coincides with DriveFile.id
+  children?: DriveTreeNode[];
 }
 
 export interface ModalWindowContent {
-  type: string
-  editing: boolean
-  data?: unknown
+  type: string;
+  editing: boolean;
+  data?: unknown;
 }
 
 export interface ModalWindowContentMarkdown extends ModalWindowContent {
-  type: 'markdown'
-  data: undefined // markdown content is moved to component
+  type: 'markdown';
+  data: undefined; // markdown content is moved to component
 }
 
 export interface ModalWindowContentWidget extends ModalWindowContent {
-  type: 'widget'
+  type: 'widget';
 }
 
 export const ModalWindowStatus = {
@@ -280,23 +280,23 @@ export const ModalWindowStatus = {
 } as const;
 
 export interface ModalWindow {
-  id: string
-  title: string
-  pinned: boolean
-  active: boolean
-  status: typeof ModalWindowStatus[keyof typeof ModalWindowStatus]
-  content: ModalWindowContent
+  id: string;
+  title: string;
+  pinned: boolean;
+  active: boolean;
+  status: typeof ModalWindowStatus[keyof typeof ModalWindowStatus];
+  content: ModalWindowContent;
 }
 
 export interface SelectOption {
-  text: string
-  value: string
-  description?: string
+  text: string;
+  value: string;
+  description?: string;
 }
 
 export interface ItemSelectorOption {
-  id: string
-  name?: string
+  id: string;
+  name?: string;
 }
 
 export const DynamicPanelModelTypes = {
@@ -330,22 +330,22 @@ export const HoverPanelModes = {
 export type HoverPanelMode = typeof HoverPanelModes[keyof typeof HoverPanelModes];
 
 export interface Hotkey {
-  id: string
-  key: string
-  code?: string
-  description: string
-  namespace?: string
+  id: string;
+  key: string;
+  code?: string;
+  description: string;
+  namespace?: string;
   modifiers: {
-    ctrl?: boolean
-    shift?: boolean
-    alt?: boolean
-    meta?: boolean
-  }
+    ctrl?: boolean;
+    shift?: boolean;
+    alt?: boolean;
+    meta?: boolean;
+  };
 }
 
 export interface HotkeyGroup {
-  namespace: string
-  hotkeys: Hotkey[]
+  namespace: string;
+  hotkeys: Hotkey[];
 }
 
 export const DataRetrievalStrategies = {
@@ -366,38 +366,38 @@ export const DataRetrievalStrategies = {
 export type DataRetrievalStrategy = typeof DataRetrievalStrategies[keyof typeof DataRetrievalStrategies];
 
 export interface GetFilesOptions {
-  TTL?: number
-  skipDisk?: boolean
+  TTL?: number;
+  skipDisk?: boolean;
 }
 
 export interface RawMediaObject {
-  id: string
-  name?: string
-  mimeType?: string
-  googleContentType?: string
-  size?: string
-  md5Checksum: string
-  version?: string
-  loadedAt: number
-  data: string
+  id: string;
+  name?: string;
+  mimeType?: string;
+  googleContentType?: string;
+  size?: string;
+  md5Checksum: string;
+  version?: string;
+  loadedAt: number;
+  data: string;
 }
 
 export interface CacheSchema extends DBSchema {
   files: {
-    key: string
-    value: DriveFile
-  }
+    key: string;
+    value: DriveFile;
+  };
   media: {
-    key: string
-    value: RawMediaObject
-  }
+    key: string;
+    value: RawMediaObject;
+  };
 }
 
 // CANVAS TYPES
 
 export interface KonvaComponent<T> {
-  getNode: () => T
-  getStage: () => Konva.Stage
+  getNode: () => T;
+  getStage: () => Konva.Stage;
 }
 
 export const CanvasLayerTypes = {
@@ -408,13 +408,13 @@ export const CanvasLayerTypes = {
 export type CanvasLayerType = typeof CanvasLayerTypes[keyof typeof CanvasLayerTypes];
 
 export interface ElementContainerConfig extends Konva.NodeConfig {
-  id: string
-  name: 'element-container'
-  width: number
-  height: number
-  rotation: number
-  scaleX: number
-  scaleY: number
+  id: string;
+  name: 'element-container';
+  width: number;
+  height: number;
+  rotation: number;
+  scaleX: number;
+  scaleY: number;
 }
 
 export const isContainerNode = (obj: unknown): obj is Konva.Node => {
@@ -449,25 +449,25 @@ export const SelectionGroupIcons = {
 export type SelectionGroupIcon = typeof SelectionGroupIcons[keyof typeof SelectionGroupIcons];
 
 export interface CanvasElementState {
-  id: string
-  name?: string
-  selectable: boolean
-  selected: boolean
-  error?: unknown
+  id: string;
+  name?: string;
+  selectable: boolean;
+  selected: boolean;
+  error?: unknown;
 }
 
 export interface CanvasElementStateLoadable extends CanvasElementState {
-  loading: boolean
-  loaded: boolean
+  loading: boolean;
+  loaded: boolean;
 }
 
 export interface CanvasElementStateAsset extends CanvasElementStateLoadable {
-  _type: 'asset'
-  imageElement?: HTMLImageElement
+  _type: 'asset';
+  imageElement?: HTMLImageElement;
 }
 
 export interface CanvasElementStateText extends CanvasElementState {
-  _type: 'text'
+  _type: 'text';
 }
 
 export const isCanvasElementStateAsset = (obj: CanvasElementState): obj is CanvasElementStateAsset => {
@@ -479,13 +479,13 @@ export const isCanvasElementStateText = (obj: CanvasElementState): obj is Canvas
 };
 
 export interface CanvasTool {
-  id: string
-  name: string
-  icon: string
-  disabled: boolean
-  active: boolean
-  events: Map<string, (e: Konva.KonvaEventObject<unknown>) => void>
-  component: DefineComponent<{}, {}, any>
+  id: string;
+  name: string;
+  icon: string;
+  disabled: boolean;
+  active: boolean;
+  events: Map<string, (e: Konva.KonvaEventObject<unknown>) => void>;
+  component: DefineComponent<Record<string, never>, Record<string, never>, any>;
 }
 
 // FIRESTORE TYPES
@@ -494,66 +494,66 @@ export interface CanvasTool {
  * Main widget entity. Exists in root collection under owner id.
  */
 export interface Widget {
-  id: string
-  fileId: string
-  owner: string
-  enabled: boolean
-  template: WidgetTemplate
-  rank: number
+  id: string;
+  fileId: string;
+  owner: string;
+  enabled: boolean;
+  template: WidgetTemplate;
+  rank: number;
 }
 
 export interface WidgetMarkdown extends Widget {
-  template: 'markdown'
-  avatar: PreviewProperties | null
-  content: string
-  privateContent: string
+  template: 'markdown';
+  avatar: PreviewProperties | null;
+  content: string;
+  privateContent: string;
 }
 
 export interface WidgetCandelaPlayer extends Widget {
-  template: 'candela-player'
+  template: 'candela-player';
   player: {
-    name: string
-    role: string
-    speciality: string
-    avatar: PreviewProperties | null
+    name: string;
+    role: string;
+    speciality: string;
+    avatar: PreviewProperties | null;
     marks: {
-      body: number
-      mind: number
-      bleed: number
-    }
-    scars: number
-  }
-  content: string
-  privateContent: string
+      body: number;
+      mind: number;
+      bleed: number;
+    };
+    scars: number;
+  };
+  content: string;
+  privateContent: string;
 }
 
 /**
  * Data for a table card that appears on a dashboard. Each user has a copy.
  */
 export interface TableCard {
-  id: string
-  title: string
-  createdAt: Timestamp
-  lastAccess: Timestamp
+  id: string;
+  title: string;
+  createdAt: Timestamp;
+  lastAccess: Timestamp;
   owner: {
-    displayName: string
-    photoURL: string
-    email: string
-  }
-  role: 'owner' | 'editor' | 'viewer'
-  thumbnail: DriveFile | null
-  type: 'private' | 'public'
-  slug: string
-  deleted: boolean
+    displayName: string;
+    photoURL: string;
+    email: string;
+  };
+  role: 'owner' | 'editor' | 'viewer';
+  thumbnail: DriveFile | null;
+  type: 'private' | 'public';
+  slug: string;
+  deleted: boolean;
 }
 
 export interface SessionGroup {
-  groupId: string | null
-  groupLabel?: string
-  color: string
-  sceneId: string
-  path: string[]
-  enabled: boolean
+  groupId: string | null;
+  groupLabel?: string;
+  color: string;
+  sceneId: string;
+  path: string[];
+  enabled: boolean;
 }
 
 /**
@@ -562,43 +562,43 @@ export interface SessionGroup {
  * In this structure, a group is flattened to a presence entity.
  */
 export interface TableSessionPresence extends SessionGroup {
-  sessionId: string
-  displayName: string
+  sessionId: string;
+  displayName: string;
   screen?: {
-    enabled: boolean
-    x: number
-    y: number
-    width: number
-    height: number
-  }
+    enabled: boolean;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 }
 /**
  * Session object for a table.
  * Property is a user id or an auto-generated local session id.
  */
 export interface TableSession {
-  [sessionId: string]: TableSessionPresence
+  [sessionId: string]: TableSessionPresence;
 }
 
 /**
  * Main table entity. Exists in root collection. Each table has a single owner.
  */
 export interface Table {
-  id: string
-  title: string
-  rootCategoryId: string
-  owner: string
-  editors: string[]
-  viewers: string[]
-  session: TableSession
+  id: string;
+  title: string;
+  rootCategoryId: string;
+  owner: string;
+  editors: string[];
+  viewers: string[];
+  session: TableSession;
   // controls which panels are open to viewers
   panels: {
     [K in DynamicPanelModelType]: boolean
-  }
+  };
   // lists widget ids of widgets on each panel
-  widgets: Record<DynamicPanelModelType, string[]>
-  createdAt: Timestamp
-  slug: string
+  widgets: Record<DynamicPanelModelType, string[]>;
+  createdAt: Timestamp;
+  slug: string;
 }
 
 /**
@@ -607,39 +607,39 @@ export interface Table {
  * Supports hierarchical structure: a category can have a parent category.
  */
 export interface Category {
-  id: string
-  tableId: string
-  title: string
-  parentId: string | null
-  owner: string
-  createdAt: Timestamp
-  deletable: boolean
-  deleted: boolean
+  id: string;
+  tableId: string;
+  title: string;
+  parentId: string | null;
+  owner: string;
+  createdAt: Timestamp;
+  deletable: boolean;
+  deleted: boolean;
 }
 
 export interface BaseScene {
-  id: string
-  path: string[]
+  id: string;
+  path: string[];
 }
 
 /**
  * Entity in a subcollection of a table. Each table has many scenes.
  */
 export interface Scene extends BaseScene {
-  tableId: string
-  categoryId: string
-  title: string
-  owner: string
-  thumbnail: DriveFile | string | null
-  createdAt: Timestamp
-  archived: boolean
-  deletable: boolean
-  deleted: boolean
-  slug: string
+  tableId: string;
+  categoryId: string;
+  title: string;
+  owner: string;
+  thumbnail: DriveFile | string | null;
+  createdAt: Timestamp;
+  archived: boolean;
+  deletable: boolean;
+  deleted: boolean;
+  slug: string;
   settings: {
-    [x: string]: unknown
-  }
-  searchIndex?: string[]
+    [x: string]: unknown;
+  };
+  searchIndex?: string[];
 }
 
 export const isScene = (obj: unknown): obj is Scene => {
@@ -647,24 +647,24 @@ export const isScene = (obj: unknown): obj is Scene => {
 };
 
 export interface SceneElement {
-  _type: 'screen' | 'canvas-object'
-  id: string
-  enabled: boolean
-  selectionGroup: SelectionGroup
-  defaultRank: number
-  owner: string
+  _type: 'screen' | 'canvas-object';
+  id: string;
+  enabled: boolean;
+  selectionGroup: SelectionGroup;
+  defaultRank: number;
+  owner: string;
 }
 
 export type Stateful<T extends SceneElement, U extends CanvasElementState> = {
   [K in keyof T]: T[K]
 } & {
-  _state: U
+  _state: U;
 };
 
 export interface SceneElementCanvasObject extends SceneElement {
-  _type: 'canvas-object'
-  type: string
-  container: ElementContainerConfig
+  _type: 'canvas-object';
+  type: string;
+  container: ElementContainerConfig;
 }
 
 export const isSceneElementCanvasObject = (
@@ -674,36 +674,36 @@ export const isSceneElementCanvasObject = (
 };
 
 export interface CanvasObjectInteraction {
-  enabled: boolean
-  action: string
-  payload: unknown
-  tooltip: string | null
+  enabled: boolean;
+  action: string;
+  payload: unknown;
+  tooltip: string | null;
 }
 
 export interface SceneElementCanvasObjectInteractive {
-  interaction?: CanvasObjectInteraction
+  interaction?: CanvasObjectInteraction;
 }
 
 export interface CanvasObjectSceneMoveInteraction extends CanvasObjectInteraction {
-  action: 'scene-move'
-  payload: BaseScene
+  action: 'scene-move';
+  payload: BaseScene;
 }
 
 export type SceneElementCanvasObjectAssetProperties = Omit<AssetProperties, 'preview'> &
-{
-  id: string
-  preview: PreviewProperties
-  settings?: Record<string, unknown>
-  // currently not used, search is done via Drive API
-  searchIndex?: string[]
-};
+  {
+    id: string;
+    preview: PreviewProperties;
+    settings?: Record<string, unknown>;
+    // currently not used, search is done via Drive API
+    searchIndex?: string[];
+  };
 
 export interface SceneElementCanvasObjectAsset extends
   SceneElementCanvasObject,
   SceneElementCanvasObjectInteractive {
-  type: 'asset'
-  asset: SceneElementCanvasObjectAssetProperties
-  image?: Konva.ImageConfig
+  type: 'asset';
+  asset: SceneElementCanvasObjectAssetProperties;
+  image?: Konva.ImageConfig;
 }
 
 export const isSceneElementCanvasObjectAsset = (
@@ -715,8 +715,8 @@ export const isSceneElementCanvasObjectAsset = (
 export interface SceneElementCanvasObjectText extends
   SceneElementCanvasObject,
   SceneElementCanvasObjectInteractive {
-  type: 'text'
-  text: Konva.TextConfig
+  type: 'text';
+  text: Konva.TextConfig;
 }
 
 export const isSceneElementCanvasObjectText = (
@@ -734,9 +734,9 @@ export const isStateful = <T extends SceneElementCanvasObject, U extends CanvasE
 };
 
 export interface SceneElementScreen extends SceneElement {
-  _type: 'screen'
-  file: string
-  thumbnail: string | null
+  _type: 'screen';
+  file: string;
+  thumbnail: string | null;
 }
 
 export const isSceneElementScreen = (
@@ -746,20 +746,20 @@ export const isSceneElementScreen = (
 };
 
 export interface LayerGroup {
-  name: SelectionGroupName
-  icon?: string
+  name: SelectionGroupName;
+  icon?: string;
 }
 
 export interface LayerItem<T extends SceneElement | LayerGroup> {
-  id: string
-  type: T extends SceneElement ? 'element' : 'group'
-  item: T
+  id: string;
+  type: T extends SceneElement ? 'element' : 'group';
+  item: T;
 }
 
 export interface TablePermissions {
-  isOwner: boolean
-  isEditor: boolean
-  isViewer: boolean
+  isOwner: boolean;
+  isEditor: boolean;
+  isViewer: boolean;
 }
 
 export const TableModes = {

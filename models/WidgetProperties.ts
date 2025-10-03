@@ -18,9 +18,9 @@ export const generateTemplates = (): SelectOption[] => {
 
 export const WidgetPropertiesFactory = (obj: Record<string, string>): WidgetProperties => {
   if (
-    !Object.hasOwn(obj, 'type') ||
-    obj.type !== 'widget' ||
-    !Object.hasOwn(obj, 'template')
+    !Object.hasOwn(obj, 'type')
+    || obj.type !== 'widget'
+    || !Object.hasOwn(obj, 'template')
   ) {
     throw new Error('Invalid object');
   }

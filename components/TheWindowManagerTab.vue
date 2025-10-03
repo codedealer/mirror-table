@@ -2,8 +2,8 @@
 import type { ModalWindow } from '~/models/types';
 
 const props = defineProps<{
-  window: ModalWindow
-  index: number
+  window: ModalWindow;
+  index: number;
 }>();
 
 const tabClassList = computed(() => ({

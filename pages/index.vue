@@ -84,8 +84,8 @@ watchEffect(() => {
   footer {
     margin-top: 2rem;
     a {
-      opacity: .7;
-      transition: opacity .3s ease-in-out;
+      opacity: 0.7;
+      transition: opacity 0.3s ease-in-out;
       &:hover {
         opacity: 1;
       }
@@ -109,7 +109,7 @@ watchEffect(() => {
 .welcome-card {
   @extend .index-card;
   padding-bottom: 100px;
-  --va-card-box-shadow: 0 .25rem .5rem rgba(241, 4, 95, .5);
+  --va-card-box-shadow: 0 0.25rem 0.5rem rgba(241, 4, 95, 0.5);
   .va-card__title {
     font-size: 2rem;
     font-weight: 400;

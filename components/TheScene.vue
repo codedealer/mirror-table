@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import TheSceneCanvas from '~/components/TheSceneCanvas.vue';
-import TheSceneScreen from '~/components/TheSceneScreen.vue';
-import TheSceneOverlay from '~/components/TheSceneOverlay.vue';
 import TheSceneCanvasContextPanel from '~/components/TheSceneCanvasContextPanel.vue';
+import TheSceneOverlay from '~/components/TheSceneOverlay.vue';
+import TheSceneScreen from '~/components/TheSceneScreen.vue';
 
 const sceneStore = useSceneStore();
 </script>

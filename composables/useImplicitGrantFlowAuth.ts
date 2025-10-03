@@ -1,7 +1,7 @@
 import type { AuthorizationInfo, UniversalAuthClient, UniversalAuthClientParams } from '~/models/types';
 import { expiryFromSeconds } from '~/utils';
-import TokenResponse = google.accounts.oauth2.TokenResponse;
 import OverridableTokenClientConfig = google.accounts.oauth2.OverridableTokenClientConfig;
+import TokenResponse = google.accounts.oauth2.TokenResponse;
 
 const tokenTTLToleranceSec = 60 * 1000;
 
@@ -70,11 +70,11 @@ export const useImplicitGrantFlowAuth = ({
 
     const googleAuthStore = useGoogleAuthStore();
     // check if the token has not yet expired
-    if (!prompt &&
-        googleAuthStore.authorizationInfo &&
-        googleAuthStore.authorizationInfo.expiry > (
-          Date.now() + tokenTTLToleranceSec
-        )
+    if (!prompt
+      && googleAuthStore.authorizationInfo
+      && googleAuthStore.authorizationInfo.expiry > (
+        Date.now() + tokenTTLToleranceSec
+      )
     ) {
       return Promise.resolve(googleAuthStore.authorizationInfo);
     }

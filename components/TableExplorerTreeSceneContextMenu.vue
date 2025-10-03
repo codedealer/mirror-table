@@ -3,7 +3,7 @@ import type { Scene, TreeNode } from '~/models/types';
 import { useSessionGroupsHere } from '~/composables/useSessionGroupsHere';
 
 const props = defineProps<{
-  node: TreeNode
+  node: TreeNode;
 }>();
 
 const { item: scene } = useExplorerItem<Scene>(toRef(() => props.node));

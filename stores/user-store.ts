@@ -1,9 +1,9 @@
-import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 import type { User } from 'firebase/auth';
-import { doc, onSnapshot, setDoc } from '@firebase/firestore';
-import { useGoogleAuthStore } from '~/stores/google-auth-store';
 import type { Profile } from '~/models/types';
+import { doc, onSnapshot, setDoc } from '@firebase/firestore';
+import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 import { ProfileFactory } from '~/models/Profile';
+import { useGoogleAuthStore } from '~/stores/google-auth-store';
 
 export const useUserStore = defineStore('user', () => {
   const { $auth, $db } = useNuxtApp();
@@ -40,7 +40,7 @@ export const useUserStore = defineStore('user', () => {
   };
 
   // watch only on the client side
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   $auth && $auth.onAuthStateChanged(async (authUser) => {
     user.value = authUser;
     if (user.value) {

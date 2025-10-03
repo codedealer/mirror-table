@@ -9,7 +9,7 @@ import type {
 import CanvasLayersElementAsset from '~/components/CanvasLayersElementAsset.vue';
 
 defineProps<{
-  item: LayerItem<SceneElement>
+  item: LayerItem<SceneElement>;
 }>();
 </script>
 

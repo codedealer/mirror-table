@@ -1,12 +1,12 @@
 <script setup lang="ts">
 withDefaults(defineProps<{
-  disabled: boolean
+  disabled: boolean;
 }>(), {
   disabled: false,
 });
 
 defineEmits<{
-  'update:dirty': void
+  'update:dirty': void;
 }>();
 
 const showTitle = defineModel<boolean>('showTitle', {

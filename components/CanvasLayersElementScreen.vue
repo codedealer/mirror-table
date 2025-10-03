@@ -2,7 +2,7 @@
 import type { ContextAction, DriveAsset, DriveImage, LayerItem, SceneElementScreen } from '~/models/types';
 
 const props = defineProps<{
-  item: LayerItem<SceneElementScreen>
+  item: LayerItem<SceneElementScreen>;
 }>();
 
 const { label, isLoading, error, file } = useDriveFile<DriveAsset>(

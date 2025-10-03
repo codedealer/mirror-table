@@ -2,8 +2,8 @@
 import type { DynamicPanelModelType, WidgetCandelaPlayer } from '~/models/types';
 
 const props = defineProps<{
-  panel: DynamicPanelModelType
-  widget: WidgetCandelaPlayer
+  panel: DynamicPanelModelType;
+  widget: WidgetCandelaPlayer;
 }>();
 
 const {

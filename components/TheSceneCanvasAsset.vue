@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { ComputedRef } from 'vue';
 import type Konva from 'konva';
+import type { ComputedRef } from 'vue';
 import type {
   CanvasElementStateAsset,
   DriveImage,
@@ -12,7 +12,7 @@ import { useCanvasAssetProperties } from '~/composables/useCanvasAssetProperties
 import { useComplexAssetPreviewWatcher } from '~/composables/useComplexAssetPreviewWatcher';
 
 const props = defineProps<{
-  element: SceneElementCanvasObjectAsset
+  element: SceneElementCanvasObjectAsset;
 }>();
 
 const { properties } = useCanvasAssetProperties(toRef(() => props.element));

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useTitle } from '@vueuse/core';
-import { TableModes } from '~/models/types';
 import TheScene from '~/components/TheScene.vue';
+import { TableModes } from '~/models/types';
 
 useSeoMeta({
   title: 'Table Session',

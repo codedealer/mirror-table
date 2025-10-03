@@ -35,7 +35,6 @@
     flex-wrap: nowrap;
     overflow: hidden;
 
-
     &:hover {
       background-color: color-mix(in oklab, var(--va-background-secondary), #ffffff10);
 
@@ -67,7 +66,7 @@
     &.unsaved {
       font-style: italic;
       &:after {
-        content: " *"
+        content: ' *';
       }
     }
   }
@@ -83,10 +82,8 @@
   }
 }
 
-
-
 .window-container {
-  --window-container-padding: .5rem;
+  --window-container-padding: 0.5rem;
   --window-container-border-radius: 3px;
   --window-container-background: var(--va-background-element);
   --window-border-color: var(--va-background-border);

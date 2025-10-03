@@ -3,8 +3,8 @@ import type { Scene } from '~/models/types';
 export const useSceneSearchStore = defineStore('scene-search', () => {
   const searchModalState = ref(false);
   const recentSelected = ref<Scene[]>([]);
-  let searchModalResolveHook = (_: Scene) => {};
-  let searchModalRejectHook = (_: unknown) => {};
+  let searchModalResolveHook = (_scene: Scene) => {};
+  let searchModalRejectHook = (_error: unknown) => {};
 
   const promptToSearch = () => {
     searchModalState.value = true;

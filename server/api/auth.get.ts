@@ -1,9 +1,9 @@
 import type { App } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
 import type { DecodedIdToken } from 'firebase-admin/auth';
 import type { Credentials } from 'google-auth-library';
-import { OAuth2Client } from 'google-auth-library';
 import type { AccessTokenReturnType } from '~/models/types';
+import { getFirestore } from 'firebase-admin/firestore';
+import { OAuth2Client } from 'google-auth-library';
 import { getFirebaseApp } from '~/server/lib/firebase-admin';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
@@ -59,8 +59,8 @@ export default defineEventHandler(async (event): Promise<AccessTokenReturnType> 
   } catch (e) {
     const errorMessage = extractErrorMessage(e);
     if (
-      errorMessage === 'invalid_grant' ||
-      errorMessage === 'invalid_request'
+      errorMessage === 'invalid_grant'
+      || errorMessage === 'invalid_request'
     ) {
       return {
         valid: false,

@@ -10,8 +10,8 @@ export const useDriveFileValidator = (file: MaybeRef<DriveFile | null>) => {
     }
 
     if (
-      fileRef.value.capabilities?.canDownload &&
-      fileRef.value.shared
+      fileRef.value.capabilities?.canDownload
+      && fileRef.value.shared
     ) {
       return null;
     }
@@ -25,9 +25,9 @@ export const useDriveFileValidator = (file: MaybeRef<DriveFile | null>) => {
     }
 
     if (
-      fileRef.value.mimeType?.startsWith('image/') &&
-      fileRef.value.imageMediaMetadata?.width &&
-      fileRef.value.imageMediaMetadata?.height
+      fileRef.value.mimeType?.startsWith('image/')
+      && fileRef.value.imageMediaMetadata?.width
+      && fileRef.value.imageMediaMetadata?.height
     ) {
       return null;
     }

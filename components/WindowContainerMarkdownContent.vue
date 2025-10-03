@@ -3,8 +3,8 @@ import type { DriveAsset, ModalWindow, RawMediaObject } from '~/models/types';
 import { usePreviewImage } from '~/composables/usePreviewImage';
 
 const props = defineProps<{
-  window: ModalWindow
-  media?: RawMediaObject
+  window: ModalWindow;
+  media?: RawMediaObject;
 }>();
 
 const { file } = useDriveFile<DriveAsset>(

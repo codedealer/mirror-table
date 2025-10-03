@@ -1,5 +1,5 @@
-import { acceptHMRUpdate } from 'pinia';
 import type { HoverPanelMode } from '~/models/types';
+import { acceptHMRUpdate } from 'pinia';
 import { HoverPanelContentTypes, HoverPanelModes } from '~/models/types';
 
 export const useHoverPanelStore = defineStore('hover-panel', () => {
@@ -24,8 +24,8 @@ export const useHoverPanelStore = defineStore('hover-panel', () => {
     }
 
     if (
-      tableStore.mode !== TableModes.OWN &&
-      tableStore.mode !== TableModes.PRESENTATION
+      tableStore.mode !== TableModes.OWN
+      && tableStore.mode !== TableModes.PRESENTATION
     ) {
       return true;
     }

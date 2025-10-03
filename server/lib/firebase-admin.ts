@@ -1,6 +1,6 @@
-import { getAuth } from 'firebase-admin/auth';
 import type { App, ServiceAccount } from 'firebase-admin/app';
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
 export const getFirebaseApp = (): App => {
   const apps = getApps();

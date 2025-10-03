@@ -1,5 +1,5 @@
-import { LOCAL_GROUP_ID_PREFIX, LOCAL_NAME_PREFIX } from '~/models/TableSessionPresence';
 import type { SessionGroup, TableSessionPresence } from '~/models/types';
+import { LOCAL_GROUP_ID_PREFIX, LOCAL_NAME_PREFIX } from '~/models/TableSessionPresence';
 
 export const useSessionStore = defineStore('session', () => {
   const tableStore = useTableStore();
@@ -9,9 +9,9 @@ export const useSessionStore = defineStore('session', () => {
    */
   const ownSession = computed(() => {
     if (
-      !tableStore.table ||
-      !tableStore.sessionId ||
-      !Object.hasOwn(tableStore.table.session, tableStore.sessionId)
+      !tableStore.table
+      || !tableStore.sessionId
+      || !Object.hasOwn(tableStore.table.session, tableStore.sessionId)
     ) {
       return undefined;
     }
@@ -28,9 +28,9 @@ export const useSessionStore = defineStore('session', () => {
    */
   const activeSession = computed(() => {
     if (
-      !tableStore.table ||
-      !activeSessionId.value ||
-      !Object.hasOwn(tableStore.table.session, activeSessionId.value)
+      !tableStore.table
+      || !activeSessionId.value
+      || !Object.hasOwn(tableStore.table.session, activeSessionId.value)
     ) {
       return undefined;
     }
@@ -43,7 +43,8 @@ export const useSessionStore = defineStore('session', () => {
       return [];
     }
 
-    return (({ [tableStore.sessionId]: _, ...viewers }) => Object.values(viewers))(tableStore.table.session);
+    const { [tableStore.sessionId]: _, ...viewers } = tableStore.table.session;
+    return Object.values(viewers);
   });
 
   const privateSessions = computed(() => {

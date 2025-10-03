@@ -2,7 +2,7 @@
 import type { TableSessionPresence } from '~/models/types';
 
 const props = defineProps<{
-  presence: TableSessionPresence
+  presence: TableSessionPresence;
 }>();
 
 const sessionStore = useSessionStore();

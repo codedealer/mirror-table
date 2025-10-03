@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import type Konva from 'konva';
 import type { ComputedRef } from 'vue';
-import { computed, toRef } from 'vue';
 import type {
   CanvasElementStateText,
   ElementContainerConfig,
   SceneElementCanvasObjectText,
 } from '~/models/types';
+import { computed, toRef } from 'vue';
 import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
 
 const props = defineProps<{
-  element: SceneElementCanvasObjectText
+  element: SceneElementCanvasObjectText;
 }>();
 
 const layersStore = useLayersStore();
@@ -97,9 +97,9 @@ const textConfig = computed(() => {
 });
 
 const { onNodeTransformEnd } = useCanvasTransformEvents();
-const onHover = (e: Konva.KonvaEventObject<PointerEvent>) => {
+const onHover = () => {
 };
-const onHoverOut = (e: Konva.KonvaEventObject<PointerEvent>) => {
+const onHoverOut = () => {
 };
 
 const canvasStageStore = useCanvasStageStore();

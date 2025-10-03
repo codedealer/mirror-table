@@ -1,16 +1,16 @@
-import { watch } from 'vue';
 import type { Ref } from 'vue';
 import type {
   CanvasElementStateAsset,
   SceneElementCanvasObjectAsset,
   SceneElementCanvasObjectAssetProperties,
 } from '~/models/types';
+import { watch } from 'vue';
 
 /*
   Handle an edge case where a complex asset's preview is changed
   while the elements with that asset are already on the scene.
  */
-export function useComplexAssetPreviewWatcher (
+export function useComplexAssetPreviewWatcher(
   element: Ref<SceneElementCanvasObjectAsset>,
   properties: Ref<SceneElementCanvasObjectAssetProperties>,
   updateState: (state: Partial<CanvasElementStateAsset>) => void,
@@ -23,10 +23,10 @@ export function useComplexAssetPreviewWatcher (
   watch(() => properties.value.preview?.id, (newPreviewId, oldPreviewId) => {
     // Only proceed if we have a complex asset with changed preview
     if (
-      element.value.asset.kind !== AssetPropertiesKinds.COMPLEX ||
-      !newPreviewId ||
-      newPreviewId === element.value.asset.preview.id ||
-      !oldPreviewId
+      element.value.asset.kind !== AssetPropertiesKinds.COMPLEX
+      || !newPreviewId
+      || newPreviewId === element.value.asset.preview.id
+      || !oldPreviewId
     ) {
       return;
     }

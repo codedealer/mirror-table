@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import type { Tree } from 'he-tree-vue';
 import type { DriveTreeNode } from '~/models/types';
-import clickOrDoubleClick from '~/utils/clickOrDoubleClick';
 import { useDriveFolderContextActions } from '~/composables/useDriveFolderContextActions';
+import clickOrDoubleClick from '~/utils/clickOrDoubleClick';
 
 const props = defineProps<{
-  node: DriveTreeNode
-  index: number
-  path: number[]
-  tree: Tree
+  node: DriveTreeNode;
+  index: number;
+  path: number[];
+  tree: Tree;
 }>();
 
 const { file, label } = useDriveFile(toRef(() => props.node.id));

@@ -1,5 +1,3 @@
-import { collection, deleteDoc, doc, orderBy, query, setDoc, updateDoc, where, writeBatch } from '@firebase/firestore';
-import { useFirestore } from '@vueuse/firebase/useFirestore';
 import type {
   DriveAsset,
   NestedPartial,
@@ -7,8 +5,10 @@ import type {
   SceneElement,
   SceneElementScreen,
 } from '~/models/types';
-import { SceneElementCanvasObjectAssetFactory } from '~/models/SceneElementCanvasObjectAsset';
 import type { WithIdPlaceholders } from '~/utils/replaceIdPlaceholder';
+import { collection, deleteDoc, doc, orderBy, query, setDoc, updateDoc, where, writeBatch } from '@firebase/firestore';
+import { useFirestore } from '@vueuse/firebase/useFirestore';
+import { SceneElementCanvasObjectAssetFactory } from '~/models/SceneElementCanvasObjectAsset';
 
 export const useSceneStore = defineStore('scene', () => {
   const { $db } = useNuxtApp();

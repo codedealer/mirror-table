@@ -1,10 +1,10 @@
 <script setup lang="ts" generic="T extends ItemSelectorOption">
-import { onKeyStroke } from '@vueuse/core';
 import type { ItemSelectorOption } from '~/models/types';
+import { onKeyStroke } from '@vueuse/core';
 
 const props = withDefaults(defineProps<{
-  options: T[]
-  loading?: boolean
+  options: T[];
+  loading?: boolean;
 }>(), {
   loading: false,
 });

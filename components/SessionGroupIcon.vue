@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useCssVar } from '@vueuse/core';
 import type { SessionGroup } from '~/models/types';
+import { useCssVar } from '@vueuse/core';
 
 const props = defineProps<{
-  group: SessionGroup
-  alt?: boolean
+  group: SessionGroup;
+  alt?: boolean;
 }>();
 
 const color = useCssVar('--icon-color');

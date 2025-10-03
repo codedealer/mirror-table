@@ -1,18 +1,22 @@
-// eslint-disable-next-line import/default
-import colors from 'ansi-colors';
-import { DataRetrievalStrategies, updateFieldMask } from '~/models/types';
 import type {
   AppProperties,
   AppPropertiesType,
   AssetPropertiesKind,
   DataRetrievalStrategy,
-  DriveFile, DriveFileRaw,
+  DriveFile,
+  DriveFileRaw,
   DriveFileUpdateObject,
   DriveFileUpdateReturnType,
-  GetFilesOptions, RawMediaObject,
+  GetFilesOptions,
+  RawMediaObject,
 } from '~/models/types';
-
 import type { updateMetadataPayload } from '~/utils/driveOps';
+import colors from 'ansi-colors';
+
+import { convertToDriveFile } from '~/models/DriveFile';
+import { SceneElementCanvasObjectAssetPropertiesFactory } from '~/models/SceneElementCanvasObjectAsset';
+import { DataRetrievalStrategies, updateFieldMask } from '~/models/types';
+import { serializeAppProperties } from '~/utils/appPropertiesSerializer';
 import {
   generateFileRequest,
   generateMediaRequest,
@@ -21,14 +25,11 @@ import {
   parseMediaResponse,
   searchFiles,
   updateMedia,
-  updateMetadata, uploadMedia,
+  updateMetadata,
+  uploadMedia,
 } from '~/utils/driveOps';
-import { serializeAppProperties } from '~/utils/appPropertiesSerializer';
-import { convertToDriveFile } from '~/models/DriveFile';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
-import { SceneElementCanvasObjectAssetPropertiesFactory } from '~/models/SceneElementCanvasObjectAsset';
 
-// eslint-disable-next-line import/no-named-as-default-member
 const { bgGreen, bgWhite, bgYellow } = colors;
 
 type FileRequest = gapi.client.Request<gapi.client.drive.File>;
@@ -107,8 +108,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       const missingFileIds = ids.filter(id => !cachedFilesIds.includes(id));
 
       if (
-        missingFileIds.length === 0 ||
-        strategy === DataRetrievalStrategies.OPTIMISTIC_CACHE
+        missingFileIds.length === 0
+        || strategy === DataRetrievalStrategies.OPTIMISTIC_CACHE
       ) {
         return cachedFiles;
       } else if (strategy === DataRetrievalStrategies.CACHE_ONLY) {
@@ -219,8 +220,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       }
       // handle the case of complex assets: their properties are stored in firestore
       if (
-        isAssetProperties(appProperties) &&
-        appProperties.kind === AssetPropertiesKinds.COMPLEX
+        isAssetProperties(appProperties)
+        && appProperties.kind === AssetPropertiesKinds.COMPLEX
       ) {
         const canvasElementsStore = useCanvasElementsStore();
         const complexAssetProperties = SceneElementCanvasObjectAssetPropertiesFactory(
@@ -244,8 +245,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     // handle the case of complex assets: their properties are stored in firestore
     const properties = files.value[id].appProperties;
     if (
-      isAssetProperties(properties) &&
-      properties.kind === AssetPropertiesKinds.COMPLEX
+      isAssetProperties(properties)
+      && properties.kind === AssetPropertiesKinds.COMPLEX
     ) {
       const canvasElementsStore = useCanvasElementsStore();
       if (!restore) {
@@ -377,12 +378,12 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   /**
    * This method is not supported by the Drive API
    * @param fileIds
-   * @param strategy
+   * @param _strategy
    * @param metaStrategy
    */
-  const batchDownloadMedia = async (
+  const _batchDownloadMedia = async (
     fileIds: string[],
-    strategy: DataRetrievalStrategy = DataRetrievalStrategies.SOURCE,
+    _strategy: DataRetrievalStrategy = DataRetrievalStrategies.SOURCE,
     metaStrategy: DataRetrievalStrategy = DataRetrievalStrategies.SOURCE,
   ) => {
     const result: Record<string, RawMediaObject> = {};

@@ -2,17 +2,17 @@ import type { Ref } from 'vue';
 import type { DataRetrievalStrategy, DriveFile } from '~/models/types';
 
 export interface DriveFileOptions<T extends DriveFile> {
-  strategy: DataRetrievalStrategy
-  predicate?: (obj: DriveFile) => obj is T
+  strategy: DataRetrievalStrategy;
+  predicate?: (obj: DriveFile) => obj is T;
 }
 
 export const useDriveFile = <T extends DriveFile>
-  (
-    idRef: Ref<string>,
-    options: DriveFileOptions<T> = {
-      strategy: DataRetrievalStrategies.OPTIMISTIC_CACHE,
-    },
-  ) => {
+(
+  idRef: Ref<string>,
+  options: DriveFileOptions<T> = {
+    strategy: DataRetrievalStrategies.OPTIMISTIC_CACHE,
+  },
+) => {
   const driveStore = useDriveStore();
   const { isReady } = storeToRefs(driveStore);
   const driveFileStore = useDriveFileStore();

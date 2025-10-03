@@ -2,7 +2,7 @@
 import type { LayerItem, SceneElementCanvasObjectText } from '~/models/types';
 
 const props = defineProps<{
-  item: LayerItem<SceneElementCanvasObjectText>
+  item: LayerItem<SceneElementCanvasObjectText>;
 }>();
 
 const canvasElementsStore = useCanvasElementsStore();

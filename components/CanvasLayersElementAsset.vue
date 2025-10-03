@@ -3,7 +3,7 @@ import type { ContextAction, DriveAsset, DriveImage, LayerItem, SceneElementCanv
 import { useCanvasElementAssetLabel } from '~/composables/useCanvasElementAssetLabel';
 
 const props = defineProps<{
-  item: LayerItem<SceneElementCanvasObjectAsset>
+  item: LayerItem<SceneElementCanvasObjectAsset>;
 }>();
 
 const { label, isLoading, error } = useDriveFile<DriveAsset>(

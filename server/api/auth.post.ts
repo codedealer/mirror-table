@@ -1,8 +1,8 @@
-import { OAuth2Client } from 'google-auth-library';
 import type { DecodedIdToken } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
-import { isObject } from '~/models/types';
 import type { AccessTokenReturnType } from '~/models/types';
+import { getFirestore } from 'firebase-admin/firestore';
+import { OAuth2Client } from 'google-auth-library';
+import { isObject } from '~/models/types';
 import { getFirebaseApp } from '~/server/lib/firebase-admin';
 
 const addRefreshToken = async (idToken: DecodedIdToken, refreshToken: string) => {

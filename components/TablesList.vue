@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useFirestore } from '@vueuse/firebase/useFirestore';
-import { collection, orderBy, query } from '@firebase/firestore';
 import type { TableCard } from '~/models/types';
+import { collection, orderBy, query } from '@firebase/firestore';
+import { useFirestore } from '@vueuse/firebase/useFirestore';
 
-let tables = ref<TableCard[] | undefined>(undefined);
+const tables = ref<TableCard[] | undefined>(undefined);
 
 onMounted(() => {
   const { $db } = useNuxtApp();
@@ -21,7 +21,7 @@ onMounted(() => {
     );
   });
 
-  tables = useFirestore(q, undefined);
+  tables.value = useFirestore(q, undefined);
 });
 </script>
 

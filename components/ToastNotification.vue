@@ -2,15 +2,15 @@
 import { useTimeoutPoll } from '@vueuse/core';
 
 interface ToastNotificationProps {
-  title?: string
-  message: string
-  icon?: string
-  duration?: number
-  color?: string
+  title?: string;
+  message: string;
+  icon?: string;
+  duration?: number;
+  color?: string;
 }
 
 interface ToastNotificationEmits {
-  (event: 'close'): void
+  (event: 'close'): void;
 }
 
 const props = withDefaults(defineProps<ToastNotificationProps>(), {

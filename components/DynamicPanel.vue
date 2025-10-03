@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useCssVar } from '@vueuse/core';
-import { useDynamicPanelStore } from '~/stores/dynamic-panel-store';
 import type { DynamicPanelContentType, DynamicPanelModelType } from '~/models/types';
-import { useRightPanelStore } from '~/stores/right-panel-store';
-import { DynamicPanelContentTypes } from '~/models/types';
 import { CanvasLayers, SessionExplorer, TableExplorer, TableWidgets } from '#components';
+import { useCssVar } from '@vueuse/core';
+import { DynamicPanelContentTypes } from '~/models/types';
+import { useDynamicPanelStore } from '~/stores/dynamic-panel-store';
+import { useRightPanelStore } from '~/stores/right-panel-store';
 
 const props = defineProps<{
-  name: DynamicPanelModelType
+  name: DynamicPanelModelType;
 }>();
 
 const store = useDynamicPanelStore();

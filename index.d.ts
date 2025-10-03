@@ -1,8 +1,8 @@
-import { Auth } from "@firebase/auth";
-import {
+import type { Auth } from '@firebase/auth';
+import type {
   Firestore,
-} from "@firebase/firestore";
-import { Logger } from "~/plugins/logger";
+} from '@firebase/firestore';
+import type { Logger } from '~/plugins/logger';
 
 declare module '#app' {
   interface NuxtApp {
@@ -28,4 +28,4 @@ declare module '@vue/runtime-core' {
   }
 }
 
-export {}
+export {};

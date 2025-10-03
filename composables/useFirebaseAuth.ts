@@ -1,10 +1,10 @@
 import {
-  GoogleAuthProvider,
   signOut as fireBaseSignOut,
+  GoogleAuthProvider,
   signInWithPopup,
 } from '@firebase/auth';
 
-export async function signIn () {
+export async function signIn() {
   const { $auth } = useNuxtApp();
 
   const provider = new GoogleAuthProvider();
@@ -19,7 +19,7 @@ export async function signIn () {
   return null;
 }
 
-export async function signOut () {
+export async function signOut() {
   const { $auth } = useNuxtApp();
 
   return await fireBaseSignOut($auth);

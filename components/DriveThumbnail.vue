@@ -1,26 +1,26 @@
 <script setup lang="ts">
 import type { DriveFile } from '~/models/types';
-import { aspectRatio } from '~/utils';
 import { PickerViewTemplates } from '~/models/types';
+import { aspectRatio } from '~/utils';
 
 interface DriveThumbnailProps {
-  width: string | number
-  height: string | number
-  file?: DriveFile | null
-  error?: any
-  fileIsLoading?: boolean
-  src?: string
-  title?: string
-  removable?: boolean
-  allowUpload?: boolean
-  uploadParentId?: string
-  fit?: 'auto' | 'cover' | 'contain'
+  width: string | number;
+  height: string | number;
+  file?: DriveFile | null;
+  error?: any;
+  fileIsLoading?: boolean;
+  src?: string;
+  title?: string;
+  removable?: boolean;
+  allowUpload?: boolean;
+  uploadParentId?: string;
+  fit?: 'auto' | 'cover' | 'contain';
 }
 
 interface DriveThumbnailEmits {
-  (event: 'error', e: Event): void
-  (event: 'remove'): void
-  (event: 'upload', id: string): void
+  (event: 'error', e: Event): void;
+  (event: 'remove'): void;
+  (event: 'upload', id: string): void;
 }
 
 const props = withDefaults(defineProps<DriveThumbnailProps>(), {
@@ -57,8 +57,8 @@ const objectFit = computed(() => {
     );
 
     if (
-      (imageAspectRatio > 1 && containerAspectRatio.value > 1) ||
-      (imageAspectRatio < 1 && containerAspectRatio.value < 1)
+      (imageAspectRatio > 1 && containerAspectRatio.value > 1)
+      || (imageAspectRatio < 1 && containerAspectRatio.value < 1)
     ) {
       return 'cover';
     }
@@ -122,8 +122,8 @@ const uploadImage = async () => {
       allowUpload: true,
       callback: (result) => {
         if (
-          result.action === google.picker.Action.PICKED &&
-            result.docs.length > 0
+          result.action === google.picker.Action.PICKED
+          && result.docs.length > 0
         ) {
           const pickedFile = result.docs[0];
 
@@ -259,15 +259,15 @@ const uploadImage = async () => {
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
-    opacity: .5;
-    filter: saturate(.2);
+    opacity: 0.5;
+    filter: saturate(0.2);
     width: 100%;
     height: 100%;
     grid-column: 1;
     grid-row: 1;
   }
   small {
-    opacity: .6;
+    opacity: 0.6;
     font-size: 0.8rem;
     text-transform: lowercase;
   }

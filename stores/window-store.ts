@@ -1,5 +1,5 @@
-import { acceptHMRUpdate, defineStore } from 'pinia';
 import type { ModalWindow } from '~/models/types';
+import { acceptHMRUpdate, defineStore } from 'pinia';
 
 export const useWindowStore = defineStore('window', () => {
   const _recentlyOpenedWindows = ref<ModalWindow[]>([]);
@@ -77,9 +77,9 @@ export const useWindowStore = defineStore('window', () => {
   };
 
   const toggle = (window: ModalWindow, forceOpen = false) => {
-    window.active = forceOpen ||
-      (window.id !== lastActiveWindowId.value && window.active) ||
-      !window.active;
+    window.active = forceOpen
+      || (window.id !== lastActiveWindowId.value && window.active)
+      || !window.active;
 
     if (window.active) {
       setLastActiveWindowId(window);

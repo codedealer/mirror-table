@@ -3,8 +3,8 @@ import type { Category, TreeNode } from '~/models/types';
 import { useExplorerItem } from '#imports';
 
 const props = defineProps<{
-  node: TreeNode
-  path?: number[]
+  node: TreeNode;
+  path?: number[];
 }>();
 
 const MAX_DEPTH = 3;

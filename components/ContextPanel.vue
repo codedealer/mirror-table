@@ -2,12 +2,12 @@
 import type { ContextAction } from '~/models/types';
 
 const props = withDefaults(defineProps<{
-  actions: ContextAction[]
-  icon?: string
-  openedIcon?: string
-  color?: string
-  size?: 'small' | 'medium' | 'large'
-  preset?: string
+  actions: ContextAction[];
+  icon?: string;
+  openedIcon?: string;
+  color?: string;
+  size?: 'small' | 'medium' | 'large';
+  preset?: string;
 }>(), {
   icon: 'more_vert',
   openedIcon: 'more_vert',

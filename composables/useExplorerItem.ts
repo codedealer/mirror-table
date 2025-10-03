@@ -1,7 +1,7 @@
 import type { Category, Scene, TreeNode } from '~/models/types';
 
-export const useExplorerItem =
-  <T extends Scene | Category>(
+export const useExplorerItem
+  = <T extends Scene | Category>(
     nodeRef: Ref<TreeNode>,
   ) => {
     const idRef = computed(() => nodeRef.value.id);

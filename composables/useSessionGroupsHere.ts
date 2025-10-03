@@ -1,8 +1,8 @@
 import type { Category, Scene } from '~/models/types';
 import { isScene } from '~/models/types';
 
-export const useSessionGroupsHere =
-  (
+export const useSessionGroupsHere
+  = (
     item: Ref<Scene | Category | undefined>,
   ) => {
     const sessionStore = useSessionStore();

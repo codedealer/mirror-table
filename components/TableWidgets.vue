@@ -3,7 +3,7 @@ import type { DynamicPanelModelType, WidgetTemplate } from '~/models/types';
 import { TableWidgetsCandelaPlayer, TableWidgetsMarkdownWidget } from '#components';
 
 const props = defineProps<{
-  type: DynamicPanelModelType
+  type: DynamicPanelModelType;
 }>();
 
 const tableStore = useTableStore();

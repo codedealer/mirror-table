@@ -3,5 +3,5 @@
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
     "types": ["node", "@nuxt/types", "google.accounts", "google.picker", "gapi.client"]
-  },
+  }
 }

@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import type { TableCard } from '~/models/types';
 
-const props = defineProps<{ table: TableCard }>();
-
-const notificationStore = useNotificationStore();
+defineProps<{ table: TableCard }>();
 </script>
 
 <template>

@@ -2,8 +2,8 @@
 import type { DynamicPanelModelType, Widget } from '~/models/types';
 
 const props = defineProps<{
-  panel: DynamicPanelModelType
-  widget: Widget
+  panel: DynamicPanelModelType;
+  widget: Widget;
 }>();
 const tableStore = useTableStore();
 const widgetStore = useWidgetStore();

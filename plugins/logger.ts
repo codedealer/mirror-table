@@ -2,9 +2,9 @@
 import debug from 'debug';
 
 export interface Logger {
-  [key: string]: debug.Debugger
-  warn: (...args: unknown[]) => void
-  error: (...args: unknown[]) => void
+  [key: string]: debug.Debugger;
+  warn: (...args: unknown[]) => void;
+  error: (...args: unknown[]) => void;
 }
 
 export default defineNuxtPlugin(() => {
@@ -28,7 +28,7 @@ export default defineNuxtPlugin(() => {
     warn: console.warn,
     error: console.error,
   } as Logger, {
-    get (target, prop: string) {
+    get(target, prop: string) {
       if (prop in target) {
         return target[prop];
       }

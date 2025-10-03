@@ -3,10 +3,10 @@ import type { Tree } from 'he-tree-vue';
 import type { Category, TreeNode } from '~/models/types';
 
 const props = defineProps<{
-  node: TreeNode
-  index: number
-  path: number[]
-  tree: Tree
+  node: TreeNode;
+  index: number;
+  path: number[];
+  tree: Tree;
 }>();
 
 const tableExplorerStore = useTableExplorerStore();

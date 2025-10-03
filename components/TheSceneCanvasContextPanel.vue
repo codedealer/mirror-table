@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core';
-import { useCanvasContextPanelStore } from '~/stores/canvas-context-panel-store';
 import type { ContextAction } from '~/models/types';
+import { useElementSize } from '@vueuse/core';
 import ContextPanel from '~/components/ContextPanel.vue';
+import { useCanvasContextPanelStore } from '~/stores/canvas-context-panel-store';
 
 const store = useCanvasContextPanelStore();
 const canvasStageStore = useCanvasStageStore();

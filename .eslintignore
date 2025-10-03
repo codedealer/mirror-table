@@ -1,9 +1,0 @@
-/.nuxt
-/node_modules
-/.output
-/dist
-.env
-.gitignore
-.eslintrc.js
-service-account.json
-nuxt.config.ts

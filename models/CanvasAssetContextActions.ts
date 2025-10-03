@@ -2,11 +2,12 @@ import type {
   AssetProperties,
   CanvasObjectSceneMoveInteraction,
   ContextAction,
-  SceneElement, SceneElementCanvasObject,
+  SceneElement,
+  SceneElementCanvasObject,
   SceneElementCanvasObjectAsset,
   SelectionGroup,
 } from '~/models/types';
-import { SelectionGroupNames, SelectionGroups, isSceneElementScreen } from '~/models/types';
+import { isSceneElementScreen, SelectionGroupNames, SelectionGroups } from '~/models/types';
 import updateComplexAssetProperties from '~/utils/updateComplexAssetProperties';
 
 const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
@@ -240,8 +241,8 @@ const groupActionsFactory = (element: SceneElementCanvasObject) => {
   const availableGroups = Object
     .values(SelectionGroups)
     .filter(group =>
-      group !== SelectionGroups.SCREEN &&
-      group !== element.selectionGroup);
+      group !== SelectionGroups.SCREEN
+      && group !== element.selectionGroup);
 
   availableGroups.forEach((group) => {
     actions.push({

@@ -1,6 +1,6 @@
 export interface ScriptReference {
-  ready: Ref<boolean>
-  loading: Ref<boolean>
+  ready: Ref<boolean>;
+  loading: Ref<boolean>;
 }
 const scriptRecord: Map<string, ScriptReference> = new Map();
 

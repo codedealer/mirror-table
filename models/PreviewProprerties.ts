@@ -12,7 +12,8 @@ export const PreviewPropertiesFactory = (
       // take values of the keys in the deserialized object that are contained in deserializedPropertyDictionary and put them in obj
       obj = Object.fromEntries(
         Object.entries(deserializedObj).filter(
-          ([key]) => key in deserializedPropertyDictionary)
+          ([key]) => key in deserializedPropertyDictionary,
+        )
           .map(
             ([key, value]) => [deserializedPropertyDictionary[key], value],
           ),
@@ -31,9 +32,9 @@ export const PreviewPropertiesFactory = (
   }
 
   if (
-    !obj.id ||
-    !Number.isSafeInteger(obj.nativeHeight) ||
-    !Number.isSafeInteger(obj.nativeWidth)
+    !obj.id
+    || !Number.isSafeInteger(obj.nativeHeight)
+    || !Number.isSafeInteger(obj.nativeWidth)
   ) {
     throw new Error('Invalid object');
   }
@@ -63,7 +64,8 @@ export const serializePreviewProperties = (previewProperties?: PreviewProperties
 
   const serializedObj = Object.fromEntries(
     Object.entries(previewProperties).filter(
-      ([key]) => key in serializedPropertyDictionary)
+      ([key]) => key in serializedPropertyDictionary,
+    )
       .map(
         ([key, value]) => [serializedPropertyDictionary[key], value],
       ),

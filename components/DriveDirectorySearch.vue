@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onKeyStroke, useDebounceFn } from '@vueuse/core';
 import type { DriveFile } from '~/models/types';
+import { onKeyStroke, useDebounceFn } from '@vueuse/core';
 
 const driveStore = useDriveStore();
 const driveSearchStore = useDriveSearchStore();
@@ -111,10 +111,10 @@ hotkeyStore.registerHotkey({
 });
 onKeyStroke(true, (e) => {
   if (
-    !driveStore.isReady ||
-    (e.code !== 'KeyF' && e.code !== 'KeyA' && e.code !== 'KeyW') ||
-    !e.shiftKey ||
-    (e.target && isEditableElement(e.target))
+    !driveStore.isReady
+    || (e.code !== 'KeyF' && e.code !== 'KeyA' && e.code !== 'KeyW')
+    || !e.shiftKey
+    || (e.target && isEditableElement(e.target))
   ) {
     return;
   }

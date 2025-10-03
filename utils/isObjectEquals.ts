@@ -1,4 +1,4 @@
-const equal = <T extends Object, V extends T>(
+const equal = <T extends object, V extends T>(
   obj: T,
   origin: V,
   compare: (a: unknown, b: unknown, key: string | number | symbol) => boolean,

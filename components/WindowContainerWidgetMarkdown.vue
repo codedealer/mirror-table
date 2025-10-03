@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useDebounceFn } from '@vueuse/core';
-import { collection, doc } from '@firebase/firestore';
-import { useFirestore } from '@vueuse/firebase/useFirestore';
 import type { DriveWidget, ModalWindow, WidgetMarkdown, WidgetProperties } from '~/models/types';
+import { collection, doc } from '@firebase/firestore';
+import { useDebounceFn } from '@vueuse/core';
+import { useFirestore } from '@vueuse/firebase/useFirestore';
 import { ModalWindowStatus } from '~/models/types';
 
 const props = defineProps<{
-  window: ModalWindow
-  file?: DriveWidget
+  window: ModalWindow;
+  file?: DriveWidget;
 }>();
 
 const windowStore = useWindowStore();
@@ -29,7 +29,7 @@ const widgetRef = computed(() => {
 const widget = useFirestore(widgetRef);
 
 const widgetModel = ref<
-Pick<WidgetMarkdown, 'content' | 'privateContent' | 'avatar'>
+  Pick<WidgetMarkdown, 'content' | 'privateContent' | 'avatar'>
 >({
   content: '',
   privateContent: '',
@@ -50,9 +50,9 @@ watchEffect(() => {
 });
 
 const isLoading = computed(() => (
-  props.window.status === ModalWindowStatus.LOADING ||
-  props.file?.loading ||
-  (!!props.file?.appProperties.firestoreId && widget.value === undefined)
+  props.window.status === ModalWindowStatus.LOADING
+  || props.file?.loading
+  || (!!props.file?.appProperties.firestoreId && widget.value === undefined)
 ));
 
 const {
@@ -65,8 +65,8 @@ const {
 });
 
 const isImageDirty = () => {
-  return !((!imageFileId.value && !widget.value?.avatar) ||
-    (imageFileId.value === widget.value?.avatar?.id));
+  return !((!imageFileId.value && !widget.value?.avatar)
+    || (imageFileId.value === widget.value?.avatar?.id));
 };
 
 const checkDirty = () => {
@@ -112,7 +112,7 @@ const updateAvatar = (payload: Partial<WidgetMarkdown>) => {
   }
 };
 
-const update = async (_: DriveWidget) => {
+const update = async () => {
   const payload = structuredClone(toRaw(widgetModel.value));
   updateAvatar(payload);
 
@@ -158,10 +158,10 @@ const create = async (file: DriveWidget) => {
 
 const submit = async () => {
   if (
-    !props.file ||
-    isLoading.value ||
-    imageLoading.value ||
-    (!widgetModel.value.content && !widgetModel.value.privateContent)
+    !props.file
+    || isLoading.value
+    || imageLoading.value
+    || (!widgetModel.value.content && !widgetModel.value.privateContent)
   ) {
     return;
   }
@@ -177,7 +177,7 @@ const submit = async () => {
     if (!props.file.appProperties.firestoreId || !widget.value) {
       await create(props.file);
     } else {
-      await update(props.file);
+      await update();
     }
 
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);

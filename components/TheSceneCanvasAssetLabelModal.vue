@@ -15,7 +15,7 @@ const canvasContextPanelStore = useCanvasContextPanelStore();
       @submit.prevent="canvasContextPanelStore.modalSubmit"
     >
       <AppPropertiesTitleForm
-        v-model:showTitle="canvasContextPanelStore.modalContent.showTitle"
+        v-model:show-title="canvasContextPanelStore.modalContent.showTitle"
         v-model:title="canvasContextPanelStore.modalContent.title"
         :disabled="canvasContextPanelStore.modalLoading"
       />

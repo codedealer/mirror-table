@@ -1,7 +1,7 @@
 import type { BuildPickerOptions } from '~/models/types';
+import { PickerViewTemplates } from '~/models/types';
 import { folderExists } from '~/utils/driveOps';
 import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
-import { PickerViewTemplates } from '~/models/types';
 
 const buildPickerOptionsDefaults = {
   uploadParentId: '',
@@ -18,9 +18,9 @@ const buildPicker = async (opts: BuildPickerOptions): Promise<google.picker.Pick
   const driveStore = useDriveStore();
 
   if (
-    !driveStore.isReady ||
-    !userStore.isAuthenticated ||
-    !userStore.profile
+    !driveStore.isReady
+    || !userStore.isAuthenticated
+    || !userStore.profile
   ) {
     throw new Error('Calling Picker API when the API is not ready or user is not authenticated');
   }

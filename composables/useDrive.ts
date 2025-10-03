@@ -44,8 +44,9 @@ export const useDrive = () => {
     }
 
     // only proceed if gapi script is loaded
+
     gapi.load('client', {
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
       callback: loadDrive,
       onerror: () => {
         driveApiLoading.value = false;

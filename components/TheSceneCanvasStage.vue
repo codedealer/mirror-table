@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type Konva from 'konva';
-import { onKeyStroke } from '@vueuse/core';
 import type { KonvaComponent } from '~/models/types';
-import { TableModes } from '~/models/types';
-import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
+import { onKeyStroke } from '@vueuse/core';
 import TheSceneCanvasScreenFrame from '~/components/TheSceneCanvasScreenFrame.vue';
+import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
+import { TableModes } from '~/models/types';
 
 const stage = ref<KonvaComponent<Konva.Node> | null>(null);
 const imageTransformer = ref<KonvaComponent<Konva.Transformer> | null>(null);
@@ -41,8 +41,8 @@ const imageTransformerConfig = ref<Konva.TransformerConfig>({
 
 onKeyStroke(true, async (e) => {
   if (
-    (e.target && isEditableElement(e.target)) ||
-    !['Backspace', 'Delete', 'KeyV'].includes(e.code)
+    (e.target && isEditableElement(e.target))
+    || !['Backspace', 'Delete', 'KeyV'].includes(e.code)
   ) {
     return;
   }

@@ -2,7 +2,7 @@
 import type { LayerGroup, LayerItem } from '~/models/types';
 
 defineProps<{
-  item: LayerItem<LayerGroup>
+  item: LayerItem<LayerGroup>;
 }>();
 </script>
 

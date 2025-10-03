@@ -2,7 +2,7 @@
 import type { DriveFile } from '~/models/types';
 
 const props = defineProps<{
-  file?: DriveFile
+  file?: DriveFile;
 }>();
 
 const createdDate = computed(() => {

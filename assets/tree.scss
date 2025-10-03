@@ -1,9 +1,10 @@
 .drive-tree-container {
   --va-tree-node-padding: 3px;
   --va-tree-view-padding: 0.3125rem;
-  --va-tree-node-children-background: linear-gradient(#adb3b9 33%, rgba(255, 255, 255, 0) 0%) 15px/1px 3px repeat-y transparent;
+  --va-tree-node-children-background: linear-gradient(#adb3b9 33%, rgba(255, 255, 255, 0) 0%) 15px/1px 3px repeat-y
+    transparent;
   --va-tree-node-border-radius: 3px;
-  --va-tree-node-interactive-bg-opacity: .1;
+  --va-tree-node-interactive-bg-opacity: 0.1;
   --node-icon-size: 28px;
   --drive-node-gap: 6px;
 }
@@ -23,7 +24,7 @@
     }
   }
 
-  .tree-node{
+  .tree-node {
     position: relative;
     padding: var(--va-tree-node-padding);
 
@@ -42,7 +43,7 @@
       background-color: transparent;
       border-radius: var(--va-tree-node-border-radius);
       opacity: 0;
-      transition: opacity .3s;
+      transition: opacity 0.3s;
     }
     &:hover {
       &:before {
@@ -70,7 +71,7 @@
     .drive-node__hover-bar {
       opacity: 0;
       display: none;
-      transition: opacity .3s ease-in-out;
+      transition: opacity 0.3s ease-in-out;
     }
 
     &:hover {
@@ -95,7 +96,7 @@
     text-align: left;
     &.drive-node__name--trashed {
       text-decoration: line-through;
-      opacity: .8;
+      opacity: 0.8;
     }
   }
   .drive-node__actions {
@@ -192,7 +193,7 @@
 
 .explorer-skeleton-header {
   display: flex;
-    align-items: center;
+  align-items: center;
   gap: 1rem;
 }
 .explorer-skeleton-content {

@@ -1,6 +1,6 @@
 import type Konva from 'konva';
-import type { IdPlaceholder, WithIdPlaceholders } from '~/utils/replaceIdPlaceholder';
 import type { SceneElementCanvasObjectText } from '~/models/types';
+import type { IdPlaceholder, WithIdPlaceholders } from '~/utils/replaceIdPlaceholder';
 
 export const SceneElementCanvasObjectTextFactory = (
   id: string | IdPlaceholder,

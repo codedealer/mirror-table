@@ -5,10 +5,10 @@ import { useDriveFileContextActions } from '~/composables/useDriveFileContextAct
 import toggleFile from '~/utils/toggleFile';
 
 const props = defineProps<{
-  node: DriveTreeNode
-  index: number
-  path: number[]
-  tree: Tree
+  node: DriveTreeNode;
+  index: number;
+  path: number[];
+  tree: Tree;
 }>();
 
 const { file, label, error } = useDriveFile(toRef(() => props.node.id));

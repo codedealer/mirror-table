@@ -1,5 +1,6 @@
 import type {
-  AppPropertiesType, AssetPropertiesKind,
+  AppPropertiesType,
+  AssetPropertiesKind,
   DriveFile,
   DriveFileRaw,
   DriveFileUpdateReturnType,
@@ -40,10 +41,10 @@ export const folderExists = async (id: string) => {
   }
 
   if (
-    !folder.shared ||
-    !folder.capabilities?.canListChildren ||
-    !folder.capabilities?.canAddChildren ||
-    !folder.capabilities?.canDelete
+    !folder.shared
+    || !folder.capabilities?.canListChildren
+    || !folder.capabilities?.canAddChildren
+    || !folder.capabilities?.canDelete
   ) {
     // the folder is not shared, or we don't have permissions
     const err = new Error(`The folder ${id} exists but this app lacks permissions to use it.`) as DriveInvalidPermissionsError;
@@ -262,7 +263,7 @@ export const deleteFile = async (id: string, restore: boolean) => {
 
 export type updateMetadataPayload = {
   [key in keyof gapi.client.drive.File]?: string | {
-    [x: string]: string | null
+    [x: string]: string | null;
   };
 };
 
@@ -355,10 +356,10 @@ export const updateMedia = async (
 };
 
 interface UploadMediaReturnType {
-  id: string
-  name: string
-  mimeType: string
-  kind: string
+  id: string;
+  name: string;
+  mimeType: string;
+  kind: string;
 }
 
 export const uploadMedia = async (

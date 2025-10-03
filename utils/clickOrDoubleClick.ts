@@ -1,5 +1,5 @@
 interface Handler {
-  (e?: MouseEvent): void
+  (e?: MouseEvent): void;
 }
 
 const clickOrDoubleClick = (onClick: Handler, onDoubleClick: Handler, delay = 200) => {

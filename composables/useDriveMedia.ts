@@ -11,16 +11,16 @@ export const useDriveMedia = (
   const loadMedia = async () => {
     // we skip image assets (they have no body) and matching checksums
     if (
-      !file.value ||
-      !file.value.md5Checksum ||
-      file.value.loading ||
-      (
-        isAssetProperties(file.value.appProperties) &&
-        file.value.appProperties.kind === AssetPropertiesKinds.IMAGE
-      ) ||
-      (
-        file.value.id === media.value?.id &&
-        file.value.md5Checksum === media.value?.md5Checksum
+      !file.value
+      || !file.value.md5Checksum
+      || file.value.loading
+      || (
+        isAssetProperties(file.value.appProperties)
+        && file.value.appProperties.kind === AssetPropertiesKinds.IMAGE
+      )
+      || (
+        file.value.id === media.value?.id
+        && file.value.md5Checksum === media.value?.md5Checksum
       )
     ) {
       return;

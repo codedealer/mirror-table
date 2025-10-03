@@ -1,13 +1,13 @@
-@import './transitions.scss';
-@import './forms.scss';
-@import './grid.scss';
-@import './sidebar.scss';
-@import './tree.scss';
-@import './windows.scss';
-@import './scene.scss';
-@import './hover-panel.scss';
-@import './markdown.scss';
-@import './widgets.scss';
+@use './transitions.scss';
+@use './forms.scss';
+@use './grid.scss';
+@use './sidebar.scss';
+@use './tree.scss';
+@use './windows.scss';
+@use './scene.scss';
+@use './hover-panel.scss';
+@use './markdown.scss';
+@use './widgets.scss';
 
 body {
   --va-button-font-weight: 400;
@@ -32,9 +32,10 @@ p {
   line-height: 1.3;
 }
 .mb-05 {
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
 }
-.mb, .mb-1 {
+.mb,
+.mb-1 {
   margin-bottom: 1rem;
 }
 .mb-2 {
@@ -87,10 +88,10 @@ header {
   text-align: center;
 }
 .mr-2 {
-  margin-right: .5rem;
+  margin-right: 0.5rem;
 }
 .ml-2 {
-  margin-left: .5rem;
+  margin-left: 0.5rem;
 }
 
 .text-overflow {
@@ -107,7 +108,7 @@ header {
   justify-content: flex-end;
 }
 .gap-05 {
-  gap: .5rem;
+  gap: 0.5rem;
 }
 .gap-1 {
   gap: 1rem;

@@ -1,5 +1,5 @@
-import { acceptHMRUpdate, defineStore } from 'pinia';
 import type { Notification } from '~/models/types';
+import { acceptHMRUpdate, defineStore } from 'pinia';
 
 export const useNotificationStore = defineStore('notification', () => {
   const notifications = ref<Notification[]>([]);

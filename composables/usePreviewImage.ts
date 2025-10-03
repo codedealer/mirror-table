@@ -2,11 +2,11 @@ import type { Ref } from 'vue';
 import type { DataRetrievalStrategy, DriveAsset, DriveImage, PreviewProperties } from '~/models/types';
 
 export interface PreviewImageOptions {
-  strategy?: DataRetrievalStrategy
+  strategy?: DataRetrievalStrategy;
   previewDimensionsConstraints?: {
-    width: number
-    height: number
-  }
+    width: number;
+    height: number;
+  };
 }
 
 export const usePreviewImage = (
@@ -33,8 +33,8 @@ export const usePreviewImage = (
     if ('appProperties' in assetOrPreviewProps.value) {
       const asset = assetOrPreviewProps.value;
       if (
-        asset.appProperties.kind !== AssetPropertiesKinds.TEXT &&
-        asset.appProperties.preview
+        asset.appProperties.kind !== AssetPropertiesKinds.TEXT
+        && asset.appProperties.preview
       ) {
         imageFileId.value = asset.appProperties.preview.id;
       }

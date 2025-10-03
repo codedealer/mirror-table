@@ -1,6 +1,6 @@
 import type { BuildPickerOptions, PickerViewTemplate } from '~/models/types';
 
-const notImplementedTemplate = (_: google.picker.PickerBuilder) => {
+const notImplementedTemplate = () => {
   throw new Error('Not implemented');
 };
 
@@ -27,7 +27,8 @@ const allTemplate = (
 };
 
 const TemplateMap: Record<
-  PickerViewTemplate, (
+  PickerViewTemplate,
+  (
     builder: google.picker.PickerBuilder,
     options: Required<BuildPickerOptions>
   ) => google.picker.PickerBuilder

@@ -1,13 +1,14 @@
-import { acceptHMRUpdate, defineStore } from 'pinia';
 import type {
   AppProperties,
   AppPropertiesType,
   AssetPropertiesKind,
   DriveTreeNode,
-  SelectOption, WidgetTemplate,
+  SelectOption,
+  WidgetTemplate,
 } from '~/models/types';
-import { AppPropertiesTypes, DriveFileExtensions, WidgetTemplates } from '~/models/types';
+import { acceptHMRUpdate, defineStore } from 'pinia';
 import { AssetPropertiesFactory } from '~/models/AssetProperties';
+import { AppPropertiesTypes, DriveFileExtensions, WidgetTemplates } from '~/models/types';
 import { WidgetPropertiesFactory } from '~/models/WidgetProperties';
 
 export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {

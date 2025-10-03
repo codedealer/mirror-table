@@ -1,6 +1,6 @@
 import type { UniversalAuthClient, UniversalAuthClientParams } from '~/models/types';
-import { useImplicitGrantFlowAuth } from '~/composables/useImplicitGrantFlowAuth';
 import { useAsyncScriptTag } from '~/composables/useAsyncScriptTag';
+import { useImplicitGrantFlowAuth } from '~/composables/useImplicitGrantFlowAuth';
 
 export type AuthFlowModel = 'implicitGrantFlow' | 'authorizationCodeFlow';
 

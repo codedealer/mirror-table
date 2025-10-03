@@ -12,7 +12,7 @@ export type WithIdPlaceholders<T> = {
 /**
  * Recursively replaces ID_PLACEHOLDER with the provided ID throughout an object
  */
-export function replaceIdPlaceholder<T extends Object> (obj: WithIdPlaceholders<T>, id: string): T {
+export function replaceIdPlaceholder<T extends object>(obj: WithIdPlaceholders<T>, id: string): T {
   if (obj === null || typeof obj !== 'object') {
     return obj === ID_PLACEHOLDER ? id as unknown as T : obj as T;
   }

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onKeyStroke, useDebounceFn } from '@vueuse/core';
-import { collection, getDocs, limit, query, where } from '@firebase/firestore';
-import ItemSelector from '~/components/ItemSelector.vue';
 import type { Scene } from '~/models/types';
+import { collection, getDocs, limit, query, where } from '@firebase/firestore';
+import { onKeyStroke, useDebounceFn } from '@vueuse/core';
+import ItemSelector from '~/components/ItemSelector.vue';
 
 const selectedScene = ref<Scene>();
 const search = ref('');
@@ -86,10 +86,10 @@ const searchScene = useSearchSceneFn();
 
 onKeyStroke(true, (e) => {
   if (
-    tableStore.mode !== TableModes.OWN ||
-    e.code !== 'KeyS' ||
-    !e.shiftKey ||
-    (e.target && isEditableElement(e.target))
+    tableStore.mode !== TableModes.OWN
+    || e.code !== 'KeyS'
+    || !e.shiftKey
+    || (e.target && isEditableElement(e.target))
   ) {
     return;
   }

@@ -1,17 +1,19 @@
 import type { ComputedRef } from 'vue';
-import { collection, deleteDoc, doc, query, setDoc, where } from '@firebase/firestore';
-import { useFirestore } from '@vueuse/firebase/useFirestore';
-import {
-  TableModes,
-  isSceneElementCanvasObject,
-  isSceneElementCanvasObjectAsset, isSceneElementCanvasObjectText,
-} from '~/models/types';
 import type {
-  CanvasElementState, CanvasElementStateAsset,
+  CanvasElementState,
+  CanvasElementStateAsset,
   ElementContainerConfig,
   SceneElementCanvasObject,
   SceneElementCanvasObjectAssetProperties,
   SceneElementScreen,
+} from '~/models/types';
+import { collection, deleteDoc, doc, query, setDoc, where } from '@firebase/firestore';
+import { useFirestore } from '@vueuse/firebase/useFirestore';
+import {
+  isSceneElementCanvasObject,
+  isSceneElementCanvasObjectAsset,
+  isSceneElementCanvasObjectText,
+  TableModes,
 } from '~/models/types';
 
 export const useCanvasElementsStore = defineStore('canvas-elements', () => {
@@ -47,9 +49,9 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
 
   const selectedElements = computed(() => {
     return canvasElements.value.filter((element) => {
-      return element.id in canvasElementsStateRegistry.value &&
-        canvasElementsStateRegistry.value[element.id].selected &&
-        canvasElementsStateRegistry.value[element.id].selectable;
+      return element.id in canvasElementsStateRegistry.value
+        && canvasElementsStateRegistry.value[element.id].selected
+        && canvasElementsStateRegistry.value[element.id].selectable;
     });
   });
 
@@ -95,10 +97,10 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     // Only check the first 30 IDs that would be in the query
     const queryableIds = complexAssetIds.value.slice(0, 30);
 
-    return queryableIds.length === 0 ||
-           queryableIds.every(id =>
-             assetPropertiesRegistry.value[id]?.preview?.id !== undefined,
-           );
+    return queryableIds.length === 0
+      || queryableIds.every(id =>
+        assetPropertiesRegistry.value[id]?.preview?.id !== undefined,
+      );
   });
 
   const layersStore = useLayersStore();
@@ -140,8 +142,8 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     // set the initial selectable state
     const isActiveGroup = layersStore.activeGroups[element.selectionGroup] === true;
     const hideHidden = layersStore.hideHiddenElements;
-    const selectable = tableStore.mode === TableModes.OWN &&
-      (hideHidden ? (isActiveGroup && element.enabled) : isActiveGroup);
+    const selectable = tableStore.mode === TableModes.OWN
+      && (hideHidden ? (isActiveGroup && element.enabled) : isActiveGroup);
     state.selectable = selectable;
 
     canvasElementsStateRegistry.value[elementId] = state;
@@ -174,8 +176,8 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
   const selectElement = (elementId: string) => {
     canvasElements.value.forEach((element) => {
       if (
-        !(element.id in canvasElementsStateRegistry.value) ||
-        !canvasElementsStateRegistry.value[element.id].selectable
+        !(element.id in canvasElementsStateRegistry.value)
+        || !canvasElementsStateRegistry.value[element.id].selectable
       ) {
         return;
       }
@@ -189,9 +191,9 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
   const addToSelectedElements = (elementId: string) => {
     const element = canvasElements.value.find(element => element.id === elementId);
     if (
-      !element ||
-      !(element.id in canvasElementsStateRegistry.value) ||
-      !canvasElementsStateRegistry.value[element.id].selectable
+      !element
+      || !(element.id in canvasElementsStateRegistry.value)
+      || !canvasElementsStateRegistry.value[element.id].selectable
     ) {
       return;
     }

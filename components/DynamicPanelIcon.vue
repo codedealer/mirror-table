@@ -2,7 +2,7 @@
 import type { DynamicPanelModelType } from '~/models/types';
 
 const props = defineProps<{
-  type: DynamicPanelModelType
+  type: DynamicPanelModelType;
 }>();
 
 const tableStore = useTableStore();

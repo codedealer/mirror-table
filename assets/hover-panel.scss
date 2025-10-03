@@ -12,12 +12,7 @@
   position: absolute;
   top: 0;
   left: 50%;
-  transform: translate(
-      -50%,
-      calc(
-        var(--translate, 1) * (-100% - var(--top-offset) + var(--trigger-area-height))
-      )
-  );
+  transform: translate(-50%, calc(var(--translate, 1) * (-100% - var(--top-offset) + var(--trigger-area-height))));
   z-index: var(--hover-panel-z-index);
   padding: var(--top-offset) 0.5rem var(--trigger-area-height);
   transition-property: transform, padding;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { watchArray } from '@vueuse/core';
-import { getNodeById } from '~/utils/canvasOps';
 import { isContainerNode } from '~/models/types';
+import { getNodeById } from '~/utils/canvasOps';
 
 const canvasStageStore = useCanvasStageStore();
 const canvasElementsStore = useCanvasElementsStore();

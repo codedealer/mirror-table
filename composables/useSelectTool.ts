@@ -1,5 +1,5 @@
-import Konva from 'konva';
 import type { CanvasTool, TableSessionPresence } from '~/models/types';
+import Konva from 'konva';
 
 export const useSelectTool = () => {
   const stageStore = useCanvasStageStore();
@@ -106,8 +106,8 @@ export const useSelectTool = () => {
 
     // don't show selection box if element is already selected
     if (
-      e.target.getParent()?.className === 'Transformer' ||
-      (elementState && elementState.selected)
+      e.target.getParent()?.className === 'Transformer'
+      || (elementState && elementState.selected)
     ) {
       return;
     }
@@ -139,10 +139,10 @@ export const useSelectTool = () => {
     y2 = stageStore.stage.getRelativePointerPosition()?.y;
 
     if (
-      x2 === undefined ||
-      y2 === undefined ||
-      x1 === undefined ||
-      y1 === undefined
+      x2 === undefined
+      || y2 === undefined
+      || x1 === undefined
+      || y1 === undefined
     ) {
       stageStore.selectionRect.visible(false);
       return;

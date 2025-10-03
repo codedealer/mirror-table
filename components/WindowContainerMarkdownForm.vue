@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { useForm } from 'vuestic-ui';
 import type { AssetProperties, DriveAsset, ModalWindow, RawMediaObject } from '~/models/types';
+import { useForm } from 'vuestic-ui';
+import AppPropertiesTitleForm from '~/components/AppPropertiesTitleForm.vue';
+import { usePreviewImage } from '~/composables/usePreviewImage';
+import { PreviewPropertiesFactory } from '~/models/PreviewProprerties';
 import { ModalWindowStatus } from '~/models/types';
 import { nameValidationsRules } from '~/utils';
-import { PreviewPropertiesFactory } from '~/models/PreviewProprerties';
-import { usePreviewImage } from '~/composables/usePreviewImage';
-import AppPropertiesTitleForm from '~/components/AppPropertiesTitleForm.vue';
 
 const props = defineProps<{
-  window: ModalWindow
-  media?: RawMediaObject
+  window: ModalWindow;
+  media?: RawMediaObject;
 }>();
 
 const { file, label } = useDriveFile<DriveAsset>(
@@ -30,9 +30,9 @@ const {
 });
 
 const isLoading = computed(() => (
-  props.window.status === ModalWindowStatus.LOADING ||
-  file.value?.loading ||
-  imageLoading.value
+  props.window.status === ModalWindowStatus.LOADING
+  || file.value?.loading
+  || imageLoading.value
 ));
 
 const body = ref('');
@@ -89,8 +89,8 @@ const { validate } = useForm(windowForm);
 const updatePreviewProperties = (assetProperties: AssetProperties) => {
   // check if the image is dirty
   if (
-    (!imageFileId.value && !assetProperties.preview) ||
-    (imageFileId.value === assetProperties.preview?.id)
+    (!imageFileId.value && !assetProperties.preview)
+    || (imageFileId.value === assetProperties.preview?.id)
   ) {
     return assetProperties;
   }

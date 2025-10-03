@@ -9,7 +9,7 @@ import WindowContainerMarkdownMeta from '~/components/WindowContainerMarkdownMet
 import { useDriveMedia } from '~/composables/useDriveMedia';
 
 const props = defineProps<{
-  window: ModalWindow
+  window: ModalWindow;
 }>();
 
 const { file } = useDriveFile<DriveAsset>(
