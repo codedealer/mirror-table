@@ -2,11 +2,5 @@
   "buildCommand": "pnpm run build",
   "devCommand": "pnpm run dev",
   "installCommand": "pnpm install",
-  "framework": "nuxtjs",
-  "builds": [
-    {
-      "src": "nuxt.config.ts",
-      "use": "@vercel/node@20"
-    }
-  ]
+  "framework": "nuxtjs"
 }
