@@ -12,10 +12,10 @@ Every element on canvas is represented by an asset that is stored on a host's Go
 
 This project was built from Vercel Nuxt template, but it is not necessary to deploy it on Vercel. The project can be deployed on any platform that supports Node.js.
 
-Make sure to install the dependencies:
+Make sure to install the dependencies (pnpm is the recommended package manager):
 
 ```bash
-yarn
+pnpm install
 ```
 
 ## Development Server
@@ -23,13 +23,13 @@ yarn
 When working on the application it is recommended to install a lint pre-commit hook:
 
 ```bash
-yarn husky install # First time only
+pnpm exec husky install # First time only
 ```
 
 Start the development server on http://localhost:3000
 
 ```bash
-yarn run dev
+pnpm run dev
 ```
 
 ## Production
@@ -37,13 +37,28 @@ yarn run dev
 Build the application for production:
 
 ```bash
-yarn run build
+pnpm run build
 ```
 
 Locally preview production build:
 
 ```bash
-yarn run preview
+pnpm run preview
 ```
+
+## Vercel notes
+
+If you deploy to Vercel, the platform may default to older pnpm/Node versions based on project age. To ensure Vercel uses pnpm 10+ and Node 22 (as required by this repo):
+
+- Make sure `package.json` contains the correct engines (for example: `"node": ">=22.20.0"` and `"packageManager": "pnpm@10.18.0"`).
+- Add an explicit install step to `vercel.json` so Corepack is enabled during the build:
+
+```json
+"installCommand": "corepack enable pnpm && pnpm install"
+```
+
+- Additionally, if you see pnpm version errors in Vercel builds, set the environment variable `ENABLE_EXPERIMENTAL_COREPACK=1` in the Vercel dashboard to opt in to Corepack during builds.
+
+This ensures the build environment matches local development (Node 22 + pnpm 10).
 
 Checkout the [deployment documentation](https://v3.nuxtjs.org/guide/deploy/presets) for more information.
