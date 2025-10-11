@@ -3,26 +3,22 @@ import type { TableCard } from '~/models/types';
 import { collection, orderBy, query } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 
-const tables = ref<TableCard[] | undefined>(undefined);
+const userStore = useUserStore();
+const { $db } = useNuxtApp();
 
-onMounted(() => {
-  const { $db } = useNuxtApp();
-
-  const userStore = useUserStore();
-
-  const q = computed(() => {
-    if (!userStore.isAuthenticated || !userStore.user) {
-      return false;
-    }
-    return query(
-      collection($db, 'users', userStore.user.uid, 'tables')
-        .withConverter(firestoreDataConverter<TableCard>()),
-      orderBy('lastAccess', 'desc'),
-    );
-  });
-
-  tables.value = useFirestore(q, undefined);
+const q = computed(() => {
+  if (!userStore.isAuthenticated || !userStore.user) {
+    return false;
+  }
+  return query(
+    collection($db, 'users', userStore.user.uid, 'tables')
+      .withConverter(firestoreDataConverter<TableCard>()),
+    orderBy('lastAccess', 'desc'),
+  );
 });
+
+// useFirestore returns a Ref in VueUse 11+
+const tables = useFirestore(q, undefined) as Ref<TableCard[] | undefined>;
 </script>
 
 <template>
@@ -32,7 +28,7 @@ onMounted(() => {
         <TablesListElementNew />
       </TablesListElement>
       <ClientOnly>
-        <div v-if="Array.isArray(tables)" class="ghost-container">
+        <div v-if="tables && Array.isArray(tables)" class="ghost-container">
           <TablesListElement v-for="table in tables" :key="table.id">
             <TablesListElementTable :table="table" />
           </TablesListElement>
