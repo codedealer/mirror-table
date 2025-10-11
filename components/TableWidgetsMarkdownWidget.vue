@@ -21,7 +21,7 @@ const showPrivateContent = computed(() => {
 </script>
 
 <template>
-  <va-card outlined class="card-thin">
+  <va-card outlined :bordered="false" class="card-thin">
     <TableWidgetsControls :panel="panel" :widget="widget" />
     <va-card-block>
       <va-card-content :class="widget?.avatar ? 'grid-img-text' : ''">

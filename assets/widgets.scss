@@ -1,3 +1,10 @@
+.widgets-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+
 .widget-avatar {
   --avatar-size: 80px;
   max-width: var(--avatar-size);

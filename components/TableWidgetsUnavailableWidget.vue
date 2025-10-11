@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DynamicPanelModelType } from '~/models/types';
+import { TableModes } from '~/models/types';
 
 const props = defineProps<{
   id: string;
@@ -18,6 +19,7 @@ const remove = () => {
       v-if="tableStore.mode === TableModes.OWN"
       stripe
       stripe-color="danger"
+      :bordered="false"
       outlined
       class="card-thin flex"
     >
