@@ -1,4 +1,4 @@
-import type { AssetProperties, SceneElementCanvasObjectAsset } from '~/models/types';
+import type { AssetProperties, SceneElementCanvasObjectAsset, SceneElementCanvasObjectText } from '~/models/types';
 import updateComplexAssetProperties from '~/utils/updateComplexAssetProperties';
 
 export const useCanvasContextPanelStore = defineStore('canvas-context-panel', () => {
@@ -9,6 +9,14 @@ export const useCanvasContextPanelStore = defineStore('canvas-context-panel', ()
   const modalContent = ref({
     title: '',
     showTitle: false,
+  });
+
+  // Text edit modal state
+  const textModalState = ref(false);
+  const textModalLoading = ref(false);
+  const textModalElementId = ref('');
+  const textModalContent = ref({
+    text: '',
   });
 
   const position = ref({
@@ -121,10 +129,90 @@ export const useCanvasContextPanelStore = defineStore('canvas-context-panel', ()
     modalHide();
   };
 
+  const getCanvasTextElement = (): SceneElementCanvasObjectText | undefined => {
+    if (!textModalElementId.value) {
+      return undefined;
+    }
+
+    const canvasElementsStore = useCanvasElementsStore();
+    const element = canvasElementsStore.canvasElements.find(element => element.id === textModalElementId.value);
+
+    if (!element) {
+      return undefined;
+    }
+
+    if (!isSceneElementCanvasObjectText(element)) {
+      return undefined;
+    }
+
+    return element;
+  };
+
+  const textModalHide = () => {
+    textModalState.value = false;
+    textModalElementId.value = '';
+    textModalContent.value = {
+      text: '',
+    };
+  };
+
+  const textModalShow = (id: string) => {
+    if (!id) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Unsafe open of the modal. Id might not be set.');
+      return;
+    }
+
+    textModalElementId.value = id;
+    const element = getCanvasTextElement();
+    if (!element) {
+      textModalHide();
+      return;
+    }
+
+    textModalContent.value = {
+      text: element.text.text || '',
+    };
+
+    textModalState.value = true;
+  };
+
+  const textModalSubmit = async () => {
+    const element = getCanvasTextElement();
+
+    if (!element) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Text element not found');
+      textModalHide();
+      return;
+    }
+
+    textModalLoading.value = true;
+
+    try {
+      const sceneStore = useSceneStore();
+      await sceneStore.updateElement<SceneElementCanvasObjectText>(element.id, {
+        text: {
+          ...element.text,
+          text: textModalContent.value.text,
+        },
+      });
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error(`Failed to update text: ${extractErrorMessage(e)}`);
+    }
+
+    textModalLoading.value = false;
+    textModalHide();
+  };
+
   return {
     modalState,
     modalLoading,
     modalContent,
+    textModalState,
+    textModalLoading,
+    textModalContent,
     visible,
     position,
     elementId,
@@ -133,6 +221,9 @@ export const useCanvasContextPanelStore = defineStore('canvas-context-panel', ()
     modalShow,
     modalHide,
     modalSubmit,
+    textModalShow,
+    textModalHide,
+    textModalSubmit,
   };
 });
 

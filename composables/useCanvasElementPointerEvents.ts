@@ -1,14 +1,14 @@
 import type Konva from 'konva';
-import type { CanvasElementStateAsset } from '~/models/types';
+import type { CanvasElementState } from '~/models/types';
 
-export const useCanvasAssetPointerEvents = (
-  state: Ref<CanvasElementStateAsset | undefined>,
+export const useCanvasElementPointerEvents = (
+  state: Ref<CanvasElementState | undefined>,
 ) => {
   const canvasStageStore = useCanvasStageStore();
   const canvasContextPanelStore = useCanvasContextPanelStore();
 
   const onHover = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
-    if (!state.value || !state.value?.selectable || !state.value?.loaded) {
+    if (!state.value || !state.value?.selectable) {
       return;
     }
 

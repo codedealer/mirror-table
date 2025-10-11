@@ -5,6 +5,7 @@ import type {
   SceneElement,
   SceneElementCanvasObject,
   SceneElementCanvasObjectAsset,
+  SceneElementCanvasObjectText,
   SelectionGroup,
 } from '~/models/types';
 import { isSceneElementScreen, SelectionGroupNames, SelectionGroups } from '~/models/types';
@@ -182,6 +183,25 @@ const ImageKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
   return actions;
 };
 
+const TextKindActionsFactory = (element: SceneElementCanvasObjectText) => {
+  const actions: ContextAction[] = [];
+
+  actions.push({
+    id: 'edit-text',
+    label: 'Edit Text',
+    icon: { name: 'edit' },
+    action: () => {
+      const canvasContextPanelStore = useCanvasContextPanelStore();
+      canvasContextPanelStore.textModalShow(element.id);
+    },
+    disabled: false,
+    pinned: true,
+    alwaysVisible: false,
+  });
+
+  return actions;
+};
+
 const getLayerRanks = (group: SelectionGroup) => {
   const sceneStore = useSceneStore();
 
@@ -327,6 +347,11 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
   actions.push(...groupActionsFactory(element));
   actions.push(...hierarchyActions);
   actions.push(deleteAction);
+
+  if (isSceneElementCanvasObjectText(element)) {
+    actions.unshift(...TextKindActionsFactory(element));
+    return actions;
+  }
 
   if (!isSceneElementCanvasObjectAsset(element)) {
     return actions;

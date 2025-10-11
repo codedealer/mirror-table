@@ -7,6 +7,7 @@ import type {
   SceneElementCanvasObjectText,
 } from '~/models/types';
 import { computed, toRef } from 'vue';
+import { useCanvasElementPointerEvents } from '~/composables/useCanvasElementPointerEvents';
 import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
 
 const props = defineProps<{
@@ -97,13 +98,16 @@ const textConfig = computed(() => {
 });
 
 const { onNodeTransformEnd } = useCanvasTransformEvents();
-const onHover = () => {
-};
-const onHoverOut = () => {
-};
+const { onHover, onHoverOut } = useCanvasElementPointerEvents(state);
 
 const canvasStageStore = useCanvasStageStore();
+const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
+  onHover(e);
+  // transform handled by the stage after event bubbling
+};
+
 const onTransformEnd = async (e: Konva.KonvaEventObject<DragEvent>) => {
+  onHover(e);
   // special case for text to avoid scaling
   // apparently, transform events don't bubble, but just in case
   e.cancelBubble = true;
@@ -127,6 +131,7 @@ const onTransformEnd = async (e: Konva.KonvaEventObject<DragEvent>) => {
   <v-group
     :config="containerConfig"
     @dragstart="onHoverOut"
+    @dragend="onDragEnd"
     @transformend="onTransformEnd"
     @transformstart="onHoverOut"
     @pointerover="onHover"

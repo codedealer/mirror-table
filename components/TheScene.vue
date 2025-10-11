@@ -19,6 +19,8 @@ const sceneStore = useSceneStore();
 
     <TheSceneCanvasAssetLabelModal />
 
+    <TheSceneCanvasTextEditModal />
+
     <TheSceneSearch />
 
     <TheSceneHotkeyModal />
