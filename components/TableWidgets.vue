@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DynamicPanelModelType, WidgetTemplate } from '~/models/types';
-import { TableWidgetsCandelaPlayer, TableWidgetsMarkdownWidget } from '#components';
+import { TableWidgetsCandelaPlayer, TableWidgetsMarkdownWidget, TableWidgetsUnavailableWidget } from '#components';
+import { TableModes, WidgetTemplates } from '~/models/types';
 
 const props = defineProps<{
   type: DynamicPanelModelType;
@@ -27,7 +28,8 @@ const widgetStore = useWidgetStore();
     <va-card
       v-if="tableStore.mode === TableModes.OWN"
       outlined
-      class="card-thin mb"
+      :bordered="false"
+      class="card-thin"
     >
       <va-card-content class="flex gap-05">
         <va-switch
