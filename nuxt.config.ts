@@ -92,4 +92,5 @@ export default {
     '/d': { ssr: false },
     '/g/**': { ssr: false },
   },
+  compatibilityDate: '2025-10-11',
 }

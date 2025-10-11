@@ -26,7 +26,16 @@ export const useCanvasAssetPointerEvents = (
 
     canvasContextPanelStore.show(container.id(), pos.x, pos.y);
   };
-  const onHoverOut = () => {
+  const onHoverOut = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    // Check if pointer is actually over the context panel before hiding
+    const evt = e.evt as MouseEvent;
+    const elementAtPoint = document.elementFromPoint(evt.clientX, evt.clientY);
+
+    // If cursor is over the panel or its children, don't hide
+    if (elementAtPoint?.closest('.canvas-context-panel')) {
+      return;
+    }
+
     canvasContextPanelStore.hide();
   };
 

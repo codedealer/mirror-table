@@ -47,6 +47,14 @@ const styleObject = computed(() => {
 
   return style;
 });
+
+const onPanelLeave = () => {
+  // Don't hide if dropdown menu is open - user might be hovering over it
+  if (menuModel.value) {
+    return;
+  }
+  store.hide();
+};
 </script>
 
 <template>
@@ -54,9 +62,11 @@ const styleObject = computed(() => {
     ref="card"
     :style="styleObject"
     class="canvas-context-panel"
+    @mouseleave="onPanelLeave"
   >
     <va-card
       v-show="store.visible"
+      class="canvas-context-panel__card"
     >
       <va-card-content>
         <ContextPanel
