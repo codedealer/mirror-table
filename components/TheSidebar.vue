@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onKeyStroke } from '@vueuse/core';
-import { DynamicPanelContentTypes } from '~/models/types';
+import { DynamicPanelContentTypes, DynamicPanelModelTypes } from '~/models/types';
 
 const dynamicPanelStore = useDynamicPanelStore();
 
