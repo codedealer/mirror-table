@@ -4,7 +4,7 @@ import { useForm } from 'vuestic-ui';
 import AppPropertiesTitleForm from '~/components/AppPropertiesTitleForm.vue';
 import { usePreviewImage } from '~/composables/usePreviewImage';
 import { PreviewPropertiesFactory } from '~/models/PreviewProprerties';
-import { ModalWindowStatus } from '~/models/types';
+import { AssetPropertiesKinds, DataRetrievalStrategies, DriveMimeTypes, ModalWindowStatus } from '~/models/types';
 import { nameValidationsRules } from '~/utils';
 
 const props = defineProps<{
