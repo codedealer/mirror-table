@@ -5,9 +5,7 @@ withDefaults(defineProps<{
   disabled: false,
 });
 
-defineEmits<{
-  'update:dirty': void;
-}>();
+const emit = defineEmits(['update:dirty']);
 
 const showTitle = defineModel<boolean>('showTitle', {
   required: true,
@@ -28,7 +26,7 @@ const title = defineModel<string>('title', {
       label="Show title"
       color="primary-dark"
       :disabled="disabled"
-      @update:dirty="$emit('update:dirty')"
+      @update:dirty="emit('update:dirty', $event)"
     />
 
     <va-input
@@ -39,7 +37,7 @@ const title = defineModel<string>('title', {
       :max-length="100"
       counter
       :disabled="disabled"
-      @update:dirty="$emit('update:dirty')"
+      @update:dirty="emit('update:dirty', $event)"
     />
   </div>
 </template>
