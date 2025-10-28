@@ -1,22 +1,44 @@
+import { defineNuxtConfig } from 'nuxt/config'
 import { createResolver } from '@nuxt/kit'
 
-const { resolve } = createResolver(import.meta.url);
-export default {
-  vite: {
-    vue: {
-      script: {
-        defineModel: true,
-        propsDestructure: true,
-      },
+const { resolve } = createResolver(import.meta.url)
+
+export default defineNuxtConfig({
+  app: {
+    head: {
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width,initial-scale=1' },
+      ],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' },
+      ],
+    },
+    layoutTransition: {
+      name: 'slide-fade',
+      mode: 'out-in',
+    },
+    pageTransition: {
+      name: 'slide-fade',
+      mode: 'out-in',
     },
   },
-  nitro: {
-    preset: '',
+  compatibilityDate: '2025-10-11',
+  imports: {
+    dirs: [
+      resolve('./stores'),
+      resolve('./models'),
+    ],
   },
   modules: [
     '@pinia/nuxt',
     '@vuestic/nuxt',
   ],
+  routeRules: {
+    /*'/': { prerender: true },*/
+    '/d': { ssr: false },
+    '/g/**': { ssr: false },
+  },
   runtimeConfig: {
     fbServiceAccount: process.env.FB_SERVICE_ACCOUNT,
     clientSecret: process.env.CLIENT_SECRET,
@@ -31,28 +53,17 @@ export default {
       searchFolder: '.search',
       debugEnabled: process.env.LOG_ENABLED?.toLowerCase() === 'true',
       debugNamespace: process.env.LOG_NAMESPACE ?? 'app:*',
-    }
-  },
-  app: {
-    head: {
-      meta: [
-        { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width,initial-scale=1' },
-      ],
-      link: [
-        { rel: 'icon', type: 'image/svg', href: '/logo.svg' },
-      ],
     },
-    pageTransition: {
-      name: 'slide-fade',
-      mode: 'out-in',
-    },
-    layoutTransition: {
-      name: 'slide-fade',
-      mode: 'out-in',
-    }
   },
-  spaLoadingTemplate: resolve(__dirname, './loader.html'),
+  spaLoadingTemplate: resolve('./loader.html'),
+  vite: {
+    vue: {
+      script: {
+        defineModel: true,
+        propsDestructure: true,
+      },
+    },
+  },
   vuestic: {
     css: ['reset', 'typography'],
     config: {
@@ -84,13 +95,4 @@ export default {
       },
     },
   },
-  imports: {
-    dirs: ['stores', 'models']
-  },
-  routeRules: {
-    /*'/': { prerender: true },*/
-    '/d': { ssr: false },
-    '/g/**': { ssr: false },
-  },
-  compatibilityDate: '2025-10-11',
-}
+})
