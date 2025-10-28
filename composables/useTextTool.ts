@@ -5,6 +5,7 @@ import { SceneElementCanvasObjectTextFactory } from '~/models/SceneElementCanvas
 export const useTextTool = () => {
   const stageStore = useCanvasStageStore();
   const sceneStore = useSceneStore();
+  const toolStore = useCanvasToolStore();
 
   let startX: number | undefined;
   let startY: number | undefined;
@@ -100,6 +101,11 @@ export const useTextTool = () => {
     // Reset start positions
     startX = undefined;
     startY = undefined;
+
+    const selectTool = toolStore.tools.find(tool => tool.id === 'select');
+    if (selectTool) {
+      toolStore.setActiveTool(selectTool);
+    }
   };
 
   const textTool: CanvasTool = {
@@ -118,8 +124,6 @@ export const useTextTool = () => {
     ]),
     component: markRaw(defineAsyncComponent(() => import('~/components/TheSceneCanvasToolText.vue'))),
   };
-
-  const toolStore = useCanvasToolStore();
 
   toolStore.registerTool(textTool);
 
