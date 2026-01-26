@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { watchArray } from '@vueuse/core';
-import { isContainerNode } from '~/models/types';
+import { isContainerNode, isSceneElementCanvasObjectAsset } from '~/models/types';
 import { getNodeById } from '~/utils/canvasOps';
 
 const canvasStageStore = useCanvasStageStore();
@@ -18,6 +18,12 @@ watchArray(selectedElements, (elements) => {
       .map(element => getNodeById(canvasStageStore.stage!, element.id))
       .filter(isContainerNode),
   );
+
+  // Set keepRatio based on selected element types:
+  // - If any asset (image) is selected, keep ratio to prevent distortion
+  // - If only text elements are selected, allow free resize
+  const hasAssetElement = elements.some(isSceneElementCanvasObjectAsset);
+  canvasStageStore.imageTransformer.keepRatio(hasAssetElement);
 }, { immediate: true });
 
 onBeforeMount(() => {
