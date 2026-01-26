@@ -19,6 +19,8 @@ export const SceneElementCanvasObjectTextFactory = (
       fontSize: textConfig.fontSize ?? 20,
       fontFamily: textConfig.fontFamily ?? 'Arial',
       fill: textConfig.fill ?? '#000000',
+      align: textConfig.align ?? 'center',
+      backgroundColor: textConfig.backgroundColor ?? 'rgba(255, 255, 255, 0.8)',
     },
     container: {
       id,

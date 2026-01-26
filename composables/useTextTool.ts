@@ -90,6 +90,8 @@ export const useTextTool = () => {
         fontSize: 20,
         fontFamily: 'Source Sans Pro, sans-serif',
         fill: '#000000',
+        align: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
       },
       { width, height },
       { x: elementX, y: elementY },

@@ -17,6 +17,10 @@ export const useCanvasContextPanelStore = defineStore('canvas-context-panel', ()
   const textModalElementId = ref('');
   const textModalContent = ref({
     text: '',
+    align: 'center' as 'left' | 'center' | 'right',
+    fill: '#000000',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 20,
   });
 
   const position = ref({
@@ -153,6 +157,10 @@ export const useCanvasContextPanelStore = defineStore('canvas-context-panel', ()
     textModalElementId.value = '';
     textModalContent.value = {
       text: '',
+      align: 'center',
+      fill: '#000000',
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      fontSize: 20,
     };
   };
 
@@ -172,6 +180,10 @@ export const useCanvasContextPanelStore = defineStore('canvas-context-panel', ()
 
     textModalContent.value = {
       text: element.text.text || '',
+      align: (element.text.align as 'left' | 'center' | 'right') || 'center',
+      fill: (element.text.fill as string) || '#000000',
+      backgroundColor: (element.text.backgroundColor as string) || 'rgba(255, 255, 255, 0.8)',
+      fontSize: (element.text.fontSize as number) || 20,
     };
 
     textModalState.value = true;
@@ -195,6 +207,10 @@ export const useCanvasContextPanelStore = defineStore('canvas-context-panel', ()
         text: {
           ...element.text,
           text: textModalContent.value.text,
+          align: textModalContent.value.align,
+          fill: textModalContent.value.fill,
+          backgroundColor: textModalContent.value.backgroundColor,
+          fontSize: textModalContent.value.fontSize,
         },
       });
     } catch (e) {

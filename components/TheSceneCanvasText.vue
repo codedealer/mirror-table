@@ -62,10 +62,11 @@ const containerConfig: ComputedRef<ElementContainerConfig> = computed(() => {
 
 // Backdrop configuration
 const backdropConfig = computed(() => {
+  const backgroundColor = props.element.text.backgroundColor as string | undefined;
   return {
     width: props.element.container.width,
     height: props.element.container.height,
-    fill: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white background
+    fill: backgroundColor || 'rgba(255, 255, 255, 0.8)', // Use element background or default
     opacity: props.element.enabled ? 1 : 0.5,
     x: 0,
     y: 0,
