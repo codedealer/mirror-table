@@ -23,16 +23,6 @@ const fontSizeMax = 72;
       class="vertical-form table-form"
       @submit.prevent="canvasContextPanelStore.textModalSubmit"
     >
-      <va-textarea
-        v-model="canvasContextPanelStore.textModalContent.text"
-        label="Text Content"
-        :min-rows="5"
-        :max-rows="15"
-        :disabled="canvasContextPanelStore.textModalLoading"
-        autosize
-        counter
-      />
-
       <div class="text-formatting">
         <div class="text-formatting__section">
           <span class="text-formatting__label">Alignment</span>
@@ -50,44 +40,45 @@ const fontSizeMax = 72;
         </div>
 
         <div class="text-formatting__section">
-          <span class="text-formatting__label">Font Size</span>
-          <div class="text-formatting__font-size">
-            <va-slider
-              v-model="canvasContextPanelStore.textModalContent.fontSize"
-              :min="fontSizeMin"
-              :max="fontSizeMax"
-              :disabled="canvasContextPanelStore.textModalLoading"
-              track-label-visible
-            />
-            <va-input
-              v-model.number="canvasContextPanelStore.textModalContent.fontSize"
-              type="number"
-              :min="fontSizeMin"
-              :max="fontSizeMax"
-              :disabled="canvasContextPanelStore.textModalLoading"
-              class="input-sm"
-            />
-          </div>
+          <span class="text-formatting__label">Size</span>
+          <va-input
+            v-model.number="canvasContextPanelStore.textModalContent.fontSize"
+            type="number"
+            :min="fontSizeMin"
+            :max="fontSizeMax"
+            :disabled="canvasContextPanelStore.textModalLoading"
+            class="input-sm"
+          />
         </div>
 
-        <div class="text-formatting__colors">
-          <div class="text-formatting__section">
-            <span class="text-formatting__label">Text Color</span>
-            <va-color-input
-              v-model="canvasContextPanelStore.textModalContent.fill"
-              :disabled="canvasContextPanelStore.textModalLoading"
-            />
-          </div>
+        <div class="text-formatting__section">
+          <span class="text-formatting__label">Color</span>
+          <va-color-input
+            v-model="canvasContextPanelStore.textModalContent.fill"
+            :disabled="canvasContextPanelStore.textModalLoading"
+            class="input-color"
+          />
+        </div>
 
-          <div class="text-formatting__section">
-            <span class="text-formatting__label">Background</span>
-            <va-color-input
-              v-model="canvasContextPanelStore.textModalContent.backgroundColor"
-              :disabled="canvasContextPanelStore.textModalLoading"
-            />
-          </div>
+        <div class="text-formatting__section">
+          <span class="text-formatting__label">Background</span>
+          <va-color-input
+            v-model="canvasContextPanelStore.textModalContent.backgroundColor"
+            :disabled="canvasContextPanelStore.textModalLoading"
+            class="input-color"
+          />
         </div>
       </div>
+
+      <va-textarea
+        v-model="canvasContextPanelStore.textModalContent.text"
+        label="Text Content"
+        :min-rows="5"
+        :max-rows="15"
+        :disabled="canvasContextPanelStore.textModalLoading"
+        autosize
+        counter
+      />
 
       <div class="vertical-form__actions">
         <va-button
@@ -112,8 +103,10 @@ const fontSizeMax = 72;
 <style scoped lang="scss">
 .text-formatting {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
 
   &__section {
     display: flex;
@@ -122,25 +115,14 @@ const fontSizeMax = 72;
   }
 
   &__label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--va-text-primary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--va-secondary);
   }
+}
 
-  &__font-size {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-
-    .va-slider {
-      flex: 1;
-    }
-  }
-
-  &__colors {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
+.input-color {
+  --va-input-wrapper-width: 140px;
 }
 </style>
