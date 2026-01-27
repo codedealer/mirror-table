@@ -1,5 +1,6 @@
 import type {
   DriveAsset,
+  ElementContainerConfig,
   NestedPartial,
   Scene,
   SceneElement,
@@ -9,6 +10,7 @@ import type { WithIdPlaceholders } from '~/utils/replaceIdPlaceholder';
 import { collection, deleteDoc, doc, orderBy, query, setDoc, updateDoc, where, writeBatch } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 import { SceneElementCanvasObjectAssetFactory } from '~/models/SceneElementCanvasObjectAsset';
+import { SceneElementCanvasObjectTextFactory } from '~/models/SceneElementCanvasObjectText';
 
 export const useSceneStore = defineStore('scene', () => {
   const { $db } = useNuxtApp();
@@ -81,7 +83,10 @@ export const useSceneStore = defineStore('scene', () => {
     }
   };
 
-  const addAsset = async (asset: DriveAsset) => {
+  const addAsset = async (
+    asset: DriveAsset,
+    position?: { x: number; y: number },
+  ) => {
     if (!scene.value) {
       return;
     }
@@ -89,17 +94,62 @@ export const useSceneStore = defineStore('scene', () => {
     const stageStore = useCanvasStageStore();
 
     try {
+      // If position is provided, place asset at that position (centered on the coordinates)
+      // Otherwise, use the default fitToStage behavior
+      const positioningFunction = position
+        ? (container: WithIdPlaceholders<ElementContainerConfig>) => ({
+            ...container,
+            x: position.x - (container.width ?? 0) / 2,
+            y: position.y - (container.height ?? 0) / 2,
+          })
+        : stageStore.fitToStage;
+
       const sceneElement = SceneElementCanvasObjectAssetFactory(
         ID_PLACEHOLDER,
         asset,
         scene.value.owner,
-        stageStore.fitToStage,
+        positioningFunction,
       );
 
       await addElement(sceneElement);
     } catch (error) {
       const notificationStore = useNotificationStore();
       notificationStore.error('Failed to add asset to the scene.');
+      console.error(error);
+    }
+  };
+
+  const addText = async (
+    position: { x: number; y: number },
+    dimensions?: { width: number; height: number },
+  ) => {
+    if (!scene.value) {
+      return;
+    }
+
+    const width = dimensions?.width ?? 200;
+    const height = dimensions?.height ?? 100;
+
+    const textElement = SceneElementCanvasObjectTextFactory(
+      ID_PLACEHOLDER,
+      {
+        text: '<Enter text>',
+        fontSize: 20,
+        fontFamily: 'Source Sans Pro, sans-serif',
+        fill: '#000000',
+        align: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      },
+      { width, height },
+      { x: position.x - width / 2, y: position.y - height / 2 },
+      scene.value.owner,
+    );
+
+    try {
+      await addElement(textElement);
+    } catch (error) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Failed to add text to the scene.');
       console.error(error);
     }
   };
@@ -209,6 +259,7 @@ export const useSceneStore = defineStore('scene', () => {
     sceneElements,
     addElement,
     addAsset,
+    addText,
     addScreen,
     updateElement,
     updateElements,

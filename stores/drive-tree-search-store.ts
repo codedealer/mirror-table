@@ -6,9 +6,47 @@ export const useDriveSearchStore = defineStore('drive-search', () => {
   const searchModalMode = ref<SearchMode>('all');
   const recentSelected = ref<DriveFile[]>([]);
 
+  // Promise-based selection hooks (for programmatic selection)
+  let searchModalResolveHook: ((file: DriveFile) => void) | null = null;
+  let searchModalRejectHook: ((error: unknown) => void) | null = null;
+  const isPendingSelection = ref(false);
+
   const showSearchModal = (mode: SearchMode = 'all') => {
     searchModalMode.value = mode;
     searchModalState.value = true;
+  };
+
+  /**
+   * Opens the search modal and returns a promise that resolves when a file is selected.
+   * Similar to scene search's promptToSearch pattern.
+   */
+  const promptToSearch = (mode: SearchMode = 'assets') => {
+    searchModalMode.value = mode;
+    searchModalState.value = true;
+    isPendingSelection.value = true;
+
+    return new Promise<DriveFile>((resolve, reject) => {
+      searchModalResolveHook = resolve;
+      searchModalRejectHook = reject;
+    });
+  };
+
+  const resolve = (file: DriveFile) => {
+    if (searchModalResolveHook) {
+      searchModalResolveHook(file);
+      searchModalResolveHook = null;
+      searchModalRejectHook = null;
+      isPendingSelection.value = false;
+    }
+  };
+
+  const reject = (error?: unknown) => {
+    if (searchModalRejectHook) {
+      searchModalRejectHook(error ?? new Error('Search cancelled'));
+      searchModalResolveHook = null;
+      searchModalRejectHook = null;
+      isPendingSelection.value = false;
+    }
   };
 
   const recentSelectedLimit = 10;
@@ -27,7 +65,11 @@ export const useDriveSearchStore = defineStore('drive-search', () => {
     searchModalState,
     searchModalMode,
     recentSelected,
+    isPendingSelection,
     showSearchModal,
+    promptToSearch,
+    resolve,
+    reject,
     addRecentSelected,
   };
 });

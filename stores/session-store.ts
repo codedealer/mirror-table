@@ -182,6 +182,52 @@ export const useSessionStore = defineStore('session', () => {
     }
   };
 
+  /**
+   * Move all private session screens to center around the given position
+   */
+  const movePrivateScreensToPosition = async (position: { x: number; y: number }) => {
+    if (!tableStore.table || !privateSessions.value.length) {
+      return;
+    }
+
+    const canvasStageStore = useCanvasStageStore();
+    const stageWidth = canvasStageStore.stage?.width() ?? 0;
+    const stageHeight = canvasStageStore.stage?.height() ?? 0;
+
+    const updates: { [sessionId: string]: TableSessionPresence } = {};
+
+    privateSessions.value.forEach((session) => {
+      if (!session.screen) {
+        return;
+      }
+
+      const { width, height } = session.screen;
+      if (width <= 0 || height <= 0) {
+        return;
+      }
+
+      // Center the screen around the position
+      let newX = position.x - width / 2;
+      let newY = position.y - height / 2;
+
+      // Constrain within the stage boundaries
+      newX = Math.floor(Math.max(0, Math.min(newX, stageWidth - width)));
+      newY = Math.floor(Math.max(0, Math.min(newY, stageHeight - height)));
+
+      const updatedSession = structuredClone(toRaw(session));
+      updatedSession.screen = { ...updatedSession.screen!, x: newX, y: newY };
+      updates[updatedSession.sessionId] = updatedSession;
+    });
+
+    try {
+      await tableStore.updateSessionPresence(tableStore.table.id, updates);
+    } catch (error) {
+      console.error(error);
+      const notificationStore = useNotificationStore();
+      notificationStore.error('Failed to move screen frames');
+    }
+  };
+
   return {
     ownSession,
     activeSessionId,
@@ -194,6 +240,7 @@ export const useSessionStore = defineStore('session', () => {
     launchPrivateSession,
     findSessionsByGroupId,
     updateScreenFrame,
+    movePrivateScreensToPosition,
   };
 });
 

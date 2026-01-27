@@ -1,4 +1,4 @@
-import type { CanvasTool, TableSessionPresence } from '~/models/types';
+import type { CanvasTool } from '~/models/types';
 import Konva from 'konva';
 
 export const useSelectTool = () => {
@@ -14,41 +14,12 @@ export const useSelectTool = () => {
     }
 
     const { x, y } = event.target.getStage()?.getPointerPosition() ?? { x: 0, y: 0 };
-    const stageWidth = stageStore.stage.width();
-    const stageHeight = stageStore.stage.height();
 
-    const updates: { [sessionId: string]: TableSessionPresence } = {};
-
-    privateSessions.value.forEach((session) => {
-      if (!session.screen) {
-        return;
-      }
-
-      const { width, height } = session.screen;
-      if (width <= 0 || height <= 0) {
-        return;
-      }
-
-      // Calculate new coordinates to center the frame around the click point.
-      let newX = x - width / 2 + stageStore._scroll.x;
-      let newY = y - height / 2 + stageStore._scroll.y;
-
-      // Constrain within the stage boundaries.
-      newX = Math.floor(Math.max(0, Math.min(newX, stageWidth - width)));
-      newY = Math.floor(Math.max(0, Math.min(newY, stageHeight - height)));
-
-      const updatedSession = structuredClone(toRaw(session));
-      updatedSession.screen = { ...updatedSession.screen!, x: newX, y: newY };
-      updates[updatedSession.sessionId] = updatedSession;
+    // Convert pointer position to stage coordinates (account for scroll offset)
+    await sessionStore.movePrivateScreensToPosition({
+      x: x + stageStore._scroll.x,
+      y: y + stageStore._scroll.y,
     });
-
-    try {
-      await tableStore.updateSessionPresence(tableStore.table.id, updates);
-    } catch (error) {
-      console.error(error);
-      const notificationStore = useNotificationStore();
-      notificationStore.error('Failed to update screen frame');
-    }
   };
 
   const onClick = (event: Konva.KonvaEventObject<unknown>) => {

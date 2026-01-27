@@ -1,4 +1,4 @@
-import type { ContextAction, TableSessionPresence } from '~/models/types';
+import type { ContextAction } from '~/models/types';
 import type { RightClickTarget } from '~/stores/canvas-right-click-store';
 
 /**
@@ -8,32 +8,54 @@ import type { RightClickTarget } from '~/stores/canvas-right-click-store';
 export const CanvasEmptyContextActionsFactory = (stagePosition: { stageX: number; stageY: number }): ContextAction[] => {
   const actions: ContextAction[] = [];
   const sessionStore = useSessionStore();
-  const tableStore = useTableStore();
+  const sceneStore = useSceneStore();
 
   const { privateSessions } = storeToRefs(sessionStore);
 
-  // Add asset at this position (placeholder - TODO: integrate with drive picker)
+  // Add asset at this position - opens asset search modal
   actions.push({
     id: 'add-asset-here',
     label: 'Add Asset Here',
     icon: { name: 'add_photo_alternate' },
-    action: () => {
-      const notificationStore = useNotificationStore();
-      notificationStore.success(`Add asset at position (${Math.round(stagePosition.stageX)}, ${Math.round(stagePosition.stageY)}) - coming soon`);
+    action: async () => {
+      const driveSearchStore = useDriveSearchStore();
+
+      try {
+        const file = await driveSearchStore.promptToSearch('assets');
+
+        if (!isDriveAsset(file)) {
+          const notificationStore = useNotificationStore();
+          notificationStore.error('Selected file is not an asset');
+          return;
+        }
+
+        await sceneStore.addAsset(file, {
+          x: stagePosition.stageX,
+          y: stagePosition.stageY,
+        });
+      } catch (e) {
+        // User cancelled the search - do nothing
+        if (isObject(e) && e.message === 'Search cancelled') {
+          return;
+        }
+        console.error(e);
+      }
     },
     disabled: false,
     pinned: false,
     alwaysVisible: false,
   });
 
-  // Add text element at this position (placeholder - TODO: integrate with text tool)
+  // Add text element at this position
   actions.push({
     id: 'add-text-here',
     label: 'Add Text Here',
     icon: { name: 'text_fields' },
-    action: () => {
-      const notificationStore = useNotificationStore();
-      notificationStore.success(`Add text at position (${Math.round(stagePosition.stageX)}, ${Math.round(stagePosition.stageY)}) - coming soon`);
+    action: async () => {
+      await sceneStore.addText({
+        x: stagePosition.stageX,
+        y: stagePosition.stageY,
+      });
     },
     disabled: false,
     pinned: false,
@@ -46,46 +68,10 @@ export const CanvasEmptyContextActionsFactory = (stagePosition: { stageX: number
     label: 'Move All Screens Here',
     icon: { name: 'screenshot_monitor' },
     action: async () => {
-      if (!tableStore.table || !privateSessions.value.length) {
-        return;
-      }
-
-      const canvasStageStore = useCanvasStageStore();
-      const stageWidth = canvasStageStore.stage?.width() ?? 0;
-      const stageHeight = canvasStageStore.stage?.height() ?? 0;
-
-      const updates: { [sessionId: string]: TableSessionPresence } = {};
-
-      privateSessions.value.forEach((session) => {
-        if (!session.screen) {
-          return;
-        }
-
-        const { width, height } = session.screen;
-        if (width <= 0 || height <= 0) {
-          return;
-        }
-
-        // Center the screen around the click point
-        let newX = stagePosition.stageX - width / 2;
-        let newY = stagePosition.stageY - height / 2;
-
-        // Constrain within the stage boundaries
-        newX = Math.floor(Math.max(0, Math.min(newX, stageWidth - width)));
-        newY = Math.floor(Math.max(0, Math.min(newY, stageHeight - height)));
-
-        const updatedSession = structuredClone(toRaw(session));
-        updatedSession.screen = { ...updatedSession.screen!, x: newX, y: newY };
-        updates[updatedSession.sessionId] = updatedSession;
+      await sessionStore.movePrivateScreensToPosition({
+        x: stagePosition.stageX,
+        y: stagePosition.stageY,
       });
-
-      try {
-        await tableStore.updateSessionPresence(tableStore.table.id, updates);
-      } catch (error) {
-        console.error(error);
-        const notificationStore = useNotificationStore();
-        notificationStore.error('Failed to move screen frames');
-      }
     },
     disabled: !privateSessions.value.length,
     pinned: false,

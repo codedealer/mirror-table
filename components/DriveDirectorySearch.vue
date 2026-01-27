@@ -80,10 +80,22 @@ watch(search, searchFn);
 
 watchEffect(() => {
   if (selectedFile.value) {
-    toggleFile(selectedFile.value, selectedFile.value.name);
+    // If there's a pending programmatic selection, resolve it instead of opening the file
+    if (driveSearchStore.isPendingSelection) {
+      driveSearchStore.resolve(selectedFile.value);
+    } else {
+      toggleFile(selectedFile.value, selectedFile.value.name);
+    }
     driveSearchStore.addRecentSelected(selectedFile.value);
     reset();
     state.value = false;
+  }
+});
+
+// Reject pending selection when modal is closed without selection
+watch(state, (newState) => {
+  if (!newState && driveSearchStore.isPendingSelection) {
+    driveSearchStore.reject(new Error('Search cancelled'));
   }
 });
 

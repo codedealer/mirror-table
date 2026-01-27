@@ -1,6 +1,5 @@
 import type Konva from 'konva';
 import type { CanvasTool } from '~/models/types';
-import { SceneElementCanvasObjectTextFactory } from '~/models/SceneElementCanvasObjectText';
 
 export const useTextTool = () => {
   const stageStore = useCanvasStageStore();
@@ -79,26 +78,14 @@ export const useTextTool = () => {
     const isClick = Math.abs(pos.x - startX) < 5 && Math.abs(pos.y - startY) < 5;
     const width = isClick ? 200 : Math.abs(pos.x - startX);
     const height = isClick ? 100 : Math.abs(pos.y - startY);
-    // Calculate the top-left position for the text element
-    const elementX = isClick ? startX : Math.min(startX, pos.x);
-    const elementY = isClick ? startY : Math.min(startY, pos.y);
+    // Calculate the center position for the text element
+    const centerX = isClick ? startX : Math.min(startX, pos.x) + width / 2;
+    const centerY = isClick ? startY : Math.min(startY, pos.y) + height / 2;
 
-    const textElement = SceneElementCanvasObjectTextFactory(
-      ID_PLACEHOLDER,
-      {
-        text: '<Enter text>',
-        fontSize: 20,
-        fontFamily: 'Source Sans Pro, sans-serif',
-        fill: '#000000',
-        align: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-      },
-      { width, height },
-      { x: elementX, y: elementY },
-      sceneStore.scene.owner,
+    await sceneStore.addText(
+      { x: centerX, y: centerY },
+      isClick ? undefined : { width, height },
     );
-
-    await sceneStore.addElement(textElement);
 
     // Reset start positions
     startX = undefined;
