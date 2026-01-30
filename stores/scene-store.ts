@@ -97,11 +97,16 @@ export const useSceneStore = defineStore('scene', () => {
       // If position is provided, place asset at that position (centered on the coordinates)
       // Otherwise, use the default fitToStage behavior
       const positioningFunction = position
-        ? (container: WithIdPlaceholders<ElementContainerConfig>) => ({
-            ...container,
-            x: position.x - (container.width ?? 0) / 2,
-            y: position.y - (container.height ?? 0) / 2,
-          })
+        ? (container: WithIdPlaceholders<ElementContainerConfig>) => {
+            // Calculate visual size accounting for scale
+            const visualWidth = (container.width ?? 0) * (container.scaleX ?? 1);
+            const visualHeight = (container.height ?? 0) * (container.scaleY ?? 1);
+            return {
+              ...container,
+              x: position.x - visualWidth / 2,
+              y: position.y - visualHeight / 2,
+            };
+          }
         : stageStore.fitToStage;
 
       const sceneElement = SceneElementCanvasObjectAssetFactory(

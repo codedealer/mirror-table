@@ -8,7 +8,7 @@ import type {
   SceneElementCanvasObjectText,
   SelectionGroup,
 } from '~/models/types';
-import { isSceneElementScreen, SelectionGroupNames, SelectionGroups } from '~/models/types';
+import { DataRetrievalStrategies, isAssetProperties, isSceneElementScreen, SelectionGroupNames, SelectionGroups } from '~/models/types';
 import updateComplexAssetProperties from '~/utils/updateComplexAssetProperties';
 
 const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
@@ -361,12 +361,34 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
     id: 'restore-size',
     label: 'Restore Native Size',
     icon: { name: 'aspect_ratio' },
-    action: () => sceneStore.updateElement<SceneElementCanvasObjectAsset>(elementId, {
-      container: {
-        scaleX: 1,
-        scaleY: 1,
-      },
-    }),
+    action: async () => {
+      // Reset scale on the scene element
+      await sceneStore.updateElement<SceneElementCanvasObjectAsset>(elementId, {
+        container: {
+          scaleX: 1,
+          scaleY: 1,
+        },
+      });
+
+      // For complex assets, also reset the default scale in Drive metadata
+      if (element.asset.kind === AssetPropertiesKinds.COMPLEX && element.asset.id) {
+        const driveFileStore = useDriveFileStore();
+        const driveFile = await driveFileStore.getFile(element.asset.id, DataRetrievalStrategies.CACHE_ONLY);
+
+        if (driveFile?.appProperties && isAssetProperties(driveFile.appProperties) && driveFile.appProperties.preview) {
+          const updatedProperties: AssetProperties = {
+            ...driveFile.appProperties,
+            preview: {
+              ...driveFile.appProperties.preview,
+              scaleX: 1,
+              scaleY: 1,
+              rotation: 0,
+            },
+          };
+          await updateComplexAssetProperties(element.asset.id, updatedProperties);
+        }
+      }
+    },
     disabled: false,
     pinned: false,
     alwaysVisible: false,

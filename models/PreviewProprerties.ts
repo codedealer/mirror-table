@@ -43,8 +43,8 @@ export const PreviewPropertiesFactory = (
     id: obj.id,
     nativeWidth: obj.nativeWidth as number,
     nativeHeight: obj.nativeHeight as number,
-    scaleX: Number.isSafeInteger(obj.scaleX) ? obj.scaleX as number : 1,
-    scaleY: Number.isSafeInteger(obj.scaleY) ? obj.scaleY as number : 1,
+    scaleX: Number.isFinite(obj.scaleX) ? obj.scaleX as number : 1,
+    scaleY: Number.isFinite(obj.scaleY) ? obj.scaleY as number : 1,
   };
 
   if ('rotation' in obj) {

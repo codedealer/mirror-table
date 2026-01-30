@@ -68,20 +68,36 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
       y: -stageConfig.value.y + fieldPadding.value + realStageHeight / 2,
     };
 
-    // place the container in the center of the stage
+    // Get the existing scale (from stored asset transforms)
+    const existingScaleX = container.scaleX ?? 1;
+    const existingScaleY = container.scaleY ?? 1;
+
+    // Calculate the visual size with existing scale
+    const visualWidth = container.width * existingScaleX;
+    const visualHeight = container.height * existingScaleY;
+
+    // Calculate fit scale based on visual size
     // scale it down if it's too big
-    const scale = Math.min(
-      realStageWidth / container.width,
-      realStageHeight / (container.height + labelPadding),
+    const fitScale = Math.min(
+      realStageWidth / visualWidth,
+      realStageHeight / (visualHeight + labelPadding * existingScaleY),
       1,
     );
 
+    // Combine existing scale with fit scale
+    const finalScaleX = existingScaleX * fitScale;
+    const finalScaleY = existingScaleY * fitScale;
+
+    // Calculate position based on final visual size
+    const finalVisualWidth = container.width * finalScaleX;
+    const finalVisualHeight = container.height * finalScaleY;
+
     const scaledContainer = {
       ...container,
-      scaleX: scale,
-      scaleY: scale,
-      x: stageCenter.x - (container.width * scale) / 2,
-      y: stageCenter.y - ((container.height + labelPadding) * scale) / 2,
+      scaleX: finalScaleX,
+      scaleY: finalScaleY,
+      x: stageCenter.x - finalVisualWidth / 2,
+      y: stageCenter.y - (finalVisualHeight + labelPadding * finalScaleY) / 2,
     } as T;
 
     return scaledContainer;

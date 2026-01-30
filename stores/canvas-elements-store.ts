@@ -1,5 +1,6 @@
 import type { ComputedRef } from 'vue';
 import type {
+  AssetProperties,
   CanvasElementState,
   CanvasElementStateAsset,
   ElementContainerConfig,
@@ -10,6 +11,8 @@ import type {
 import { collection, deleteDoc, doc, query, setDoc, where } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 import {
+  DataRetrievalStrategies,
+  isAssetProperties,
   isSceneElementCanvasObject,
   isSceneElementCanvasObjectAsset,
   isSceneElementCanvasObjectText,
@@ -216,6 +219,54 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     await sceneStore.updateElement<SceneElementCanvasObject>(elementId, {
       container: transforms,
     });
+
+    // For complex assets, save transform values to Drive metadata as the new defaults
+    if (
+      isSceneElementCanvasObjectAsset(element)
+      && element.asset.kind === AssetPropertiesKinds.COMPLEX
+      && element.asset.id
+    ) {
+      const hasTransformChanges
+        = transforms.scaleX !== undefined
+          || transforms.scaleY !== undefined
+          || transforms.rotation !== undefined;
+
+      if (hasTransformChanges) {
+        const driveFileStore = useDriveFileStore();
+
+        try {
+          // Get the Drive file for this complex asset
+          const driveFile = await driveFileStore.getFile(element.asset.id, DataRetrievalStrategies.CACHE_ONLY);
+
+          if (!driveFile?.appProperties || !isAssetProperties(driveFile.appProperties)) {
+            console.warn('Complex asset Drive file not found or has invalid properties');
+            return;
+          }
+
+          const currentPreview = driveFile.appProperties.preview;
+          if (!currentPreview) {
+            console.warn('Complex asset has no preview properties');
+            return;
+          }
+
+          // Build updated appProperties with new transform values
+          const updatedAppProperties: AssetProperties = {
+            ...driveFile.appProperties,
+            preview: {
+              ...currentPreview,
+              scaleX: transforms.scaleX ?? currentPreview.scaleX,
+              scaleY: transforms.scaleY ?? currentPreview.scaleY,
+              rotation: transforms.rotation ?? currentPreview.rotation ?? 0,
+            },
+          };
+
+          // Save to Drive (this also syncs to Firestore asset_properties)
+          await driveFileStore.saveFile(element.asset.id, updatedAppProperties);
+        } catch (e) {
+          console.error('Failed to save complex asset transform to Drive:', e);
+        }
+      }
+    }
   };
 
   const { $logger } = useNuxtApp();
