@@ -3,6 +3,14 @@ import type { DynamicPanelContentType, DynamicPanelModelType } from '~/models/ty
 export const useDynamicPanelStore = defineStore('dynamic-panel', () => {
   const tableStore = useTableStore();
 
+  // Track pinned state per content type, default is true (pinned)
+  const pinnedStates = ref<Partial<Record<DynamicPanelContentType, boolean>>>({
+    [DynamicPanelContentTypes.EXPLORER]: true,
+    [DynamicPanelContentTypes.SESSIONS]: true,
+    [DynamicPanelContentTypes.LAYERS]: true,
+    [DynamicPanelContentTypes.WIDGETS]: true,
+  });
+
   const _models = ref<Record<DynamicPanelModelType, boolean>>({
     [DynamicPanelModelTypes.LEFT]: false,
     [DynamicPanelModelTypes.RIGHT]: false,
@@ -77,13 +85,28 @@ export const useDynamicPanelStore = defineStore('dynamic-panel', () => {
     open(type, DynamicPanelContentTypes.WIDGETS);
   };
 
+  const isPinned = (contentType: DynamicPanelContentType | null) => {
+    if (!contentType)
+      return true;
+    return pinnedStates.value[contentType] ?? true;
+  };
+
+  const togglePin = (contentType: DynamicPanelContentType | null) => {
+    if (!contentType)
+      return;
+    pinnedStates.value[contentType] = !isPinned(contentType);
+  };
+
   return {
     models,
     contents,
+    pinnedStates,
     open,
     close,
     toggleTablePanelState,
     togglePanelLocal,
+    isPinned,
+    togglePin,
   };
 });
 
