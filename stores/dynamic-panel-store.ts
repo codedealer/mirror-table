@@ -63,11 +63,27 @@ export const useDynamicPanelStore = defineStore('dynamic-panel', () => {
     _contents.value[model] = content;
   };
 
+  const toggleTablePanelState = (type: DynamicPanelModelType) => {
+    if (!tableStore.table) {
+      return;
+    }
+
+    tableStore.togglePanelsState({
+      [type]: !tableStore.table.panels[type],
+    });
+  };
+
+  const togglePanelLocal = (type: DynamicPanelModelType) => {
+    open(type, DynamicPanelContentTypes.WIDGETS);
+  };
+
   return {
     models,
     contents,
     open,
     close,
+    toggleTablePanelState,
+    togglePanelLocal,
   };
 });
 

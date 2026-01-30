@@ -48,15 +48,35 @@ const toggleHotkeyModal = () => {
   hotkeyStore.isHotkeyModalVisible = !hotkeyStore.isHotkeyModalVisible;
 };
 
+const layersStore = useLayersStore();
+
 onKeyStroke(true, (e) => {
   if (e.target && isEditableElement(e.target)) {
     return;
   }
-  if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) {
+  if (e.metaKey || e.ctrlKey || e.altKey) {
     return;
   }
 
   e.preventDefault();
+
+  if (e.code === 'KeyE') {
+    if (!e.shiftKey) {
+      dynamicPanelStore.togglePanelLocal(DynamicPanelModelTypes.RIGHT);
+    } else {
+      dynamicPanelStore.toggleTablePanelState(DynamicPanelModelTypes.RIGHT);
+    }
+  } else if (e.code === 'KeyQ') {
+    if (!e.shiftKey) {
+      dynamicPanelStore.togglePanelLocal(DynamicPanelModelTypes.LEFT);
+    } else {
+      dynamicPanelStore.toggleTablePanelState(DynamicPanelModelTypes.LEFT);
+    }
+  }
+
+  if (e.shiftKey) {
+    return;
+  }
 
   if (e.code === 'KeyW') {
     openWidgets();
@@ -66,6 +86,8 @@ onKeyStroke(true, (e) => {
     openLayers();
   } else if (e.code === 'KeyD') {
     openSessions();
+  } else if (e.code === 'KeyH') {
+    layersStore.toggleHiddenElements();
   }
 });
 hotkeyStore.registerHotkey({
@@ -73,6 +95,34 @@ hotkeyStore.registerHotkey({
   key: 'W',
   description: 'Toggle widget panels',
   modifiers: {},
+  namespace: 'Widget panels',
+});
+hotkeyStore.registerHotkey({
+  id: 'toggle-left-panel',
+  key: 'Q',
+  modifiers: { shift: true },
+  description: 'Show left panel to viewers',
+  namespace: 'Widget panels',
+});
+hotkeyStore.registerHotkey({
+  id: 'toggle-right-panel',
+  key: 'E',
+  modifiers: { shift: true },
+  description: 'Show right panel to viewers',
+  namespace: 'Widget panels',
+});
+hotkeyStore.registerHotkey({
+  id: 'open-left-panel',
+  key: 'Q',
+  modifiers: {},
+  description: 'Open left widget panel',
+  namespace: 'Widget panels',
+});
+hotkeyStore.registerHotkey({
+  id: 'open-right-panel',
+  key: 'E',
+  modifiers: {},
+  description: 'Open right widget panel',
   namespace: 'Widget panels',
 });
 hotkeyStore.registerHotkey({
@@ -96,6 +146,13 @@ hotkeyStore.registerHotkey({
   modifiers: {},
   namespace: 'Global',
 });
+hotkeyStore.registerHotkey({
+  id: 'toggle-hidden-elements',
+  key: 'H',
+  modifiers: {},
+  description: 'Toggle hidden elements',
+  namespace: 'Canvas',
+});
 </script>
 
 <template>
@@ -112,7 +169,7 @@ hotkeyStore.registerHotkey({
             <img src="/logo.png" alt="logo" width="32" height="32">
           </div>
         </va-badge>
-        <va-sidebar-item-title>Back to Dashboard</va-sidebar-item-title>
+        <va-sidebar-item-title>Open sessions</va-sidebar-item-title>
       </va-sidebar-item-content>
     </va-sidebar-item>
 

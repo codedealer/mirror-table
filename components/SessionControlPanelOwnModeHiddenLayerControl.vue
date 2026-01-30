@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { onKeyStroke } from '@vueuse/core';
-
 const layersStore = useLayersStore();
-const hotkeyStore = useHotkeyStore();
 const hoverPanelStore = useHoverPanelStore();
 
 watchEffect(() => {
@@ -15,29 +12,6 @@ watchEffect(() => {
 
 onUnmounted(() => {
   hoverPanelStore.dismissManual('hidden-elements');
-});
-
-hotkeyStore.registerHotkey({
-  id: 'toggle-hidden-elements',
-  key: 'H',
-  modifiers: {},
-  description: 'Toggle hidden elements',
-  namespace: 'Canvas',
-});
-onKeyStroke(true, (e) => {
-  if (
-    e.code !== 'KeyH'
-    || e.shiftKey
-    || e.ctrlKey
-    || e.altKey
-    || e.metaKey
-    || (e.target && isEditableElement(e.target))
-  ) {
-    return;
-  }
-
-  e.preventDefault();
-  layersStore.toggleHiddenElements();
 });
 </script>
 
