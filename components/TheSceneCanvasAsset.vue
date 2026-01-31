@@ -151,6 +151,14 @@ const showLoading = computed(() => {
   return assetError.value || (tableStore.mode === TableModes.OWN && (!state.value || !state.value.loaded));
 });
 
+const showHiddenIcon = computed(() => {
+  if (assetError.value || props.element.enabled || !state.value || !state.value.loaded) {
+    return false;
+  }
+  // Only show icon if the element is large enough (>75x75px)
+  return containerConfig.value.width > 75 && containerConfig.value.height > 75;
+});
+
 onUnmounted(() => {
   if (!state.value || !state.value.imageElement) {
     return;
@@ -203,6 +211,24 @@ const onTransformEnd = async (e: Konva.KonvaEventObject<DragEvent>) => {
         offsetY: 25, // Half of the height
         align: 'center',
         verticalAlign: 'middle',
+      }"
+    />
+
+    <v-text
+      v-if="showHiddenIcon"
+      :config="{
+        text: '\ue8f5', // visibility_off icon
+        fontFamily: 'Material Icons',
+        fontSize: 50,
+        fill: 'hotpink',
+        x: containerConfig.width / 2,
+        y: containerConfig.height / 2,
+        offsetX: 25,
+        offsetY: 25,
+        align: 'center',
+        verticalAlign: 'middle',
+        scaleX: 1 / (containerConfig.scaleX || 1),
+        scaleY: 1 / (containerConfig.scaleY || 1),
       }"
     />
 
