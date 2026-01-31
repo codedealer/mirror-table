@@ -4,6 +4,7 @@ import type { RightClickTarget } from '~/stores/canvas-right-click-store';
 export const useCanvasRightClick = () => {
   const canvasStageStore = useCanvasStageStore();
   const canvasRightClickStore = useCanvasRightClickStore();
+  const canvasElementsStore = useCanvasElementsStore();
 
   const onContextMenu = (e: Konva.KonvaEventObject<PointerEvent>) => {
     // Prevent the default browser context menu
@@ -49,10 +50,22 @@ export const useCanvasRightClick = () => {
         return;
       }
 
-      target = {
-        type: 'element',
-        elementId,
-      };
+      // Check if the element is selectable - if not, treat as canvas click
+      const elementState = canvasElementsStore.canvasElementsStateRegistry[elementId];
+      if (!elementState?.selectable) {
+        target = {
+          type: 'canvas',
+          position: {
+            stageX: stagePos.x,
+            stageY: stagePos.y,
+          },
+        };
+      } else {
+        target = {
+          type: 'element',
+          elementId,
+        };
+      }
     }
 
     // Get the actions for this target
