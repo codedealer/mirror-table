@@ -4,6 +4,9 @@ const hoverPanelStore = useHoverPanelStore();
 
 onMounted(() => {
   hoverPanelStore.requestManual('presentation-mode');
+  setTimeout(() => {
+    hoverPanelStore.dismissManual('presentation-mode');
+  }, 5000);
 });
 
 onUnmounted(() => {
