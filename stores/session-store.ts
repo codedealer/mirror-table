@@ -136,6 +136,17 @@ export const useSessionStore = defineStore('session', () => {
     );
   };
 
+  const exitPresentationMode = () => {
+    if (!tableStore.sessionOverride) {
+      return;
+    }
+
+    tableStore.sessionOverride = null;
+
+    const notificationStore = useNotificationStore();
+    notificationStore.success('Exited presentation mode');
+  };
+
   const findSessionsByGroupId = (groupId: string) => {
     return viewerSessions.value.filter(session => session.groupId === groupId);
   };
@@ -238,6 +249,7 @@ export const useSessionStore = defineStore('session', () => {
     emptyTable,
     createPrivateSession,
     launchPrivateSession,
+    exitPresentationMode,
     findSessionsByGroupId,
     updateScreenFrame,
     movePrivateScreensToPosition,

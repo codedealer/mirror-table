@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { HoverPanelModes } from '~/models/types';
+
 const sessionStore = useSessionStore();
 const hoverPanelStore = useHoverPanelStore();
 
@@ -25,6 +27,7 @@ onUnmounted(() => {
       </va-card-content>
     </va-card-block>
     <SessionControlPanelOwnModeFullscreenControl />
+    <SessionControlPanelOwnModePresentationControl />
     <va-card-block v-show="hoverPanelStore.mode === HoverPanelModes.MANUAL" horizontal>
       <va-divider vertical />
       <va-card-content class="centered">
