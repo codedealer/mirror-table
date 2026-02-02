@@ -68,6 +68,7 @@ watchEffect(() => {
       <va-list-item-label
         v-show="!error"
         caption
+        :title="isVisible ? elementLabel : label"
       >
         {{ isVisible ? elementLabel : label }}
       </va-list-item-label>

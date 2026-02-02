@@ -59,6 +59,7 @@ watchEffect(() => {
       <va-list-item-label
         v-show="!error"
         caption
+        :title="label"
       >
         {{ label }}
       </va-list-item-label>
