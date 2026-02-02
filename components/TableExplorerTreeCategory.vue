@@ -67,7 +67,7 @@ const undoDeleteCategory = async () => {
           alt
         />
 
-        <div class="text-overflow">
+        <div class="text-overflow" :title="category?.title">
           {{ category?.title ?? '[ NO DATA ]' }}
         </div>
       </div>
