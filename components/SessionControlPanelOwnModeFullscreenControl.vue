@@ -1,7 +1,27 @@
 <script setup lang="ts">
-import { useFullscreen } from '@vueuse/core';
+import { onKeyStroke, useFullscreen } from '@vueuse/core';
 
 const { isFullscreen, toggle, isSupported } = useFullscreen();
+
+onKeyStroke(true, (e) => {
+  if (!e.target || isEditableElement(e.target) || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || !isSupported.value) {
+    return;
+  }
+
+  if (e.code === 'F11') {
+    toggle();
+  }
+});
+
+const hotkeyStore = useHotkeyStore();
+
+hotkeyStore.registerHotkey({
+  id: 'toggle-fullscreen',
+  description: 'Toggle Fullscreen mode',
+  key: 'F11',
+  modifiers: { },
+  namespace: 'General',
+});
 </script>
 
 <template>
