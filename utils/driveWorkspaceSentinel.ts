@@ -61,10 +61,10 @@ const driveWorkspaceSentinel = async () => {
       searchFolderId = await createSearchFolder(workspaceFolderId);
     }
 
-    const newProfile = structuredClone(toRaw(userStore.profile));
-    newProfile.settings.driveFolderId = workspaceFolderId;
-    newProfile.settings.searchFolderId = searchFolderId;
-    await userStore.updateProfile(newProfile);
+    await userStore.updateProfileSettings({
+      driveFolderId: workspaceFolderId,
+      searchFolderId,
+    });
   }
 };
 

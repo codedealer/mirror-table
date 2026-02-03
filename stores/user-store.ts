@@ -1,9 +1,10 @@
 import type { User } from 'firebase/auth';
 import type { Profile } from '~/models/types';
-import { doc, onSnapshot, setDoc } from '@firebase/firestore';
+import { doc, onSnapshot, setDoc, updateDoc } from '@firebase/firestore';
 import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 import { ProfileFactory } from '~/models/Profile';
 import { useGoogleAuthStore } from '~/stores/google-auth-store';
+import firestoreDataConverter from '~/utils/firestoreDataConverter';
 
 export const useUserStore = defineStore('user', () => {
   const { $auth, $db } = useNuxtApp();
@@ -27,16 +28,34 @@ export const useUserStore = defineStore('user', () => {
   let unsubFromProfileUpdates = () => {};
   // subscribe to profile updates
   const subscribeToProfileUpdates = (user: User) => {
-    const profileRef = doc($db, 'users', user.uid);
+    const profileRef = doc($db, 'users', user.uid).withConverter(
+      firestoreDataConverter<Profile>(),
+    );
     unsubFromProfileUpdates();
-    unsubFromProfileUpdates = onSnapshot(profileRef, (doc) => {
-      if (doc.exists()) {
-        profile.value = doc.data() as Profile;
-      } else {
+
+    // NOTE:
+    // When offline (or before the server answers), Firestore may emit a snapshot
+    // from cache where the doc "doesn't exist". Creating a default profile in
+    // that state can overwrite an existing profile on reconnect.
+    unsubFromProfileUpdates = onSnapshot(
+      profileRef,
+      { includeMetadataChanges: true },
+      (snap) => {
+        if (snap.exists()) {
+          profile.value = snap.data();
+          return;
+        }
+
+        // Don't write defaults based on cache-only knowledge.
+        if (snap.metadata.fromCache) {
+          return;
+        }
+
         const newProfile = ProfileFactory();
-        void setDoc(profileRef, newProfile);
-      }
-    });
+        // Use merge to avoid wiping future fields if schema grows.
+        void setDoc(profileRef, newProfile, { merge: true });
+      },
+    );
   };
 
   // watch only on the client side
@@ -46,7 +65,11 @@ export const useUserStore = defineStore('user', () => {
     if (user.value) {
       subscribeToProfileUpdates(user.value);
 
-      idToken.value = await user.value.getIdToken();
+      try {
+        idToken.value = await user.value.getIdToken();
+      } catch (e) {
+        console.error(e);
+      }
     } else {
       unsubFromProfileUpdates();
       profile.value = null;
@@ -57,9 +80,51 @@ export const useUserStore = defineStore('user', () => {
 
   const updateProfile = async (newProfile: Profile) => {
     if (user.value) {
-      const profileRef = doc($db, 'users', user.value.uid);
-      await setDoc(profileRef, newProfile);
+      // Guard against accidentally persisting empty settings (common when
+      // a default profile gets created while offline).
+      if (
+        profile.value?.settings.driveFolderId
+        && !newProfile.settings.driveFolderId
+      ) {
+        console.warn('Skipping profile update that would clear driveFolderId');
+        return;
+      }
+
+      const profileRef = doc($db, 'users', user.value.uid).withConverter(
+        firestoreDataConverter<Profile>(),
+      );
+      await setDoc(profileRef, newProfile, { merge: true });
     }
+  };
+
+  const updateProfileSettings = async (settings: Partial<Profile['settings']>) => {
+    if (!user.value) {
+      return;
+    }
+
+    // Avoid accidentally clearing persisted settings.
+    if (profile.value?.settings.driveFolderId && settings.driveFolderId === '') {
+      console.warn('Skipping settings update that would clear driveFolderId');
+      return;
+    }
+
+    const profileRef = doc($db, 'users', user.value.uid).withConverter(
+      firestoreDataConverter<Profile>(),
+    );
+
+    const update: Record<string, string> = {};
+    if (typeof settings.driveFolderId === 'string') {
+      update['settings.driveFolderId'] = settings.driveFolderId;
+    }
+    if (typeof settings.searchFolderId === 'string') {
+      update['settings.searchFolderId'] = settings.searchFolderId;
+    }
+
+    if (!Object.keys(update).length) {
+      return;
+    }
+
+    await updateDoc(profileRef, update);
   };
 
   return {
@@ -69,6 +134,7 @@ export const useUserStore = defineStore('user', () => {
     isLoggedIn,
     isAuthenticated,
     updateProfile,
+    updateProfileSettings,
   };
 });
 
