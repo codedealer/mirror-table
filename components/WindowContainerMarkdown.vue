@@ -22,6 +22,11 @@ const { file } = useDriveFile<DriveAsset>(
 
 const { media, error: mediaError } = useDriveMedia(file);
 
+const { actions } = useWindowContextActions(
+  file,
+  toRef(() => props.window),
+);
+
 const windowStore = useWindowStore();
 
 watchEffect(() => {
@@ -66,6 +71,14 @@ const toggleEdit = () => {
 
       <WindowContainerMarkdownMeta
         :file="file"
+      />
+
+      <ContextPanel
+        :actions="actions"
+        dropdown-only
+        preset="plain"
+        size="small"
+        color="background-border"
       />
     </div>
     <div class="window-container-markdown__content mb">

@@ -15,6 +15,11 @@ const { file, error } = useDriveFile<DriveWidget>(
   },
 );
 
+const { actions } = useWindowContextActions(
+  file,
+  toRef(() => props.window),
+);
+
 const windowStore = useWindowStore();
 
 watchEffect(() => {
@@ -56,6 +61,21 @@ const content = computed(() => {
 
 <template>
   <div class="window-container-widget window-container-markdown">
+    <div class="window-container-markdown__actions mb">
+      <va-spacer />
+
+      <WindowContainerMarkdownMeta
+        :file="file"
+      />
+
+      <ContextPanel
+        :actions="actions"
+        dropdown-only
+        preset="plain"
+        size="small"
+        color="background-border"
+      />
+    </div>
     <div class="window-container-markdown__content">
       <va-scroll-container vertical>
         <component

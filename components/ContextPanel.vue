@@ -8,19 +8,27 @@ const props = withDefaults(defineProps<{
   color?: string;
   size?: 'small' | 'medium' | 'large';
   preset?: string;
+  dropdownOnly?: boolean;
 }>(), {
   icon: 'more_vert',
   openedIcon: 'more_vert',
   color: 'primary-dark',
   size: 'medium',
   preset: 'plain',
+  dropdownOnly: false,
 });
 
 const dropdownModel = defineModel<boolean>('dropdown', {
   required: false,
 });
 
-const pinnedActions = computed(() => props.actions.filter(action => action.pinned));
+const pinnedActions = computed(() => {
+  if (props.dropdownOnly) {
+    return [];
+  }
+
+  return props.actions.filter(action => action.pinned);
+});
 </script>
 
 <template>
