@@ -4,6 +4,8 @@ import type { RightClickTarget } from '~/stores/canvas-right-click-store';
 /**
  * Factory for creating context actions when right-clicking on the empty canvas area.
  * @param stagePosition - The position on the canvas stage where the click occurred
+ * @param stagePosition.stageX - X coordinate on the canvas stage
+ * @param stagePosition.stageY - Y coordinate on the canvas stage
  */
 export const CanvasEmptyContextActionsFactory = (stagePosition: { stageX: number; stageY: number }): ContextAction[] => {
   const actions: ContextAction[] = [];

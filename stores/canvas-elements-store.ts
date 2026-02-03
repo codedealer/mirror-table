@@ -226,45 +226,80 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
       && element.asset.kind === AssetPropertiesKinds.COMPLEX
       && element.asset.id
     ) {
-      const hasTransformChanges
-        = transforms.scaleX !== undefined
-          || transforms.scaleY !== undefined
-          || transforms.rotation !== undefined;
+      const nearlyEqual = (a: number, b: number, epsilon = 1e-4) => {
+        return Math.abs(a - b) <= epsilon;
+      };
 
-      if (hasTransformChanges) {
-        const driveFileStore = useDriveFileStore();
+      const round = (value: number, digits = 4) => {
+        const factor = 10 ** digits;
+        return Math.round(value * factor) / factor;
+      };
 
-        try {
-          // Get the Drive file for this complex asset
-          const driveFile = await driveFileStore.getFile(element.asset.id, DataRetrievalStrategies.CACHE_ONLY);
+      // Konva will report scale/rotation on transform end even if unchanged.
+      // Only persist to Drive when these values actually changed.
+      const currentElementScaleX = element.container.scaleX ?? 1;
+      const currentElementScaleY = element.container.scaleY ?? 1;
+      const currentElementRotation = element.container.rotation ?? 0;
 
-          if (!driveFile?.appProperties || !isAssetProperties(driveFile.appProperties)) {
-            console.warn('Complex asset Drive file not found or has invalid properties');
-            return;
-          }
+      const scaleXChangedOnElement = transforms.scaleX !== undefined
+        && !nearlyEqual(transforms.scaleX, currentElementScaleX);
+      const scaleYChangedOnElement = transforms.scaleY !== undefined
+        && !nearlyEqual(transforms.scaleY, currentElementScaleY);
+      const rotationChangedOnElement = transforms.rotation !== undefined
+        && !nearlyEqual(transforms.rotation, currentElementRotation);
 
-          const currentPreview = driveFile.appProperties.preview;
-          if (!currentPreview) {
-            console.warn('Complex asset has no preview properties');
-            return;
-          }
+      if (!(scaleXChangedOnElement || scaleYChangedOnElement || rotationChangedOnElement)) {
+        return;
+      }
 
-          // Build updated appProperties with new transform values
-          const updatedAppProperties: AssetProperties = {
-            ...driveFile.appProperties,
-            preview: {
-              ...currentPreview,
-              scaleX: transforms.scaleX ?? currentPreview.scaleX,
-              scaleY: transforms.scaleY ?? currentPreview.scaleY,
-              rotation: transforms.rotation ?? currentPreview.rotation ?? 0,
-            },
-          };
+      const driveFileStore = useDriveFileStore();
 
-          // Save to Drive (this also syncs to Firestore asset_properties)
-          await driveFileStore.saveFile(element.asset.id, updatedAppProperties);
-        } catch (e) {
-          console.error('Failed to save complex asset transform to Drive:', e);
+      try {
+        // Get the Drive file for this complex asset
+        const driveFile = await driveFileStore.getFile(element.asset.id, DataRetrievalStrategies.CACHE_ONLY);
+
+        if (!driveFile?.appProperties || !isAssetProperties(driveFile.appProperties)) {
+          console.warn('Complex asset Drive file not found or has invalid properties');
+          return;
         }
+
+        const currentPreview = driveFile.appProperties.preview;
+        if (!currentPreview) {
+          console.warn('Complex asset has no preview properties');
+          return;
+        }
+
+        const currentDriveScaleX = currentPreview.scaleX ?? 1;
+        const currentDriveScaleY = currentPreview.scaleY ?? 1;
+        const currentDriveRotation = currentPreview.rotation ?? 0;
+
+        const nextScaleX = transforms.scaleX !== undefined ? round(transforms.scaleX) : currentDriveScaleX;
+        const nextScaleY = transforms.scaleY !== undefined ? round(transforms.scaleY) : currentDriveScaleY;
+        const nextRotation = transforms.rotation !== undefined ? round(transforms.rotation, 2) : currentDriveRotation;
+
+        const previewTransformChanged = !nearlyEqual(nextScaleX, currentDriveScaleX)
+          || !nearlyEqual(nextScaleY, currentDriveScaleY)
+          || !nearlyEqual(nextRotation, currentDriveRotation, 1e-2);
+
+        if (!previewTransformChanged) {
+          return;
+        }
+
+        // Build updated appProperties with new transform values
+        const updatedAppProperties: AssetProperties = {
+          ...driveFile.appProperties,
+          preview: {
+            ...currentPreview,
+            scaleX: nextScaleX,
+            scaleY: nextScaleY,
+            rotation: nextRotation,
+          },
+        };
+
+        // Save to Drive (this also syncs to Firestore asset_properties)
+        await driveFileStore.saveFile(element.asset.id, updatedAppProperties);
+      } catch (e) {
+        console.error('Failed to save complex asset transform to Drive:', e);
       }
     }
   };
