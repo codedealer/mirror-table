@@ -96,15 +96,14 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     }, {} as Record<string, SceneElementCanvasObjectAssetProperties>);
   });
 
-  const complexAssetsReady = computed(() => {
-    // Only check the first 30 IDs that would be in the query
-    const queryableIds = complexAssetIds.value.slice(0, 30);
+  const getResolvedPreviewId = (element: SceneElementCanvasObjectAsset) => {
+    if (element.asset.kind !== AssetPropertiesKinds.COMPLEX) {
+      return element.asset.preview.id;
+    }
 
-    return queryableIds.length === 0
-      || queryableIds.every(id =>
-        assetPropertiesRegistry.value[id]?.preview?.id !== undefined,
-      );
-  });
+    const registryProps = assetPropertiesRegistry.value[element.asset.id];
+    return registryProps?.preview?.id || element.asset.preview.id;
+  };
 
   const layersStore = useLayersStore();
   const tableStore = useTableStore();
@@ -307,42 +306,48 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
   const { $logger } = useNuxtApp();
   const log = $logger['canvas:elements'];
   const driveFileStore = useDriveFileStore();
+
   const batchLoadPreviewImages = async () => {
     // Only proceed with asset elements that have preview IDs and weren't loaded yet
-    const batchedIds = canvasElements.value.reduce<string[]>((ids, element) => {
+    const toLoad = canvasElements.value.reduce<Array<{ elementId: string; previewId: string }>>((acc, element) => {
       // Check if element has a valid state
       if (!(element.id in canvasElementsStateRegistry.value)) {
-        return ids;
+        return acc;
       }
 
       const state = canvasElementsStateRegistry.value[element.id];
-      if (!isCanvasElementStateAsset(state) || state.loaded || state.loading) {
-        return ids;
+      if (!isCanvasElementStateAsset(state) || state.loaded || state.loading || state.error) {
+        return acc;
       }
 
       if (!isSceneElementCanvasObjectAsset(element)) {
-        return ids;
+        return acc;
       }
 
-      // Get the preview ID based on asset type
-      let previewId: undefined | string;
-      if (element.asset.kind === AssetPropertiesKinds.COMPLEX) {
-        const registryProps = assetPropertiesRegistry.value[element.asset.id];
-        previewId = registryProps?.preview?.id;
-      } else {
-        previewId = element.asset.preview.id;
-      }
-
+      const previewId = getResolvedPreviewId(element);
       if (previewId) {
-        ids.push(previewId);
+        acc.push({
+          elementId: element.id,
+          previewId,
+        });
       }
 
-      return ids;
+      return acc;
     }, []);
 
-    if (!batchedIds.length) {
+    if (!toLoad.length) {
       return;
     }
+
+    // Mark as loading immediately to avoid repeated queueing.
+    toLoad.forEach(({ elementId }) => {
+      updateElementState<CanvasElementStateAsset>(elementId, {
+        loading: true,
+        error: null,
+      });
+    });
+
+    const batchedIds = Array.from(new Set(toLoad.map(x => x.previewId)));
 
     log(`Loading ${batchedIds.length} asset previews`);
 
@@ -354,8 +359,8 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
       console.error('Failed to fetch asset previews.', e);
 
       // set the state of the failed elements to error
-      batchedIds.forEach((id) => {
-        updateElementState<CanvasElementStateAsset>(id, {
+      toLoad.forEach(({ elementId }) => {
+        updateElementState<CanvasElementStateAsset>(elementId, {
           loading: false,
           loaded: false,
           error: e,
@@ -364,20 +369,35 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     }
   };
 
-  const readyToLoadPreviews = computed(() => {
-    // First ensure all elements have states
-    const allElementsHaveStates = canvasElements.value.every(
-      element => element.id in canvasElementsStateRegistry.value,
-    );
+  let previewBatchInFlight = false;
+  let previewBatchScheduled = false;
+  const schedulePreviewBatchLoad = () => {
+    if (previewBatchScheduled) {
+      return;
+    }
+    previewBatchScheduled = true;
 
-    // Then check if complex assets are ready
-    return allElementsHaveStates && complexAssetsReady.value;
-  });
+    // Coalesce multiple reactive triggers into a single batch.
+    queueMicrotask(async () => {
+      previewBatchScheduled = false;
+      try {
+        if (previewBatchInFlight) {
+          schedulePreviewBatchLoad();
+          return;
+        }
+
+        previewBatchInFlight = true;
+        await batchLoadPreviewImages();
+      } finally {
+        previewBatchInFlight = false;
+      }
+    });
+  };
 
   /*
    Watch the elements on the canvas and load the previews in a single batch, accounting for the fact that the preview data for complex assets is stored in a separate collection
   */
-  watch([canvasElements, readyToLoadPreviews], ([elements, ready]) => {
+  watch(canvasElements, (elements) => {
     if (!elements.length) {
       return;
     }
@@ -387,13 +407,11 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
       element => !(element.id in canvasElementsStateRegistry.value),
     );
 
-    log(`\nElements: ${elements.length}\nMissing: ${missingElements.length}\nReady: ${ready}`);
+    log(`\nElements: ${elements.length}\nMissing: ${missingElements.length}`);
 
     missingElements.forEach(element => createElementState(element.id));
 
-    if (ready) {
-      void batchLoadPreviewImages();
-    }
+    schedulePreviewBatchLoad();
   }, { immediate: true });
 
   return {

@@ -12,10 +12,7 @@ export const useCanvasAssetProperties = (element: Ref<SceneElementCanvasObjectAs
   });
 
   const hasValidPreviewId = computed(() => {
-    if (element.value.asset.kind === AssetPropertiesKinds.COMPLEX) {
-      return !!assetPropertiesRegistry.value[element.value.asset.id]?.preview?.id;
-    }
-    return true;
+    return !!resolvedAssetProperties.value?.preview?.id;
   });
 
   return { properties: resolvedAssetProperties, hasValidPreviewId };

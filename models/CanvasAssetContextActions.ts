@@ -15,11 +15,21 @@ const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
   const actions: ContextAction[] = [];
   const { properties } = useCanvasAssetProperties(ref(element));
 
+  const isTrashed = computed(() => {
+    return properties.value.settings?.trashed === true;
+  });
+
   actions.push({
     id: 'open-window',
     label: 'Open in window',
     icon: { name: 'open_in_new' },
     action: () => {
+      if (isTrashed.value) {
+        const notificationStore = useNotificationStore();
+        notificationStore.error('This asset is in trash and cannot be opened.');
+        return;
+      }
+
       const windowStore = useWindowStore();
       const window = WindowFactory(
         properties.value.id,
@@ -33,7 +43,7 @@ const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
 
       windowStore.toggleOrAdd(window);
     },
-    disabled: false,
+    disabled: isTrashed.value,
     pinned: false,
     alwaysVisible: false,
   });
@@ -43,6 +53,10 @@ const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
     label: properties.value.showTitle ? 'Hide Label' : 'Show Label',
     icon: { name: properties.value.showTitle ? 'label_off' : 'label' },
     action: async () => {
+      if (isTrashed.value) {
+        return;
+      }
+
       const payload: AssetProperties = {
         type: properties.value.type,
         title: properties.value.title,
@@ -52,7 +66,7 @@ const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
       };
       await updateComplexAssetProperties(properties.value.id, payload);
     },
-    disabled: false,
+    disabled: isTrashed.value,
     pinned: true,
     alwaysVisible: false,
   });
@@ -62,10 +76,14 @@ const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
     label: 'Edit Label',
     icon: { name: 'edit' },
     action: () => {
+      if (isTrashed.value) {
+        return;
+      }
+
       const canvasContextPanelStore = useCanvasContextPanelStore();
       canvasContextPanelStore.modalShow(element.id);
     },
-    disabled: false,
+    disabled: isTrashed.value,
     pinned: false,
     alwaysVisible: false,
   });

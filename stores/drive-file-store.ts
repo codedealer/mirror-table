@@ -136,7 +136,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     // check if there are any pending requests
     const pendingIds = idsToLoad.filter(id => fileRequestRegistry.has(id));
     if (pendingIds.length) {
-      console.warn(`Blocked duplicate requests for files ${pendingIds.join(', ')}`);
+      fileLog(`${bgYellow.black('DEDUPED')}\n${pendingIds.join(', ')}`);
 
       const pendingRequests = pendingIds.map(id => fileRequestRegistry.get(id)) as FileRequest[];
       const pendingResults = await Promise.all(pendingRequests);
@@ -249,15 +249,20 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       && properties.kind === AssetPropertiesKinds.COMPLEX
     ) {
       const canvasElementsStore = useCanvasElementsStore();
-      if (!restore) {
-        await canvasElementsStore.removeComplexAssetProperties(id);
-      } else {
-        const complexAssetProperties = SceneElementCanvasObjectAssetPropertiesFactory(
-          id,
-          properties,
-        );
-        await canvasElementsStore.addComplexAssetProperties(complexAssetProperties);
-      }
+
+      const complexAssetProperties = SceneElementCanvasObjectAssetPropertiesFactory(
+        id,
+        properties,
+      );
+
+      complexAssetProperties.settings = {
+        ...(complexAssetProperties.settings ?? {}),
+        trashed: !restore,
+      };
+
+      // Keep asset_properties present even when the Drive file is trashed.
+      // This avoids missing properties for complex assets currently on the canvas.
+      await canvasElementsStore.addComplexAssetProperties(complexAssetProperties);
     }
 
     files.value[id].trashed = !restore;

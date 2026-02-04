@@ -121,8 +121,19 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
   const setRootToParent = async () => {
     const driveFileStore = useDriveFileStore();
-    const rootFile = driveFileStore.files[rootNode.value.id];
-    if (!rootNode.value || !rootFile?.parents) {
+    if (!rootNode.value) {
+      return false;
+    }
+
+    let rootFile: DriveFile | undefined;
+    try {
+      rootFile = await driveFileStore.getFile(rootNode.value.id, DataRetrievalStrategies.CACHE_ONLY);
+    } catch {
+      // If cache is missing, we cannot resolve parent without fetching.
+      return false;
+    }
+
+    if (!rootFile?.parents) {
       return false;
     }
 

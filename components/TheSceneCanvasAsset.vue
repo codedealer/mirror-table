@@ -17,6 +17,14 @@ const props = defineProps<{
 
 const { properties } = useCanvasAssetProperties(toRef(() => props.element));
 
+const isTrashed = computed(() => {
+  if (props.element.asset.kind !== AssetPropertiesKinds.COMPLEX) {
+    return false;
+  }
+
+  return properties.value.settings?.trashed === true;
+});
+
 // create a stateful object
 const canvasElementsStore = useCanvasElementsStore();
 
@@ -114,8 +122,8 @@ const containerConfig: ComputedRef<ElementContainerConfig> = computed(() => {
   return {
     ...props.element.container,
     draggable: state.value?.selectable && state.value?.selected,
-    visible: layersStore.hideHiddenElements ? props.element.enabled : true,
-    listening: layersStore.hideHiddenElements ? props.element.enabled : true,
+    visible: isTrashed.value ? false : (layersStore.hideHiddenElements ? props.element.enabled : true),
+    listening: isTrashed.value ? false : (layersStore.hideHiddenElements ? props.element.enabled : true),
   };
 });
 
@@ -148,7 +156,7 @@ const loadingRect = computed(() => {
 });
 
 const showLoading = computed(() => {
-  return assetError.value || (tableStore.mode === TableModes.OWN && (!state.value || !state.value.loaded));
+  return !isTrashed.value && (assetError.value || (tableStore.mode === TableModes.OWN && (!state.value || !state.value.loaded)));
 });
 
 const showHiddenIcon = computed(() => {

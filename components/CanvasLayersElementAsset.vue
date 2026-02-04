@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import type { ContextAction, DriveAsset, DriveImage, LayerItem, SceneElementCanvasObjectAsset } from '~/models/types';
+import { useCanvasAssetProperties } from '~/composables/useCanvasAssetProperties';
 import { useCanvasElementAssetLabel } from '~/composables/useCanvasElementAssetLabel';
+import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
 const props = defineProps<{
   item: LayerItem<SceneElementCanvasObjectAsset>;
 }>();
 
-const { label, isLoading, error } = useDriveFile<DriveAsset>(
+const { file, label, isLoading, error } = useDriveFile<DriveAsset>(
   toRef(() => props.item.item.asset.id),
   {
     strategy: DataRetrievalStrategies.LAZY,
@@ -14,8 +16,12 @@ const { label, isLoading, error } = useDriveFile<DriveAsset>(
   },
 );
 
+const { properties } = useCanvasAssetProperties(
+  toRef(() => props.item.item),
+);
+
 const { file: image, isLoading: imageLoading } = useDriveFile<DriveImage>(
-  toRef(() => props.item.item.asset.preview.id),
+  toRef(() => properties.value.preview.id),
   {
     strategy: DataRetrievalStrategies.LAZY,
   },
@@ -44,7 +50,7 @@ watchEffect(() => {
 
 <template>
   <va-list-item
-    :disabled="isLoading || !!error"
+    :disabled="isLoading || !!error || !!file?.trashed"
     :class="{ active: isSelected && !isLoading }"
     class="layer-element"
     href="#"
@@ -75,6 +81,7 @@ watchEffect(() => {
     </va-list-item-section>
     <va-list-item-section icon>
       <ContextPanel
+        v-show="!file?.trashed"
         :actions="contextActions"
       />
     </va-list-item-section>
