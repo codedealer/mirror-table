@@ -37,7 +37,7 @@ const undoTrashFolder = () => {
       class="drive-node__label"
       :hover-opacity="1"
       :loading="node.loading || file?.loading"
-      :disabled="node.disabled || !file"
+      :disabled="!file || file.trashed"
       preset="plain"
       @click="onToggleFile"
     >

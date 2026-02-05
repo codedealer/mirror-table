@@ -15,6 +15,9 @@ export function useComplexAssetPreviewWatcher(
   properties: Ref<SceneElementCanvasObjectAssetProperties>,
   updateState: (state: Partial<CanvasElementStateAsset>) => void,
 ) {
+  const { $logger } = useNuxtApp();
+  const log = $logger['canvas:elements'];
+
   const sceneStore = useSceneStore();
   const tableStore = useTableStore();
 
@@ -33,6 +36,10 @@ export function useComplexAssetPreviewWatcher(
       if (newPreviewId === element.value.asset.preview.id) {
         return;
       }
+
+      log(
+        `Complex preview mismatch; syncing element ${element.value.id} (asset ${properties.value.id}) from ${element.value.asset.preview.id} to ${newPreviewId}`,
+      );
 
       // Reset preview state so it will be reloaded by the batcher.
       updateState({

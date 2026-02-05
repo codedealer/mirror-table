@@ -236,14 +236,22 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   };
 
   const removeFile = async (id: string, restore: boolean = false) => {
-    if (!files.value[id]) {
+    let file = files.value[id];
+    if (!file) {
+      const loaded = await getFile(id, DataRetrievalStrategies.SOURCE);
+      if (loaded) {
+        file = loaded;
+      }
+    }
+
+    if (!file) {
       throw new Error('File not found');
     }
 
     await deleteFile(id, restore);
 
     // handle the case of complex assets: their properties are stored in firestore
-    const properties = files.value[id].appProperties;
+    const properties = file.appProperties;
     if (
       isAssetProperties(properties)
       && properties.kind === AssetPropertiesKinds.COMPLEX
@@ -265,8 +273,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       await canvasElementsStore.addComplexAssetProperties(complexAssetProperties);
     }
 
-    files.value[id].trashed = !restore;
-    void cacheFile(files.value[id]);
+    file.trashed = !restore;
+    void cacheFile(file);
   };
 
   const updateFileMetadata = (file: DriveFile, metadata: DriveFileUpdateReturnType) => {
