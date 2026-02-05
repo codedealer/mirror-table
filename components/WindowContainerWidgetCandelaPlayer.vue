@@ -310,7 +310,6 @@ const submit = async () => {
         <va-textarea
           v-model="widgetModel.content"
           label="Content"
-          required
           placeholder="Enter markdown here"
           autosize
           :min-rows="2"
