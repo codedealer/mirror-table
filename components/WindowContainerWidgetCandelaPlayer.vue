@@ -13,6 +13,7 @@ import { ModalWindowStatus, WidgetTemplates } from '~/models/types';
 const props = defineProps<{
   window: ModalWindow;
   file?: DriveWidget;
+  blocked?: boolean;
 }>();
 
 type WidgetModel = Pick<WidgetCandelaPlayer, 'content' | 'privateContent' | 'player'>;
@@ -70,6 +71,8 @@ const isLoading = computed(() => (
   || (!!props.file?.appProperties.firestoreId && widget.value === undefined)
 ));
 
+const isDisabled = computed(() => isLoading.value || !!props.blocked);
+
 const {
   imageFileId,
   file: imageFile,
@@ -85,7 +88,10 @@ const isImageDirty = () => {
 };
 
 const checkDirty = () => {
-  if (isLoading.value || imageLoading.value) {
+  if (isDisabled.value || imageLoading.value) {
+    if (props.blocked) {
+      windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
+    }
     return;
   }
 
@@ -114,6 +120,10 @@ watch(widgetModel, useDebounceFn(checkDirty, 1000), {
 });
 
 const onImageUpdate = (fileId?: string) => {
+  if (isDisabled.value) {
+    return;
+  }
+
   imageFileId.value = fileId ?? '';
   checkDirty();
 };
@@ -180,7 +190,7 @@ const update = async () => {
 const submit = async () => {
   if (
     !props.file
-    || isLoading.value
+    || isDisabled.value
     || imageLoading.value
     || !widgetModel.value.player.name
   ) {
@@ -226,11 +236,11 @@ const submit = async () => {
             :error="imageError"
             :file-is-loading="imageLoading"
             :upload-parent-id="file?.parents?.[0]"
-            :allow-upload="!!file && !isLoading"
+            :allow-upload="!!file && !isDisabled"
             width="120"
             height="120"
             fit="cover"
-            removable
+            :removable="!isDisabled"
             @remove="onImageUpdate"
             @upload="onImageUpdate"
             @error="console.error"
@@ -241,20 +251,20 @@ const submit = async () => {
               v-model="widgetModel.player.name"
               label="Name"
               min-length="1"
-              :disabled="isLoading"
+              :disabled="isDisabled"
               required
             />
 
             <va-input
               v-model="widgetModel.player.role"
               label="Role"
-              :disabled="isLoading"
+              :disabled="isDisabled"
             />
 
             <va-input
               v-model="widgetModel.player.speciality"
               label="Speciality"
-              :disabled="isLoading"
+              :disabled="isDisabled"
             />
           </div>
         </div>
@@ -267,7 +277,7 @@ const submit = async () => {
             label="Body"
             type="number"
             class="input-sm"
-            :disabled="isLoading"
+            :disabled="isDisabled"
           />
 
           <va-input
@@ -275,7 +285,7 @@ const submit = async () => {
             label="Mind"
             type="number"
             class="input-sm"
-            :disabled="isLoading"
+            :disabled="isDisabled"
           />
 
           <va-input
@@ -283,7 +293,7 @@ const submit = async () => {
             label="Bleed"
             type="number"
             class="input-sm"
-            :disabled="isLoading"
+            :disabled="isDisabled"
           />
 
           <va-input
@@ -291,7 +301,7 @@ const submit = async () => {
             label="Scars"
             type="number"
             class="input-sm"
-            :disabled="isLoading"
+            :disabled="isDisabled"
           />
         </div>
 
@@ -305,7 +315,7 @@ const submit = async () => {
           autosize
           :min-rows="2"
           :max-rows="25"
-          :disabled="isLoading"
+          :disabled="isDisabled"
         />
 
         <va-textarea
@@ -315,7 +325,7 @@ const submit = async () => {
           autosize
           :min-rows="2"
           :max-rows="25"
-          :disabled="isLoading"
+          :disabled="isDisabled"
         />
 
         <va-divider />
@@ -326,7 +336,7 @@ const submit = async () => {
             type="submit"
             :disabled="
               window.status === ModalWindowStatus.SYNCED
-                || isLoading
+                || isDisabled
                 || imageLoading
                 || !widgetModel.player.name"
           >

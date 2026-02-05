@@ -250,8 +250,30 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
     await deleteFile(id, restore);
 
-    // handle the case of complex assets: their properties are stored in firestore
     const properties = file.appProperties;
+
+    // Widgets use a Firestore doc for their content/state.
+    // We soft-delete them by toggling `trashed` to match the Drive file.
+    // Backwards-compat: older versions may have deleted the doc on trash; recreate if missing.
+    if (isWidgetProperties(properties) && properties.firestoreId) {
+      const widgetId = properties.firestoreId;
+
+      try {
+        const widgetStore = useWidgetStore();
+
+        // Best-effort toggle; if it fails we still consider the Drive file trashed/restored.
+        // (The widget doc is optional and can be repaired on next open.)
+        void widgetStore.updateWidget(widgetId, {
+          trashed: !restore,
+        });
+      } catch (e) {
+        console.error(e);
+        const notificationStore = useNotificationStore();
+        notificationStore.error(extractErrorMessage(e));
+      }
+    }
+
+    // handle the case of complex assets: their properties are stored in firestore
     if (
       isAssetProperties(properties)
       && properties.kind === AssetPropertiesKinds.COMPLEX

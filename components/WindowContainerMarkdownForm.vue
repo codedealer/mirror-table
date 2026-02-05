@@ -35,6 +35,9 @@ const isLoading = computed(() => (
   || imageLoading.value
 ));
 
+const isTrashed = computed(() => !!file.value?.trashed);
+const isDisabled = computed(() => isLoading.value || isTrashed.value);
+
 const body = ref('');
 
 // update the editor when the media is downloaded
@@ -70,7 +73,7 @@ watchEffect(() => {
 
 const setDirty = () => {
   if (
-    isLoading.value
+    isDisabled.value
   ) {
     return;
   }
@@ -79,6 +82,10 @@ const setDirty = () => {
 };
 
 const onImageUpdate = (fileId: string = '') => {
+  if (isDisabled.value) {
+    return;
+  }
+
   imageFileId.value = fileId;
   setDirty();
 };
@@ -112,7 +119,7 @@ const updatePreviewProperties = (assetProperties: AssetProperties) => {
 };
 
 const submit = async () => {
-  if (!file.value || isLoading.value || imageLoading.value) {
+  if (!file.value || isDisabled.value || imageLoading.value) {
     return;
   }
 
@@ -186,7 +193,7 @@ const submit = async () => {
           :rules="nameValidationsRules"
           counter
           required
-          :disabled="isLoading"
+          :disabled="isDisabled"
           @update:dirty="setDirty"
         />
 
@@ -194,7 +201,7 @@ const submit = async () => {
           v-if="file?.appProperties?.kind !== AssetPropertiesKinds.TEXT"
           v-model:show-title="showTitle"
           v-model:title="title"
-          :disabled="isLoading"
+          :disabled="isDisabled"
           @update:dirty="setDirty"
         />
       </div>
@@ -210,8 +217,8 @@ const submit = async () => {
           :upload-parent-id="file?.parents?.[0]"
           width="200"
           height="200"
-          :allow-upload="!!file"
-          removable
+          :allow-upload="!!file && !isDisabled"
+          :removable="!isDisabled"
           @remove="onImageUpdate"
           @upload="onImageUpdate"
           @error="console.error"
@@ -227,7 +234,7 @@ const submit = async () => {
         autosize
         :min-rows="5"
         :max-rows="25"
-        :disabled="isLoading"
+        :disabled="isDisabled"
         @update:dirty="setDirty"
       />
 
@@ -235,7 +242,7 @@ const submit = async () => {
         <va-button
           preset="outlined"
           type="submit"
-          :disabled="!file || window.status === ModalWindowStatus.SYNCED"
+          :disabled="!file || isDisabled || window.status === ModalWindowStatus.SYNCED"
           :loading="isLoading"
         >
           Save

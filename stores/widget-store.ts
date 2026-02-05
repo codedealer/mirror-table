@@ -65,33 +65,35 @@ export const useWidgetStore = defineStore('widget', () => {
 
   const getWidget = async <T extends Widget>(id: string) => {
     if (!userStore.user) {
-      return;
+      return null;
     }
 
-    const docRef = doc(collection($db, 'users', userStore.user.uid, 'widgets'), id).withConverter(firestoreDataConverter<T>());
+    const docRef = doc(
+      collection($db, 'users', userStore.user.uid, 'widgets'),
+      id,
+    ).withConverter(firestoreDataConverter<T>());
 
     try {
       const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
-        return docSnap.data();
-      }
+      return docSnap.exists() ? docSnap.data() : null;
     } catch (e) {
       console.error(e);
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
+      throw e;
     }
   };
 
-  const createWidget = async (widget: Widget) => {
+  const saveWidgetDoc = async <T extends Widget>(id: string, widget: T) => {
     if (!userStore.user) {
       return;
     }
 
-    const docRef = doc(collection($db, 'users', userStore.user.uid, 'widgets'));
-
-    widget.id = docRef.id;
-    widget.owner = userStore.user.uid;
+    const docRef = doc(
+      collection($db, 'users', userStore.user.uid, 'widgets'),
+      id,
+    ).withConverter(firestoreDataConverter<T>());
 
     try {
       await setDoc(docRef, widget);
@@ -104,6 +106,34 @@ export const useWidgetStore = defineStore('widget', () => {
     }
 
     return widget;
+  };
+
+  const createWidget = async (widget: Widget) => {
+    if (!userStore.user) {
+      return;
+    }
+
+    const docRef = doc(collection($db, 'users', userStore.user.uid, 'widgets'));
+
+    widget.id = docRef.id;
+    widget.owner = userStore.user.uid;
+
+    return await saveWidgetDoc(widget.id, widget);
+  };
+
+  const createWidgetWithId = async <T extends Widget>(id: string, widget: T) => {
+    if (!userStore.user) {
+      return;
+    }
+
+    if (!id) {
+      throw new Error('Widget id is empty');
+    }
+
+    widget.id = id;
+    widget.owner = userStore.user.uid;
+
+    return await saveWidgetDoc(id, widget);
   };
 
   const updateWidget = async <T extends Widget>(id: string, payload: NestedPartial<T>) => {
@@ -152,6 +182,7 @@ export const useWidgetStore = defineStore('widget', () => {
     widgetMap,
     getWidget,
     createWidget,
+    createWidgetWithId,
     updateWidget,
     removeWidget,
   };

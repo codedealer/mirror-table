@@ -1,6 +1,6 @@
 import type { ContextAction, DriveAsset, DriveFile, DriveWidget, ModalWindow } from '~/models/types';
 import { AssetContextActionsFactory } from '~/models/AssetContextActions';
-import { DynamicPanelModelTypes, isDriveAsset, isDriveWidget } from '~/models/types';
+import { isDriveAsset, isDriveWidget } from '~/models/types';
 import { WidgetContextActionsFactory } from '~/models/WidgetContextActions';
 
 type WindowContextActionsFileRef =
@@ -14,7 +14,7 @@ export const useWindowContextActions = (
 ) => {
   const windowStore = useWindowStore();
 
-  const closeWindow = () => {
+  const _closeWindow = () => {
     // ensure it's removed even if pinned
     if (window.value.pinned) {
       windowStore.unpin(window.value);
@@ -29,6 +29,29 @@ export const useWindowContextActions = (
       return [];
     }
 
+    if (file.value.trashed) {
+      const restoreAction: ContextAction = {
+        id: 'restore',
+        label: 'Restore',
+        icon: { name: 'replay', color: 'primary-dark' },
+        action: async () => {
+          try {
+            const driveFileStore = useDriveFileStore();
+            await driveFileStore.removeFile(file.value!.id, true);
+          } catch (e) {
+            const notificationStore = useNotificationStore();
+            notificationStore.error(extractErrorMessage(e));
+            console.error(e);
+          }
+        },
+        disabled: !file.value.capabilities?.canDelete,
+        pinned: false,
+        alwaysVisible: true,
+      };
+
+      return [restoreAction];
+    }
+
     if (isDriveWidget(file.value)) {
       const widgetFile = file.value;
       const baseActions = WidgetContextActionsFactory(widgetFile);
@@ -39,27 +62,10 @@ export const useWindowContextActions = (
         icon: { name: 'delete', color: 'danger' },
         action: async () => {
           try {
-            const tableStore = useTableStore();
-
-            if (widgetFile.appProperties.firestoreId) {
-              // remove widget from all panels
-              if (tableStore.table) {
-                Object.values(DynamicPanelModelTypes).forEach((panel) => {
-                  void tableStore.removeWidgetFromPanel(panel, widgetFile.appProperties.firestoreId!);
-                });
-              }
-
-              const widgetStore = useWidgetStore();
-              const result = await widgetStore.removeWidget(widgetFile.appProperties.firestoreId);
-              if (!result) {
-                return;
-              }
-            }
-
             const driveFileStore = useDriveFileStore();
             await driveFileStore.removeFile(widgetFile.id, false);
 
-            closeWindow();
+            // closeWindow();
           } catch (e) {
             const notificationStore = useNotificationStore();
             notificationStore.error(extractErrorMessage(e));
@@ -87,7 +93,7 @@ export const useWindowContextActions = (
             const driveFileStore = useDriveFileStore();
             await driveFileStore.removeFile(assetFile.id, false);
 
-            closeWindow();
+            // closeWindow();
           } catch (e) {
             const notificationStore = useNotificationStore();
             notificationStore.error(extractErrorMessage(e));

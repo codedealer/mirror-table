@@ -8,6 +8,7 @@ import { ModalWindowStatus } from '~/models/types';
 const props = defineProps<{
   window: ModalWindow;
   file?: DriveWidget;
+  blocked?: boolean;
 }>();
 
 const windowStore = useWindowStore();
@@ -55,6 +56,8 @@ const isLoading = computed(() => (
   || (!!props.file?.appProperties.firestoreId && widget.value === undefined)
 ));
 
+const isDisabled = computed(() => isLoading.value || !!props.blocked);
+
 const {
   imageFileId,
   file: imageFile,
@@ -70,7 +73,10 @@ const isImageDirty = () => {
 };
 
 const checkDirty = () => {
-  if (isLoading.value || imageLoading.value) {
+  if (isDisabled.value || imageLoading.value) {
+    if (props.blocked) {
+      windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
+    }
     return;
   }
 
@@ -96,6 +102,10 @@ watch(widgetModel, useDebounceFn(checkDirty, 1000), {
 });
 
 const onImageUpdate = (fileId?: string) => {
+  if (isDisabled.value) {
+    return;
+  }
+
   imageFileId.value = fileId ?? '';
   checkDirty();
 };
@@ -159,7 +169,7 @@ const create = async (file: DriveWidget) => {
 const submit = async () => {
   if (
     !props.file
-    || isLoading.value
+    || isDisabled.value
     || imageLoading.value
     || (!widgetModel.value.content && !widgetModel.value.privateContent)
   ) {
@@ -207,11 +217,11 @@ const submit = async () => {
             :error="imageError"
             :file-is-loading="imageLoading"
             :upload-parent-id="file?.parents?.[0]"
-            :allow-upload="!!file && !isLoading"
+            :allow-upload="!!file && !isDisabled"
             width="120"
             height="120"
             fit="cover"
-            removable
+            :removable="!isDisabled"
             @remove="onImageUpdate"
             @upload="onImageUpdate"
             @error="console.error"
@@ -226,7 +236,7 @@ const submit = async () => {
           autosize
           :min-rows="2"
           :max-rows="25"
-          :disabled="isLoading"
+          :disabled="isDisabled"
         />
 
         <va-textarea
@@ -236,7 +246,7 @@ const submit = async () => {
           autosize
           :min-rows="2"
           :max-rows="25"
-          :disabled="isLoading"
+          :disabled="isDisabled"
         />
 
         <va-divider />
@@ -247,7 +257,7 @@ const submit = async () => {
             type="submit"
             :disabled="
               window.status === ModalWindowStatus.SYNCED
-                || isLoading
+                || isDisabled
                 || imageLoading
                 || (!widgetModel.content && !widgetModel.privateContent)"
           >

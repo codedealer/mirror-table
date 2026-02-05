@@ -22,8 +22,10 @@ const showPrivateContent = computed(() => {
   return tableStore.mode === TableModes.OWN && props.widget.privateContent;
 });
 
+const isTrashed = computed(() => !!props.widget.trashed);
+
 // Quick edit mode for numerical stats (only for owners)
-const canQuickEdit = computed(() => tableStore.mode === TableModes.OWN);
+const canQuickEdit = computed(() => tableStore.mode === TableModes.OWN && !isTrashed.value);
 
 // Track which stat is currently being edited
 const editingStat = ref<'body' | 'mind' | 'bleed' | 'scars' | null>(null);

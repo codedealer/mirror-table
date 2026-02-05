@@ -500,6 +500,7 @@ export interface Widget {
   enabled: boolean;
   template: WidgetTemplate;
   rank: number;
+  trashed?: boolean;
 }
 
 export interface WidgetMarkdown extends Widget {

@@ -22,6 +22,8 @@ const { actions } = useWindowContextActions(
 
 const windowStore = useWindowStore();
 
+const isTrashed = computed(() => !!file.value?.trashed);
+
 watchEffect(() => {
   if (error.value) {
     const notificationStore = useNotificationStore();
@@ -30,6 +32,8 @@ watchEffect(() => {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.ERROR);
   } else if (file.value?.loading) {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.LOADING);
+  } else if (file.value?.trashed) {
+    windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
   } else if (props.window.status !== ModalWindowStatus.DIRTY) {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
   }
@@ -76,12 +80,18 @@ const content = computed(() => {
         color="background-border"
       />
     </div>
+
+    <WindowTrashedBanner
+      class="mb"
+      :file="file"
+    />
     <div class="window-container-markdown__content">
       <va-scroll-container vertical>
         <component
           :is="content"
           :window="window"
           :file="file"
+          :blocked="isTrashed"
         />
       </va-scroll-container>
     </div>

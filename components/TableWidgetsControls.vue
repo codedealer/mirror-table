@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DynamicPanelModelType, Widget } from '~/models/types';
+import { DataRetrievalStrategies, DynamicPanelModelTypes, isGapiErrorResponseResult, isObject, TableModes } from '~/models/types';
 
 const props = defineProps<{
   panel: DynamicPanelModelType;
@@ -8,9 +9,14 @@ const props = defineProps<{
 const tableStore = useTableStore();
 const widgetStore = useWidgetStore();
 const showControls = computed(() => tableStore.mode === TableModes.OWN);
+const isTrashed = computed(() => !!props.widget.trashed);
 
 const toggleEnabled = () => {
   if (!props.widget.id) {
+    return;
+  }
+
+  if (isTrashed.value) {
     return;
   }
 
@@ -18,10 +24,51 @@ const toggleEnabled = () => {
     enabled: !props.widget.enabled,
   });
 };
-const edit = () => {
+const isDriveNotFoundError = (e: unknown) => {
+  if (!isObject(e)) {
+    return false;
+  }
+
+  if (isGapiErrorResponseResult(e)) {
+    return e.error.code === 404;
+  }
+
+  if ('result' in e && isObject(e.result) && isGapiErrorResponseResult(e.result)) {
+    return e.result.error.code === 404;
+  }
+
+  return false;
+};
+
+const edit = async () => {
   if (!props.widget.fileId) {
     const notification = useNotificationStore();
     notification.error('Corresponding widget file not found');
+    return;
+  }
+
+  // This is the point where we verify the Drive file.
+  // - If it exists but is trashed: open window in trashed mode (restore-only).
+  // - If it is truly gone (404): remove Firestore references and notify.
+  try {
+    const driveFileStore = useDriveFileStore();
+    await driveFileStore.getFile(props.widget.fileId, DataRetrievalStrategies.SOURCE);
+  } catch (e) {
+    if (isDriveNotFoundError(e)) {
+      const notification = useNotificationStore();
+      notification.error('This widget was permanently deleted from Drive. Removing it from the table.');
+
+      Object.values(DynamicPanelModelTypes).forEach((panel) => {
+        void tableStore.removeWidgetFromPanel(panel, props.widget.id);
+      });
+      void widgetStore.removeWidget(props.widget.id);
+
+      return;
+    }
+
+    const notification = useNotificationStore();
+    notification.error(extractErrorMessage(e));
+    console.error(e);
     return;
   }
 
@@ -53,14 +100,21 @@ const remove = () => {
           color="warning"
         />
 
+        <va-badge
+          v-show="isTrashed"
+          text="Deleted"
+          color="danger"
+        />
+
         <va-button
           icon="visibility"
           preset="plain"
           :color="widget.enabled ? 'primary' : 'background-border'"
+          :disabled="isTrashed"
           @click="toggleEnabled"
         />
         <va-button
-          icon="edit"
+          :icon="isTrashed ? 'open_in_new' : 'edit'"
           preset="plain"
           color="primary"
           @click="edit"
