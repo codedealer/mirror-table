@@ -82,7 +82,7 @@ watchEffect(() => {
     :class="{ active: isSelected && !imageLoading && !isComplexTrashed }"
     class="layer-element"
     href="#"
-    @click.prevent="select"
+    @click="select"
   >
     <va-list-item-section avatar>
       <DriveThumbnail
