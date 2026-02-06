@@ -1,7 +1,5 @@
 import type { AuthorizationInfo, UniversalAuthClient, UniversalAuthClientParams } from '~/models/types';
 import { expiryFromSeconds } from '~/utils';
-import OverridableTokenClientConfig = google.accounts.oauth2.OverridableTokenClientConfig;
-import TokenResponse = google.accounts.oauth2.TokenResponse;
 
 const tokenTTLToleranceSec = 60 * 1000;
 
@@ -25,7 +23,7 @@ export const useImplicitGrantFlowAuth = ({
   const firstScope = requiredScopes.length > 0 ? requiredScopes.pop() as string : '';
   let prompt = '';
 
-  const callback = (tokenResponse: TokenResponse) => {
+  const callback = (tokenResponse: google.accounts.oauth2.TokenResponse) => {
     if (tokenResponse.error && tokenResponse.error_description) {
       console.error(tokenResponse.error_description);
       rejectHook && rejectHook(tokenResponse.error_description);
@@ -79,7 +77,7 @@ export const useImplicitGrantFlowAuth = ({
       return Promise.resolve(googleAuthStore.authorizationInfo);
     }
 
-    const options: OverridableTokenClientConfig = {
+    const options: google.accounts.oauth2.OverridableTokenClientConfig = {
       hint: userStore.user.email,
       prompt,
     };

@@ -339,12 +339,8 @@ export const updateMedia = async (
   const updateUrl = new URL(uploadUrl);
   updateUrl.pathname = `/upload/drive/v3/files/${fileId}`;
 
-  const googleStore = useGoogleAuthStore();
-  if (!googleStore.client) {
-    throw new Error('Google client is not initialized');
-  }
-
-  const authInfo = await googleStore.client.requestToken();
+  const driveStore = useDriveStore();
+  const authInfo = await driveStore.getAuthorizationInfo();
 
   void await $fetch(updateUrl.toString(), {
     method: 'PATCH',
@@ -373,12 +369,8 @@ export const uploadMedia = async (
 
   const form = generateFileFormData(file, metadata, folderId);
 
-  const googleStore = useGoogleAuthStore();
-  if (!googleStore.client) {
-    throw new Error('Google client is not initialized');
-  }
-
-  const authInfo = await googleStore.client.requestToken();
+  const driveStore = useDriveStore();
+  const authInfo = await driveStore.getAuthorizationInfo();
 
   const response = await $fetch(uploadUrl, {
     method: 'POST',

@@ -2,7 +2,6 @@ import type { ComputedRef } from 'vue';
 import type {
   AssetProperties,
   CanvasElementState,
-  CanvasElementStateAsset,
   ElementContainerConfig,
   SceneElementCanvasObject,
   SceneElementCanvasObjectAssetProperties,
@@ -95,15 +94,6 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
       return acc;
     }, {} as Record<string, SceneElementCanvasObjectAssetProperties>);
   });
-
-  const getResolvedPreviewId = (element: SceneElementCanvasObjectAsset) => {
-    if (element.asset.kind !== AssetPropertiesKinds.COMPLEX) {
-      return element.asset.preview.id;
-    }
-
-    const registryProps = assetPropertiesRegistry.value[element.asset.id];
-    return registryProps?.preview?.id || element.asset.preview.id;
-  };
 
   const layersStore = useLayersStore();
   const tableStore = useTableStore();
@@ -255,7 +245,10 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
 
       try {
         // Get the Drive file for this complex asset
-        const driveFile = await driveFileStore.getFile(element.asset.id, DataRetrievalStrategies.CACHE_ONLY);
+        const { file: driveFile } = await driveFileStore.getFile(
+          element.asset.id,
+          DataRetrievalStrategies.CACHE_ONLY,
+        );
 
         if (!driveFile?.appProperties || !isAssetProperties(driveFile.appProperties)) {
           console.warn('Complex asset Drive file not found or has invalid properties');
@@ -305,97 +298,10 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
 
   const { $logger } = useNuxtApp();
   const log = $logger['canvas:elements'];
-  const driveFileStore = useDriveFileStore();
-
-  const batchLoadPreviewImages = async () => {
-    // Only proceed with asset elements that have preview IDs and weren't loaded yet
-    const toLoad = canvasElements.value.reduce<Array<{ elementId: string; previewId: string }>>((acc, element) => {
-      // Check if element has a valid state
-      if (!(element.id in canvasElementsStateRegistry.value)) {
-        return acc;
-      }
-
-      const state = canvasElementsStateRegistry.value[element.id];
-      if (!isCanvasElementStateAsset(state) || state.loaded || state.loading || state.error) {
-        return acc;
-      }
-
-      if (!isSceneElementCanvasObjectAsset(element)) {
-        return acc;
-      }
-
-      const previewId = getResolvedPreviewId(element);
-      if (previewId) {
-        acc.push({
-          elementId: element.id,
-          previewId,
-        });
-      }
-
-      return acc;
-    }, []);
-
-    if (!toLoad.length) {
-      return;
-    }
-
-    // Mark as loading immediately to avoid repeated queueing.
-    toLoad.forEach(({ elementId }) => {
-      updateElementState<CanvasElementStateAsset>(elementId, {
-        loading: true,
-        error: null,
-      });
-    });
-
-    const batchedIds = Array.from(new Set(toLoad.map(x => x.previewId)));
-
-    log(`Loading ${batchedIds.length} asset previews`);
-
-    try {
-      await driveFileStore.getFiles(batchedIds, DataRetrievalStrategies.RECENT);
-    } catch (e) {
-      const notificationStore = useNotificationStore();
-      notificationStore.error('Failed to fetch asset previews.');
-      console.error('Failed to fetch asset previews.', e);
-
-      // set the state of the failed elements to error
-      toLoad.forEach(({ elementId }) => {
-        updateElementState<CanvasElementStateAsset>(elementId, {
-          loading: false,
-          loaded: false,
-          error: e,
-        });
-      });
-    }
-  };
-
-  let previewBatchInFlight = false;
-  let previewBatchScheduled = false;
-  const schedulePreviewBatchLoad = () => {
-    if (previewBatchScheduled) {
-      return;
-    }
-    previewBatchScheduled = true;
-
-    // Coalesce multiple reactive triggers into a single batch.
-    queueMicrotask(async () => {
-      previewBatchScheduled = false;
-      try {
-        if (previewBatchInFlight) {
-          schedulePreviewBatchLoad();
-          return;
-        }
-
-        previewBatchInFlight = true;
-        await batchLoadPreviewImages();
-      } finally {
-        previewBatchInFlight = false;
-      }
-    });
-  };
 
   /*
-   Watch the elements on the canvas and load the previews in a single batch, accounting for the fact that the preview data for complex assets is stored in a separate collection
+   Watch the elements on the canvas and ensure element state exists.
+   Drive file loading is requested by components/composables (useDriveFile/useDriveMedia) and batched inside drive-file-store.
   */
   watch(canvasElements, (elements) => {
     if (!elements.length) {
@@ -410,8 +316,6 @@ export const useCanvasElementsStore = defineStore('canvas-elements', () => {
     log(`\nElements: ${elements.length}\nMissing: ${missingElements.length}`);
 
     missingElements.forEach(element => createElementState(element.id));
-
-    schedulePreviewBatchLoad();
   }, { immediate: true });
 
   return {

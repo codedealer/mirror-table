@@ -61,7 +61,7 @@ useSelectableStateWatcher(
 const { file: imageFile, error: fileError } = useDriveFile<DriveImage>(
   toRef(() => properties.value.preview.id),
   {
-    strategy: DataRetrievalStrategies.PASSIVE,
+    strategy: DataRetrievalStrategies.RECENT,
   },
 );
 

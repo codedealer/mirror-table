@@ -391,7 +391,10 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
       // For complex assets, also reset the default scale in Drive metadata
       if (element.asset.kind === AssetPropertiesKinds.COMPLEX && element.asset.id) {
         const driveFileStore = useDriveFileStore();
-        const driveFile = await driveFileStore.getFile(element.asset.id, DataRetrievalStrategies.CACHE_ONLY);
+        const { file: driveFile } = await driveFileStore.getFile(
+          element.asset.id,
+          DataRetrievalStrategies.CACHE_ONLY,
+        );
 
         if (driveFile?.appProperties && isAssetProperties(driveFile.appProperties) && driveFile.appProperties.preview) {
           const updatedProperties: AssetProperties = {

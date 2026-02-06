@@ -52,7 +52,14 @@ const edit = async () => {
   // - If it is truly gone (404): remove Firestore references and notify.
   try {
     const driveFileStore = useDriveFileStore();
-    await driveFileStore.getFile(props.widget.fileId, DataRetrievalStrategies.SOURCE);
+    const { error } = await driveFileStore.getFile(
+      props.widget.fileId,
+      DataRetrievalStrategies.SOURCE,
+    );
+
+    if (error) {
+      throw error;
+    }
   } catch (e) {
     if (isDriveNotFoundError(e)) {
       const notification = useNotificationStore();

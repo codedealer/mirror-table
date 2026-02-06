@@ -19,27 +19,35 @@ export const useDriveStore = defineStore('drive', () => {
 
   const tokenRequest = ref<Promise<AuthorizationInfo> | null>(null);
 
-  const augmentWithTokenAndGet = async (client: typeof gapi.client) => {
+  const lastSetAccessToken = ref<string>('');
+
+  const getAuthorizationInfo = async (): Promise<AuthorizationInfo> => {
     if (!googleStore.client) {
       throw new Error('Google Auth Client not initialized when accessing Google Drive API');
     }
 
-    let authInfo: AuthorizationInfo;
     try {
-      if (tokenRequest.value) {
-        console.warn('Requesting auth token while another request is in progress');
-        authInfo = await tokenRequest.value;
-      } else {
+      if (!tokenRequest.value) {
         tokenRequest.value = googleStore.client.requestToken();
-        authInfo = await tokenRequest.value;
       }
+
+      return await tokenRequest.value;
     } finally {
       tokenRequest.value = null;
     }
+  };
 
-    client.setToken({
-      access_token: authInfo.accessToken,
-    });
+  const augmentWithTokenAndGet = async (client: typeof gapi.client) => {
+    const authInfo = await getAuthorizationInfo();
+
+    // Avoid redundant setToken() calls during rapid reactivity churn.
+    // requestToken() already handles expiry internally; we only update gapi when the token value changes.
+    if (authInfo.accessToken && authInfo.accessToken !== lastSetAccessToken.value) {
+      client.setToken({
+        access_token: authInfo.accessToken,
+      });
+      lastSetAccessToken.value = authInfo.accessToken;
+    }
 
     return client;
   };
@@ -61,10 +69,9 @@ export const useDriveStore = defineStore('drive', () => {
       throw new Error('Google Picker API not ready');
     }
 
-    let authInfo: AuthorizationInfo = googleStore.authorizationInfo;
-    if (!noTokenAugment) {
-      authInfo = await googleStore.client!.requestToken();
-    }
+    const authInfo: AuthorizationInfo = noTokenAugment
+      ? googleStore.authorizationInfo
+      : await getAuthorizationInfo();
 
     const builder = new window.google.picker.PickerBuilder();
     const config = useRuntimeConfig();
@@ -81,6 +88,7 @@ export const useDriveStore = defineStore('drive', () => {
   return {
     isLoading: skipHydrate(isLoading),
     isReady,
+    getAuthorizationInfo,
     getClient,
     getPickerBuilder,
     promptToCreateParentFolder: driveFolderModalStore.promptToCreateParentFolder,

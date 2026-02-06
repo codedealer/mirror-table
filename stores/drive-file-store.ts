@@ -35,6 +35,16 @@ const { bgGreen, bgWhite, bgYellow } = colors;
 type FileRequest = gapi.client.Request<gapi.client.drive.File>;
 type FileResponse = gapi.client.Response<gapi.client.drive.File>;
 
+export interface GetFilesResult {
+  files: DriveFile[];
+  errors: Record<string, unknown>;
+}
+
+export interface GetFileResult {
+  file?: DriveFile;
+  error?: unknown;
+}
+
 export const useDriveFileStore = defineStore('drive-file', () => {
   const { $logger } = useNuxtApp();
   const fileLog = $logger['drive:file'];
@@ -43,6 +53,57 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   const cacheStore = useCacheStore();
 
   const fileRequestRegistry: Map<string, FileRequest> = new Map();
+
+  // Coalesce rapid file metadata requests into a single Drive batch.
+  const queuedFileRequestIds: Set<string> = new Set();
+  let queuedFilesFlushPromise: Promise<void> | null = null;
+
+  const scheduleQueuedFilesFlush = (client: typeof gapi.client) => {
+    if (queuedFilesFlushPromise) {
+      return queuedFilesFlushPromise;
+    }
+
+    queuedFilesFlushPromise = new Promise<void>((resolve) => {
+      queueMicrotask(async () => {
+        try {
+          if (!queuedFileRequestIds.size) {
+            return;
+          }
+
+          const idsToFlush = Array.from(queuedFileRequestIds);
+          queuedFileRequestIds.clear();
+
+          fileLog(`${bgWhite.blue('GOOGLE DRIVE API')}\n${idsToFlush.join(', ')}`);
+
+          const batch = client.newBatch();
+          idsToFlush.forEach((id) => {
+            const req = fileRequestRegistry.get(id);
+            if (req) {
+              batch.add(req);
+            }
+          });
+
+          try {
+            void await batch;
+          } catch (e) {
+            // Some Drive batch implementations reject the whole batch if any request fails.
+            // Individual request promises should still settle; callers handle per-id errors.
+            console.error('Drive file batch failed.', e);
+          }
+        } finally {
+          queuedFilesFlushPromise = null;
+          resolve();
+
+          // If more requests were queued during the flush, schedule another.
+          if (queuedFileRequestIds.size) {
+            void scheduleQueuedFilesFlush(client);
+          }
+        }
+      });
+    });
+
+    return queuedFilesFlushPromise;
+  };
 
   const files = computed(() => {
     return cacheStore.files;
@@ -80,7 +141,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   const getFiles = async (
     ids: string[],
     strategy: DataRetrievalStrategy = DataRetrievalStrategies.RECENT,
-  ) => {
+  ): Promise<GetFilesResult> => {
     ids = Array.from(new Set(ids));
 
     if (ids.length > 1) {
@@ -88,6 +149,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     } else {
       fileLog(`GET\n${ids.join(', ')}`);
     }
+
+    const errors: Record<string, unknown> = {};
 
     let idsToLoad: string[] = [];
     let result: DriveFile[] = [];
@@ -111,9 +174,13 @@ export const useDriveFileStore = defineStore('drive-file', () => {
         missingFileIds.length === 0
         || strategy === DataRetrievalStrategies.OPTIMISTIC_CACHE
       ) {
-        return cachedFiles;
+        return { files: cachedFiles, errors };
       } else if (strategy === DataRetrievalStrategies.CACHE_ONLY) {
-        throw new Error(`Missing files: ${missingFileIds.join(', ')}`);
+        missingFileIds.forEach((id) => {
+          errors[id] = new Error(`Missing files: ${id}`);
+        });
+
+        return { files: cachedFiles, errors };
       }
 
       idsToLoad = missingFileIds;
@@ -125,7 +192,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     if (!idsToLoad.length) {
       fileLog('No files to load');
 
-      return result;
+      return { files: result, errors };
     }
 
     fileLog(`${bgYellow.black('PENDING')}\n${idsToLoad.join(', ')}`);
@@ -133,58 +200,66 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     const driveStore = useDriveStore();
     const client = await driveStore.getClient();
 
-    // check if there are any pending requests
-    const pendingIds = idsToLoad.filter(id => fileRequestRegistry.has(id));
-    if (pendingIds.length) {
-      fileLog(`${bgYellow.black('DEDUPED')}\n${pendingIds.join(', ')}`);
+    // Ensure each missing id has a request registered and queued.
+    const idsForRequests: string[] = [];
+    idsToLoad.forEach((id) => {
+      if (fileRequestRegistry.has(id)) {
+        idsForRequests.push(id);
+        return;
+      }
 
-      const pendingRequests = pendingIds.map(id => fileRequestRegistry.get(id)) as FileRequest[];
-      const pendingResults = await Promise.all(pendingRequests);
-
-      result.push(...parseResponse(pendingResults));
-    }
-
-    const unfulfilledIds = idsToLoad.filter(id => !pendingIds.includes(id));
-    if (!unfulfilledIds.length) {
-      fileLog('After pending requests are cleared there are no files to load');
-      return result;
-    }
-
-    fileLog(`${bgWhite.blue('GOOGLE DRIVE API')}\n${unfulfilledIds.join(', ')}`);
-
-    const batch = client.newBatch();
-    const pendingRequests: FileRequest[] = [];
-    unfulfilledIds.forEach((id) => {
       const req = generateFileRequest(client, id);
       fileRequestRegistry.set(id, req);
-      pendingRequests.push(req);
-      batch.add(req);
+      queuedFileRequestIds.add(id);
+      idsForRequests.push(id);
     });
 
-    try {
-      void await batch;
+    // Flush in a microtask to coalesce rapid calls.
+    await scheduleQueuedFilesFlush(client);
 
-      const rawResult = await Promise.all(pendingRequests);
+    const requests = idsForRequests
+      .map(id => ({ id, req: fileRequestRegistry.get(id) }))
+      .filter((x): x is { id: string; req: FileRequest } => !!x.req);
 
-      result.push(...parseResponse(rawResult));
-    } finally {
-      fileLog(`${bgGreen.black('FINISHED')}\n${unfulfilledIds.join(', ')}`);
+    const settled = await Promise.allSettled(requests.map(x => x.req));
 
-      unfulfilledIds.forEach((id) => {
-        fileRequestRegistry.delete(id);
-      });
+    const fulfilledResponses: FileResponse[] = [];
+    settled.forEach((res, idx) => {
+      const id = requests[idx]?.id;
+      if (!id) {
+        return;
+      }
+
+      if (res.status === 'fulfilled') {
+        fulfilledResponses.push(res.value);
+      } else {
+        errors[id] = res.reason;
+      }
+    });
+
+    if (fulfilledResponses.length) {
+      result.push(...parseResponse(fulfilledResponses));
     }
 
-    return result;
+    fileLog(`${bgGreen.black('FINISHED')}\n${idsForRequests.join(', ')}`);
+    idsForRequests.forEach((id) => {
+      fileRequestRegistry.delete(id);
+    });
+
+    return { files: result, errors };
   };
 
   const getFile = async (
     id: string,
     strategy: DataRetrievalStrategy = DataRetrievalStrategies.SOURCE,
-  ) => {
-    const files = await getFiles([id], strategy);
+  ): Promise<GetFileResult> => {
+    const { files, errors } = await getFiles([id], strategy);
 
-    return files.length ? files[0] : undefined;
+    if (errors[id]) {
+      return { error: errors[id] };
+    }
+
+    return files.length ? { file: files[0] } : {};
   };
 
   const listFilesInFolder = async (folderId: string) => {
@@ -236,12 +311,10 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   };
 
   const removeFile = async (id: string, restore: boolean = false) => {
-    let file = files.value[id];
+    let file: DriveFile | undefined = files.value[id];
     if (!file) {
-      const loaded = await getFile(id, DataRetrievalStrategies.SOURCE);
-      if (loaded) {
-        file = loaded;
-      }
+      const { file: loaded } = await getFile(id, DataRetrievalStrategies.SOURCE);
+      file = loaded;
     }
 
     if (!file) {
@@ -331,7 +404,8 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   ) => {
     let file: DriveFile | undefined;
     if (!files.value[fileId]) {
-      file = await getFile(fileId, DataRetrievalStrategies.SOURCE);
+      const res = await getFile(fileId, DataRetrievalStrategies.SOURCE);
+      file = res.file;
     } else {
       file = files.value[fileId];
     }
@@ -422,7 +496,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     metaStrategy: DataRetrievalStrategy = DataRetrievalStrategies.SOURCE,
   ) => {
     const result: Record<string, RawMediaObject> = {};
-    const files = await getFiles(fileIds, metaStrategy);
+    const { files } = await getFiles(fileIds, metaStrategy);
 
     // we will check cache here later
 
@@ -496,13 +570,27 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   };
 
   const downloadMedia = async (
-    fileId: string,
+    fileOrId: DriveFile | string,
     mediaStrategy: DataRetrievalStrategy = DataRetrievalStrategies.LAZY,
     fileStrategy: DataRetrievalStrategy = DataRetrievalStrategies.RECENT,
   ): Promise<RawMediaObject | undefined> => {
+    const fileId = typeof fileOrId === 'string' ? fileOrId : fileOrId.id;
     mediaLog(`File get\n${fileId}`);
 
-    const file = await getFile(fileId, fileStrategy);
+    let file: DriveFile | undefined;
+    if (typeof fileOrId === 'string') {
+      const res = await getFile(fileId, fileStrategy);
+      file = res.file;
+    } else {
+      // Prefer the canonical cached reference if available.
+      file = files.value[fileOrId.id] ?? fileOrId;
+
+      // If the caller's file object is incomplete, refresh metadata.
+      if (!file.md5Checksum || !file.capabilities) {
+        const res = await getFile(fileId, fileStrategy);
+        file = res.file ?? file;
+      }
+    }
 
     if (!file) {
       throw new Error(`File ${fileId} not found`);

@@ -34,7 +34,14 @@ export const useDriveFile = <T extends DriveFile>
 
     try {
       // make sure the file is in the registry
-      await driveFileStore.getFile(idRefValue, options.strategy);
+      const { error: loadError } = await driveFileStore.getFile(idRefValue, options.strategy);
+      if (loadError) {
+        error.value = loadError;
+        file.value = undefined;
+        return;
+      }
+
+      error.value = null;
     } catch (e) {
       error.value = e;
       file.value = undefined;
@@ -54,6 +61,7 @@ export const useDriveFile = <T extends DriveFile>
     }
 
     file.value = driveFile as T;
+    error.value = null;
   }, { immediate: true });
 
   const isLoading = computed(() => {

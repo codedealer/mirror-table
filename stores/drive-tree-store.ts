@@ -127,7 +127,10 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
     let rootFile: DriveFile | undefined;
     try {
-      rootFile = await driveFileStore.getFile(rootNode.value.id, DataRetrievalStrategies.CACHE_ONLY);
+      ({ file: rootFile } = await driveFileStore.getFile(
+        rootNode.value.id,
+        DataRetrievalStrategies.CACHE_ONLY,
+      ));
     } catch {
       // If cache is missing, we cannot resolve parent without fetching.
       return false;
@@ -147,7 +150,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     try {
       rootNode.value.loading = true;
 
-      const parentFile = await driveFileStore.getFile(parentId);
+      const { file: parentFile } = await driveFileStore.getFile(parentId);
 
       if (!parentFile) {
         throw new Error('Parent file not found');
@@ -260,7 +263,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     const driveFileStore = useDriveFileStore();
 
     try {
-      images = await driveFileStore.getFiles(ids);
+      ({ files: images } = await driveFileStore.getFiles(ids));
     } catch (e) {
       console.error(e);
       const notificationStore = useNotificationStore();

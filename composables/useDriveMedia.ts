@@ -12,7 +12,6 @@ export const useDriveMedia = (
     // we skip image assets (they have no body) and matching checksums
     if (
       !file.value
-      || !file.value.md5Checksum
       || file.value.loading
       || (
         isAssetProperties(file.value.appProperties)
@@ -20,6 +19,7 @@ export const useDriveMedia = (
       )
       || (
         file.value.id === media.value?.id
+        && file.value.md5Checksum
         && file.value.md5Checksum === media.value?.md5Checksum
       )
     ) {
@@ -32,7 +32,7 @@ export const useDriveMedia = (
       error.value = undefined;
 
       const mediaObj = await driveFileStore.downloadMedia(
-        file.value.id,
+        file.value,
         mediaStrategy,
         fileStrategy,
       );

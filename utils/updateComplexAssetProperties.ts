@@ -68,15 +68,17 @@ const updateComplexAssetProperties = async (fileId: string, properties: AssetPro
   try {
     // Avoid spamming Drive metadata updates if appProperties are identical.
     // We use cache-only lookup so this guard doesn't trigger extra Drive reads.
-    try {
-      const driveFile = await driveFileStore.getFile(fileId, DataRetrievalStrategies.CACHE_ONLY);
+    {
+      const { file: driveFile } = await driveFileStore.getFile(
+        fileId,
+        DataRetrievalStrategies.CACHE_ONLY,
+      );
+
       if (driveFile?.appProperties && isAssetProperties(driveFile.appProperties)) {
         if (areComplexAssetPropertiesEquivalent(driveFile.appProperties, properties)) {
           return;
         }
       }
-    } catch {
-      // Cache miss: fall back to saving.
     }
 
     await driveFileStore.saveFile(fileId, properties);

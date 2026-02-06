@@ -4,7 +4,6 @@ import type {
   UniversalAuthClient,
   UniversalAuthClientParams,
 } from '~/models/types';
-import CodeResponse = google.accounts.oauth2.CodeResponse;
 
 const tokenTTLToleranceSec = 60 * 1000;
 
@@ -23,7 +22,7 @@ export const useAuthCodeFlowAuth = ({
   let resolveHook: ((code: string) => void) | null = null;
   let rejectHook: ((reason: any) => void) | null = null;
 
-  const callback = (codeResponse: CodeResponse) => {
+  const callback = (codeResponse: google.accounts.oauth2.CodeResponse) => {
     if (codeResponse.error && codeResponse.error_description) {
       console.error(codeResponse.error_description);
       rejectHook && rejectHook(codeResponse.error_description);
