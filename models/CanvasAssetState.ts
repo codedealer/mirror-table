@@ -19,6 +19,7 @@ export const CanvasAssetStateFactory = (id: string, optional?: Partial<CanvasEle
     selected: false,
     selectable: false,
     error: null,
+    reloadNonce: 0,
     ...optional,
   };
 

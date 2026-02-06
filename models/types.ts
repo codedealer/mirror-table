@@ -464,6 +464,7 @@ export interface CanvasElementStateLoadable extends CanvasElementState {
 export interface CanvasElementStateAsset extends CanvasElementStateLoadable {
   _type: 'asset';
   imageElement?: HTMLImageElement;
+  reloadNonce?: number;
 }
 
 export interface CanvasElementStateText extends CanvasElementState {

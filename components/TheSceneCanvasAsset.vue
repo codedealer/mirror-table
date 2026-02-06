@@ -58,10 +58,13 @@ useSelectableStateWatcher(
   updateState,
 );
 
+const reloadNonce = computed(() => state.value?.reloadNonce ?? 0);
+
 const { file: imageFile, error: fileError } = useDriveFile<DriveImage>(
   toRef(() => properties.value.preview.id),
   {
     strategy: DataRetrievalStrategies.RECENT,
+    reloadRef: reloadNonce,
   },
 );
 
@@ -69,6 +72,7 @@ const { media: imageObject, error: mediaError } = useDriveMedia(
   imageFile,
   DataRetrievalStrategies.LAZY,
   DataRetrievalStrategies.PASSIVE,
+  reloadNonce,
 );
 
 const { src, error: imageError } = useMediaImageSrc(imageObject);
@@ -76,6 +80,24 @@ const { src, error: imageError } = useMediaImageSrc(imageObject);
 const assetError = computed(() => {
   return fileError.value || mediaError.value || imageError.value;
 });
+
+watch([
+  () => properties.value.preview?.id,
+  reloadNonce,
+], ([previewId]) => {
+  if (!previewId || isTrashed.value) {
+    return;
+  }
+
+  if (state.value && (state.value.error || !state.value.loaded)) {
+    updateState({
+      loading: true,
+      loaded: false,
+      error: null,
+      imageElement: undefined,
+    });
+  }
+}, { immediate: true });
 
 watch(assetError, (error) => {
   if (error) {

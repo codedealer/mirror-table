@@ -30,7 +30,7 @@ import {
 } from '~/utils/driveOps';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
-const { bgGreen, bgWhite, bgYellow } = colors;
+const { bgGreen, bgWhite, bgYellow, bgRed } = colors;
 
 type FileRequest = gapi.client.Request<gapi.client.drive.File>;
 type FileResponse = gapi.client.Response<gapi.client.drive.File>;
@@ -51,6 +51,46 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   const mediaLog = $logger['drive:media'];
 
   const cacheStore = useCacheStore();
+
+  const getHttpStatusFromError = (e: unknown): number | undefined => {
+    if (!e || typeof e !== 'object') {
+      return;
+    }
+
+    const anyErr = e as any;
+
+    if (typeof anyErr.status === 'number') {
+      return anyErr.status;
+    }
+
+    // Some shapes use `code` at the top level.
+    if (typeof anyErr.code === 'number') {
+      return anyErr.code;
+    }
+
+    // gapi error responses may contain `result.error.code`.
+    if (typeof anyErr.result?.error?.code === 'number') {
+      return anyErr.result.error.code;
+    }
+  };
+
+  const isNotFoundOrGoneError = (e: unknown) => {
+    const status = getHttpStatusFromError(e);
+    return status === 404 || status === 410;
+  };
+
+  const invalidateFile = async (
+    id: string,
+    options?: {
+      clearMedia?: boolean;
+    },
+  ) => {
+    await cacheStore.deleteFiles([id]);
+
+    if (options?.clearMedia) {
+      await cacheStore.deleteMedia([id]);
+    }
+  };
 
   const fileRequestRegistry: Map<string, FileRequest> = new Map();
 
@@ -224,6 +264,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     const settled = await Promise.allSettled(requests.map(x => x.req));
 
     const fulfilledResponses: FileResponse[] = [];
+    const notFoundIds: string[] = [];
     settled.forEach((res, idx) => {
       const id = requests[idx]?.id;
       if (!id) {
@@ -234,11 +275,26 @@ export const useDriveFileStore = defineStore('drive-file', () => {
         fulfilledResponses.push(res.value);
       } else {
         errors[id] = res.reason;
+
+        if (isNotFoundOrGoneError(res.reason)) {
+          notFoundIds.push(id);
+        }
       }
     });
 
+    if (notFoundIds.length) {
+      // Critical: ensure no consumer can later read a stale cached entry under a lax strategy.
+      await Promise.all(notFoundIds.map(id => invalidateFile(id, { clearMedia: true })));
+      fileLog(`${bgRed.white('NOT FOUND')}\n${notFoundIds.join(', ')}`);
+    }
+
     if (fulfilledResponses.length) {
       result.push(...parseResponse(fulfilledResponses));
+    }
+
+    const errorIds = Object.keys(errors).filter(id => !notFoundIds.includes(id));
+    if (errorIds.length) {
+      fileLog(`${bgRed.white('ERRORS')}\n${errorIds.map(id => `${id}: ${extractErrorMessage(errors[id])}`).join('\n')}`);
     }
 
     fileLog(`${bgGreen.black('FINISHED')}\n${idsForRequests.join(', ')}`);
@@ -327,7 +383,6 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
     // Widgets use a Firestore doc for their content/state.
     // We soft-delete them by toggling `trashed` to match the Drive file.
-    // Backwards-compat: older versions may have deleted the doc on trash; recreate if missing.
     if (isWidgetProperties(properties) && properties.firestoreId) {
       const widgetId = properties.firestoreId;
 
@@ -335,7 +390,6 @@ export const useDriveFileStore = defineStore('drive-file', () => {
         const widgetStore = useWidgetStore();
 
         // Best-effort toggle; if it fails we still consider the Drive file trashed/restored.
-        // (The widget doc is optional and can be repaired on next open.)
         void widgetStore.updateWidget(widgetId, {
           trashed: !restore,
         });
@@ -692,6 +746,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     files,
     getFile,
     getFiles,
+    invalidateFile,
     listFilesInFolder,
     createFile,
     removeFile,

@@ -1,5 +1,6 @@
 import type {
   AssetProperties,
+  CanvasElementStateAsset,
   CanvasObjectSceneMoveInteraction,
   ContextAction,
   SceneElement,
@@ -8,7 +9,14 @@ import type {
   SceneElementCanvasObjectText,
   SelectionGroup,
 } from '~/models/types';
-import { DataRetrievalStrategies, isAssetProperties, isSceneElementScreen, SelectionGroupNames, SelectionGroups } from '~/models/types';
+import {
+  DataRetrievalStrategies,
+  isAssetProperties,
+  isCanvasElementStateAsset,
+  isSceneElementScreen,
+  SelectionGroupNames,
+  SelectionGroups,
+} from '~/models/types';
 import updateComplexAssetProperties from '~/utils/updateComplexAssetProperties';
 
 const ComplexKindActionsFactory = (element: SceneElementCanvasObjectAsset) => {
@@ -348,6 +356,35 @@ export const CanvasAssetContextActionsFactory = (elementId: string) => {
 
   if (!isSceneElementCanvasObject(element)) {
     return actions;
+  }
+
+  // If the asset is in an error state, provide a limited recovery menu.
+  if (isSceneElementCanvasObjectAsset(element)) {
+    const canvasElementsStore = useCanvasElementsStore();
+    const state = canvasElementsStore.canvasElementsStateRegistry[elementId];
+
+    if (state && isCanvasElementStateAsset(state) && (state as CanvasElementStateAsset).error) {
+      actions.push({
+        id: 'retry-load',
+        label: 'Retry Load',
+        icon: { name: 'refresh' },
+        action: () => {
+          // bump a local nonce so the component/composables rerun their reactive load pipeline.
+          canvasElementsStore.updateElementState<CanvasElementStateAsset>(elementId, {
+            loading: true,
+            loaded: false,
+            error: null,
+            reloadNonce: ((state as CanvasElementStateAsset).reloadNonce ?? 0) + 1,
+          });
+        },
+        disabled: false,
+        pinned: true,
+        alwaysVisible: true,
+      });
+
+      actions.push(deleteAction);
+      return actions;
+    }
   }
 
   actions.push({

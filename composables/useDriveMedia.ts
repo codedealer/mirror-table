@@ -4,9 +4,12 @@ export const useDriveMedia = (
   file: Ref<DriveFile | undefined>,
   mediaStrategy: DataRetrievalStrategy = DataRetrievalStrategies.LAZY,
   fileStrategy: DataRetrievalStrategy = DataRetrievalStrategies.RECENT,
+  reloadRef?: Ref<unknown>,
 ) => {
   const media = ref<RawMediaObject | undefined>();
   const error = ref<unknown>();
+
+  const reload = reloadRef ?? ref(0);
 
   const loadMedia = async () => {
     // we skip image assets (they have no body) and matching checksums
@@ -48,7 +51,7 @@ export const useDriveMedia = (
     }
   };
 
-  watch(file, loadMedia, {
+  watch([file, reload], loadMedia, {
     immediate: true,
     deep: true,
   });

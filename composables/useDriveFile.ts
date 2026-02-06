@@ -4,6 +4,7 @@ import type { DataRetrievalStrategy, DriveFile } from '~/models/types';
 export interface DriveFileOptions<T extends DriveFile> {
   strategy: DataRetrievalStrategy;
   predicate?: (obj: DriveFile) => obj is T;
+  reloadRef?: Ref<unknown>;
 }
 
 export const useDriveFile = <T extends DriveFile>
@@ -18,10 +19,12 @@ export const useDriveFile = <T extends DriveFile>
   const driveFileStore = useDriveFileStore();
   const { files } = storeToRefs(driveFileStore);
 
+  const reloadRef = options.reloadRef ?? ref(0);
+
   const file = ref<T>();
   const error = shallowRef<unknown>(null);
 
-  watch([isReady, idRef], async ([isReadyValue, idRefValue]) => {
+  watch([isReady, idRef, reloadRef], async ([isReadyValue, idRefValue]) => {
     if (!isReadyValue || options.strategy === DataRetrievalStrategies.PASSIVE) {
       return;
     }

@@ -5,7 +5,7 @@ import colors from 'ansi-colors';
 import { openDB } from 'idb';
 import { isDriveFile } from '~/models/types';
 
-const { green, red, yellow } = colors;
+const { bgBlack } = colors;
 
 const formatIds = (
   requested: string[] | number[],
@@ -13,9 +13,9 @@ const formatIds = (
 ) => {
   let result = '';
   const hitMsg = retrieved.length === requested.length
-    ? `${green('HIT')}`
-    : (retrieved.length > 0 ? `${yellow('PARTIAL HIT')}` : `${red('MISS')}`);
-  result += `[${hitMsg}] (${retrieved.length}/${requested.length}):\n`;
+    ? `${bgBlack.green('HIT')}`
+    : (retrieved.length > 0 ? `${bgBlack.yellow('PARTIAL HIT')}` : `${bgBlack.red('MISS')}`);
+  result += `${hitMsg} (${retrieved.length}/${requested.length}):\n`;
 
   if (requested.length === retrieved.length) {
     return result + retrieved.join(', ');
@@ -94,6 +94,20 @@ export const useCacheStore = defineStore('cache', () => {
     await tx.done;
   };
 
+  const deleteFiles = async (ids: string[]) => {
+    ids.forEach((id) => {
+      delete _files.value[id];
+    });
+
+    if (!db.value) {
+      return;
+    }
+
+    const tx = db.value.transaction('files', 'readwrite');
+    await Promise.all(ids.map(id => tx.store.delete(id)));
+    await tx.done;
+  };
+
   const getFiles = async (
     ids: string[],
     options?: GetFilesOptions,
@@ -142,6 +156,20 @@ export const useCacheStore = defineStore('cache', () => {
     }
   };
 
+  const deleteMedia = async (ids: string[]) => {
+    ids.forEach((id) => {
+      delete _media.value[id];
+    });
+
+    if (!db.value) {
+      return;
+    }
+
+    const tx = db.value.transaction('media', 'readwrite');
+    await Promise.all(ids.map(id => tx.store.delete(id)));
+    await tx.done;
+  };
+
   const getMedia = async (id: string, md5Checksum?: string) => {
     if (!db.value) {
       const media = _media.value[id];
@@ -156,12 +184,11 @@ export const useCacheStore = defineStore('cache', () => {
     const media = await tx.store.get(id);
 
     if (!media || (md5Checksum && media.md5Checksum !== md5Checksum)) {
-      mediaLog(`[${red('MISS')}]\n${id}`);
+      mediaLog(`${bgBlack.red('MISS')}\n${id}`);
       return;
     }
 
-    mediaLog(`[${green('HIT')}]\n${id}`);
-
+    mediaLog(`${bgBlack.green('HIT')}\n${id}`);
     return media;
   };
 
@@ -173,8 +200,10 @@ export const useCacheStore = defineStore('cache', () => {
     open,
     setFiles,
     getFiles,
+    deleteFiles,
     setMedia,
     getMedia,
+    deleteMedia,
   };
 });
 

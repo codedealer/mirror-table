@@ -6,9 +6,14 @@ export const useCanvasAssetPointerEvents = (
 ) => {
   const canvasStageStore = useCanvasStageStore();
   const canvasContextPanelStore = useCanvasContextPanelStore();
+  const tableStore = useTableStore();
 
   const onHover = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
-    if (!state.value || !state.value?.selectable || !state.value?.loaded) {
+    if (tableStore.mode !== TableModes.OWN) {
+      return;
+    }
+
+    if (!state.value || (!state.value.loaded && !state.value.error)) {
       return;
     }
 
