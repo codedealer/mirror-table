@@ -14,7 +14,6 @@ import type { updateMetadataPayload } from '~/utils/driveOps';
 import colors from 'ansi-colors';
 
 import { convertToDriveFile } from '~/models/DriveFile';
-import { SceneElementCanvasObjectAssetPropertiesFactory } from '~/models/SceneElementCanvasObjectAsset';
 import { DataRetrievalStrategies, updateFieldMask } from '~/models/types';
 import { serializeAppProperties } from '~/utils/appPropertiesSerializer';
 import {
@@ -35,6 +34,21 @@ const { bgGreen, bgWhite, bgYellow, bgRed } = colors;
 type FileRequest = gapi.client.Request<gapi.client.drive.File>;
 type FileResponse = gapi.client.Response<gapi.client.drive.File>;
 
+export interface DriveFileHardMissingEvent {
+  id: string;
+  status: 404 | 410;
+  error: unknown;
+  cachedFile?: DriveFile;
+}
+
+export interface DriveFileLifecycleHandler {
+  appliesTo?: (appProperties: AppProperties) => boolean;
+  onCreated?: (ctx: { fileId: string; appProperties: AppProperties }) => void | Promise<void>;
+  onTrashed?: (ctx: { file: DriveFile; restore: boolean }) => void | Promise<void>;
+  onSaved?: (ctx: { file: DriveFile; appProperties: AppProperties }) => void | Promise<void>;
+  onHardMissing?: (ctx: DriveFileHardMissingEvent) => void | Promise<void>;
+}
+
 export interface GetFilesResult {
   files: DriveFile[];
   errors: Record<string, unknown>;
@@ -51,6 +65,57 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   const mediaLog = $logger['drive:media'];
 
   const cacheStore = useCacheStore();
+
+  // Optional domain lifecycle hooks (e.g., syncing Firestore asset_properties).
+  const lifecycleHandlers: DriveFileLifecycleHandler[] = [];
+
+  const registerLifecycleHandler = (handler: DriveFileLifecycleHandler) => {
+    lifecycleHandlers.push(handler);
+    return () => {
+      const idx = lifecycleHandlers.indexOf(handler);
+      if (idx >= 0) {
+        lifecycleHandlers.splice(idx, 1);
+      }
+    };
+  };
+
+  const runLifecycleHandlers = async <T>(
+    getHook: (h: DriveFileLifecycleHandler) => ((ctx: T) => void | Promise<void>) | undefined,
+    ctx: T,
+    appProperties?: AppProperties,
+    options?: { notifyOnError?: boolean },
+  ) => {
+    const hooks = lifecycleHandlers
+      .filter((h) => {
+        if (!appProperties) {
+          return !h.appliesTo;
+        }
+
+        return !h.appliesTo || h.appliesTo(appProperties);
+      })
+      .map(h => getHook(h))
+      .filter((x): x is (ctx: T) => void | Promise<void> => typeof x === 'function');
+
+    if (!hooks.length) {
+      return;
+    }
+
+    const settled = await Promise.allSettled(hooks.map(h => h(ctx)));
+    const rejected = settled.filter(r => r.status === 'rejected') as PromiseRejectedResult[];
+
+    if (!rejected.length) {
+      return;
+    }
+
+    rejected.forEach((r) => {
+      console.error('Drive file lifecycle handler failed', r.reason);
+    });
+
+    if (options?.notifyOnError) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error('An internal sync handler failed. Some data may be out of date.');
+    }
+  };
 
   const getHttpStatusFromError = (e: unknown): number | undefined => {
     if (!e || typeof e !== 'object') {
@@ -349,18 +414,13 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       if (!result.id) {
         throw new Error('Failed to upload file to Drive');
       }
-      // handle the case of complex assets: their properties are stored in firestore
-      if (
-        isAssetProperties(appProperties)
-        && appProperties.kind === AssetPropertiesKinds.COMPLEX
-      ) {
-        const canvasElementsStore = useCanvasElementsStore();
-        const complexAssetProperties = SceneElementCanvasObjectAssetPropertiesFactory(
-          result.id,
-          appProperties,
-        );
-        await canvasElementsStore.addComplexAssetProperties(complexAssetProperties);
-      }
+
+      await runLifecycleHandlers(
+        h => h.onCreated,
+        { fileId: result.id, appProperties },
+        appProperties,
+        { notifyOnError: true },
+      );
     } else {
       throw new Error('App Properties are not filled');
     }
@@ -379,51 +439,15 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
     await deleteFile(id, restore);
 
-    const properties = file.appProperties;
-
-    // Widgets use a Firestore doc for their content/state.
-    // We soft-delete them by toggling `trashed` to match the Drive file.
-    if (isWidgetProperties(properties) && properties.firestoreId) {
-      const widgetId = properties.firestoreId;
-
-      try {
-        const widgetStore = useWidgetStore();
-
-        // Best-effort toggle; if it fails we still consider the Drive file trashed/restored.
-        void widgetStore.updateWidget(widgetId, {
-          trashed: !restore,
-        });
-      } catch (e) {
-        console.error(e);
-        const notificationStore = useNotificationStore();
-        notificationStore.error(extractErrorMessage(e));
-      }
-    }
-
-    // handle the case of complex assets: their properties are stored in firestore
-    if (
-      isAssetProperties(properties)
-      && properties.kind === AssetPropertiesKinds.COMPLEX
-    ) {
-      const canvasElementsStore = useCanvasElementsStore();
-
-      const complexAssetProperties = SceneElementCanvasObjectAssetPropertiesFactory(
-        id,
-        properties,
-      );
-
-      complexAssetProperties.settings = {
-        ...(complexAssetProperties.settings ?? {}),
-        trashed: !restore,
-      };
-
-      // Keep asset_properties present even when the Drive file is trashed.
-      // This avoids missing properties for complex assets currently on the canvas.
-      await canvasElementsStore.addComplexAssetProperties(complexAssetProperties);
-    }
-
     file.trashed = !restore;
     void cacheFile(file);
+
+    await runLifecycleHandlers(
+      h => h.onTrashed,
+      { file, restore },
+      file.appProperties,
+      { notifyOnError: true },
+    );
   };
 
   const updateFileMetadata = (file: DriveFile, metadata: DriveFileUpdateReturnType) => {
@@ -517,21 +541,12 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       notificationStore.error(extractErrorMessage(e));
     }
 
-    // Handle complex assets: update their properties in Firestore
-    if (isAssetProperties(appProperties) && appProperties.kind === AssetPropertiesKinds.COMPLEX) {
-      const canvasElementsStore = useCanvasElementsStore();
-      const complexAssetProperties = SceneElementCanvasObjectAssetPropertiesFactory(
-        fileId,
-        appProperties,
-      );
-      try {
-        await canvasElementsStore.addComplexAssetProperties(complexAssetProperties);
-      } catch (e) {
-        console.error(e);
-        const notificationStore = useNotificationStore();
-        notificationStore.error(extractErrorMessage(e));
-      }
-    }
+    await runLifecycleHandlers(
+      h => h.onSaved,
+      { file, appProperties },
+      appProperties,
+      { notifyOnError: true },
+    );
 
     void cacheFile(file);
   };
@@ -744,6 +759,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
   return {
     files,
+    registerLifecycleHandler,
     getFile,
     getFiles,
     invalidateFile,
