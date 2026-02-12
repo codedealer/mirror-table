@@ -1,0 +1,10 @@
+ignoredBuiltDependencies:
+  - vue-demi
+
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - '@parcel/watcher'
+  - esbuild
+  - he-tree-vue
+  - protobufjs
+  - unrs-resolver
