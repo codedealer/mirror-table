@@ -41,13 +41,26 @@ export interface DriveFileHardMissingEvent {
   cachedFile?: DriveFile;
 }
 
-export interface DriveFileLifecycleHandler {
-  appliesTo?: (appProperties: AppProperties) => boolean;
-  onCreated?: (ctx: { fileId: string; appProperties: AppProperties }) => void | Promise<void>;
-  onTrashed?: (ctx: { file: DriveFile; restore: boolean }) => void | Promise<void>;
-  onSaved?: (ctx: { file: DriveFile; appProperties: AppProperties }) => void | Promise<void>;
-  onHardMissing?: (ctx: DriveFileHardMissingEvent) => void | Promise<void>;
+export interface DriveFileCreatedEvent {
+  fileId: string;
+  appProperties: AppProperties;
 }
+
+export interface DriveFileTrashedEvent {
+  file: DriveFile;
+  restore: boolean;
+}
+
+export interface DriveFileSavedEvent {
+  file: DriveFile;
+  appProperties: AppProperties;
+}
+
+type DriveFileLifecycleHookEvent =
+  | { hook: 'drive-file:created'; ctx: DriveFileCreatedEvent }
+  | { hook: 'drive-file:trashed'; ctx: DriveFileTrashedEvent }
+  | { hook: 'drive-file:saved'; ctx: DriveFileSavedEvent }
+  | { hook: 'drive-file:hard-missing'; ctx: DriveFileHardMissingEvent };
 
 export interface GetFilesResult {
   files: DriveFile[];
@@ -60,60 +73,39 @@ export interface GetFileResult {
 }
 
 export const useDriveFileStore = defineStore('drive-file', () => {
-  const { $logger } = useNuxtApp();
-  const fileLog = $logger['drive:file'];
-  const mediaLog = $logger['drive:media'];
+  const nuxtApp = useNuxtApp();
+  const noopLog = (..._args: unknown[]) => {};
+  const fileLog = nuxtApp.$logger?.['drive:file'] ?? noopLog;
+  const mediaLog = nuxtApp.$logger?.['drive:media'] ?? noopLog;
 
   const cacheStore = useCacheStore();
 
-  // Optional domain lifecycle hooks (e.g., syncing Firestore asset_properties).
-  const lifecycleHandlers: DriveFileLifecycleHandler[] = [];
-
-  const registerLifecycleHandler = (handler: DriveFileLifecycleHandler) => {
-    lifecycleHandlers.push(handler);
-    return () => {
-      const idx = lifecycleHandlers.indexOf(handler);
-      if (idx >= 0) {
-        lifecycleHandlers.splice(idx, 1);
-      }
-    };
-  };
-
-  const runLifecycleHandlers = async <T>(
-    getHook: (h: DriveFileLifecycleHandler) => ((ctx: T) => void | Promise<void>) | undefined,
-    ctx: T,
-    appProperties?: AppProperties,
+  const runDriveLifecycleHook = async (
+    event: DriveFileLifecycleHookEvent,
     options?: { notifyOnError?: boolean },
   ) => {
-    const hooks = lifecycleHandlers
-      .filter((h) => {
-        if (!appProperties) {
-          return !h.appliesTo;
-        }
+    try {
+      switch (event.hook) {
+        case 'drive-file:created':
+          await nuxtApp.callHook('drive-file:created', event.ctx);
+          break;
+        case 'drive-file:trashed':
+          await nuxtApp.callHook('drive-file:trashed', event.ctx);
+          break;
+        case 'drive-file:saved':
+          await nuxtApp.callHook('drive-file:saved', event.ctx);
+          break;
+        case 'drive-file:hard-missing':
+          await nuxtApp.callHook('drive-file:hard-missing', event.ctx);
+          break;
+      }
+    } catch (e) {
+      console.error(`Drive file lifecycle hook \"${event.hook}\" failed`, e);
 
-        return !h.appliesTo || h.appliesTo(appProperties);
-      })
-      .map(h => getHook(h))
-      .filter((x): x is (ctx: T) => void | Promise<void> => typeof x === 'function');
-
-    if (!hooks.length) {
-      return;
-    }
-
-    const settled = await Promise.allSettled(hooks.map(h => h(ctx)));
-    const rejected = settled.filter(r => r.status === 'rejected') as PromiseRejectedResult[];
-
-    if (!rejected.length) {
-      return;
-    }
-
-    rejected.forEach((r) => {
-      console.error('Drive file lifecycle handler failed', r.reason);
-    });
-
-    if (options?.notifyOnError) {
-      const notificationStore = useNotificationStore();
-      notificationStore.error('An internal sync handler failed. Some data may be out of date.');
+      if (options?.notifyOnError) {
+        const notificationStore = useNotificationStore();
+        notificationStore.error('An internal sync handler failed. Some data may be out of date.');
+      }
     }
   };
 
@@ -348,6 +340,29 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     });
 
     if (notFoundIds.length) {
+      const hardMissingEvents = notFoundIds.reduce<DriveFileHardMissingEvent[]>((events, id) => {
+        const status = getHttpStatusFromError(errors[id]);
+        if (status !== 404 && status !== 410) {
+          return events;
+        }
+
+        events.push({
+          id,
+          status,
+          error: errors[id],
+          cachedFile: files.value[id],
+        });
+
+        return events;
+      }, []);
+
+      await Promise.all(
+        hardMissingEvents.map(event => runDriveLifecycleHook({
+          hook: 'drive-file:hard-missing',
+          ctx: event,
+        })),
+      );
+
       // Critical: ensure no consumer can later read a stale cached entry under a lax strategy.
       await Promise.all(notFoundIds.map(id => invalidateFile(id, { clearMedia: true })));
       fileLog(`${bgRed.white('NOT FOUND')}\n${notFoundIds.join(', ')}`);
@@ -415,10 +430,11 @@ export const useDriveFileStore = defineStore('drive-file', () => {
         throw new Error('Failed to upload file to Drive');
       }
 
-      await runLifecycleHandlers(
-        h => h.onCreated,
-        { fileId: result.id, appProperties },
-        appProperties,
+      await runDriveLifecycleHook(
+        {
+          hook: 'drive-file:created',
+          ctx: { fileId: result.id, appProperties },
+        },
         { notifyOnError: true },
       );
     } else {
@@ -442,10 +458,11 @@ export const useDriveFileStore = defineStore('drive-file', () => {
     file.trashed = !restore;
     void cacheFile(file);
 
-    await runLifecycleHandlers(
-      h => h.onTrashed,
-      { file, restore },
-      file.appProperties,
+    await runDriveLifecycleHook(
+      {
+        hook: 'drive-file:trashed',
+        ctx: { file, restore },
+      },
       { notifyOnError: true },
     );
   };
@@ -541,10 +558,11 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       notificationStore.error(extractErrorMessage(e));
     }
 
-    await runLifecycleHandlers(
-      h => h.onSaved,
-      { file, appProperties },
-      appProperties,
+    await runDriveLifecycleHook(
+      {
+        hook: 'drive-file:saved',
+        ctx: { file, appProperties },
+      },
       { notifyOnError: true },
     );
 
@@ -759,7 +777,6 @@ export const useDriveFileStore = defineStore('drive-file', () => {
 
   return {
     files,
-    registerLifecycleHandler,
     getFile,
     getFiles,
     invalidateFile,

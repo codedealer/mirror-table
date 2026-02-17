@@ -2,48 +2,51 @@
 import debug from 'debug';
 
 export interface Logger {
-  [key: string]: debug.Debugger;
+  [key: string]: debug.Debugger | ((...args: unknown[]) => void);
   warn: (...args: unknown[]) => void;
   error: (...args: unknown[]) => void;
 }
 
-export default defineNuxtPlugin(() => {
-  const config = useRuntimeConfig();
+export default defineNuxtPlugin({
+  name: 'logger',
+  setup: () => {
+    const config = useRuntimeConfig();
 
-  if (typeof window !== 'undefined' && config.public.debugEnabled) {
-    debug.enable(config.public.debugNamespace);
-  } else {
-    debug.disable();
-  }
+    if (typeof window !== 'undefined' && config.public.debugEnabled) {
+      debug.enable(config.public.debugNamespace);
+    } else {
+      debug.disable();
+    }
 
-  const loggers: Record<string, debug.Debugger> = {};
+    const loggers: Record<string, debug.Debugger> = {};
 
-  const createLogger = (dbg: debug.Debugger) => {
-    dbg.log = console.log.bind(console);
+    const createLogger = (dbg: debug.Debugger) => {
+      dbg.log = console.log.bind(console);
 
-    return dbg;
-  };
+      return dbg;
+    };
 
-  const logger = new Proxy<Logger>({
-    warn: console.warn,
-    error: console.error,
-  } as Logger, {
-    get(target, prop: string) {
-      if (prop in target) {
-        return target[prop];
-      }
+    const logger = new Proxy<Logger>({
+      warn: console.warn,
+      error: console.error,
+    } as Logger, {
+      get(target, prop: string) {
+        if (prop in target) {
+          return target[prop];
+        }
 
-      if (!loggers[prop]) {
-        loggers[prop] = createLogger(debug(`app:${prop}`));
-      }
+        if (!loggers[prop]) {
+          loggers[prop] = createLogger(debug(`app:${prop}`));
+        }
 
-      return loggers[prop];
-    },
-  });
+        return loggers[prop];
+      },
+    });
 
-  return {
-    provide: {
-      logger,
-    },
-  };
+    return {
+      provide: {
+        logger,
+      },
+    };
+  },
 });
