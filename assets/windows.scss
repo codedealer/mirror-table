@@ -91,9 +91,12 @@
   --window-min-height: 200px;
   --window-max-width: 80ch;
   min-width: var(--window-min-width);
-  max-width: min(var(--window-max-width), calc(100vw - 2 * var(--window-container-padding)));
+  max-width: min(
+    var(--window-max-width),
+    var(--window-workspace-max-width, calc(100vw - 2 * var(--window-container-padding)))
+  );
   min-height: var(--window-min-height);
-  max-height: calc(100dvh - var(--status-bar-height));
+  max-height: var(--window-workspace-max-height, calc(100dvh - var(--status-bar-height)));
   display: flex;
   flex-direction: column;
   position: fixed;

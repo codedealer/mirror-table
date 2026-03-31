@@ -7,17 +7,20 @@ const props = defineProps<{
   window: ModalWindow;
 }>();
 
+const DEFAULT_WINDOW_OFFSET = 24;
+
 const modal = ref<HTMLElement | null>(null);
 const modalTitle = ref<HTMLElement | null>(null);
 const windowStore = useWindowStore();
 const isMaximized = ref(false);
+const restoreState = ref<{ x: number; y: number; width: string; height: string } | null>(null);
 
 const { x, y, isDragging } = useDraggable(modal, {
   handle: modalTitle,
   preventDefault: true,
   initialValue: {
-    x: 60,
-    y: 60,
+    x: 0,
+    y: 0,
   },
 });
 
@@ -26,48 +29,93 @@ const getWorkspaceBounds = () => {
   return el?.getBoundingClientRect() ?? null;
 };
 
-const containerStyle = computed(() => {
-  let cx = x.value;
-  let cy = y.value;
-
+const clampToWorkspace = (nextX = x.value, nextY = y.value) => {
   const bounds = getWorkspaceBounds();
   const el = modal.value;
-  if (bounds && el) {
-    cx = Math.max(bounds.left, Math.min(cx, bounds.right - el.offsetWidth));
-    cy = Math.max(bounds.top, Math.min(cy, bounds.bottom - el.offsetHeight));
+
+  if (!bounds || !el) {
+    return {
+      x: nextX,
+      y: nextY,
+    };
   }
 
   return {
-    left: `${cx}px`,
-    top: `${cy}px`,
+    x: Math.max(bounds.left, Math.min(nextX, Math.max(bounds.left, bounds.right - el.offsetWidth))),
+    y: Math.max(bounds.top, Math.min(nextY, Math.max(bounds.top, bounds.bottom - el.offsetHeight))),
+  };
+};
+
+const positionWithinWorkspace = (offset = DEFAULT_WINDOW_OFFSET) => {
+  const bounds = getWorkspaceBounds();
+  const el = modal.value;
+
+  if (!bounds || !el) {
+    return;
+  }
+
+  x.value = Math.min(bounds.left + offset, Math.max(bounds.left, bounds.right - el.offsetWidth));
+  y.value = Math.min(bounds.top + offset, Math.max(bounds.top, bounds.bottom - el.offsetHeight));
+};
+
+const containerStyle = computed(() => {
+  const bounds = getWorkspaceBounds();
+  const position = clampToWorkspace();
+
+  return {
+    'left': `${position.x}px`,
+    'top': `${position.y}px`,
+    '--window-workspace-max-width': bounds ? `${bounds.width}px` : undefined,
+    '--window-workspace-max-height': bounds ? `${bounds.height}px` : undefined,
   };
 });
 
 const toggleMaximize = () => {
   const bounds = getWorkspaceBounds();
-  if (!bounds) {
+  const el = modal.value;
+
+  if (!bounds || !el) {
     return;
   }
 
-  const el = modal.value;
   if (isMaximized.value) {
-    if (el) {
+    if (restoreState.value) {
+      x.value = restoreState.value.x;
+      y.value = restoreState.value.y;
+      el.style.width = restoreState.value.width;
+      el.style.height = restoreState.value.height;
+    } else {
       el.style.width = '';
       el.style.height = '';
+      positionWithinWorkspace();
     }
-    x.value = 60;
-    y.value = 60;
+
+    const position = clampToWorkspace();
+    x.value = position.x;
+    y.value = position.y;
     isMaximized.value = false;
   } else {
+    const position = clampToWorkspace();
+    restoreState.value = {
+      x: position.x,
+      y: position.y,
+      width: `${el.offsetWidth}px`,
+      height: `${el.offsetHeight}px`,
+    };
+
     x.value = bounds.left;
     y.value = bounds.top;
-    if (el) {
-      el.style.width = `${bounds.width}px`;
-      el.style.height = `${bounds.height}px`;
-    }
+    el.style.width = `${bounds.width}px`;
+    el.style.height = `${bounds.height}px`;
     isMaximized.value = true;
   }
 };
+
+onMounted(() => {
+  nextTick(() => {
+    positionWithinWorkspace();
+  });
+});
 
 const statusIconName = computed(() => {
   switch (props.window.status) {
