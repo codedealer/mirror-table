@@ -100,20 +100,20 @@ const toggleEdit = () => {
     />
     <div class="window-container-markdown__content mb">
       <va-scroll-container
+        v-show="!window.content.editing"
         vertical
       >
         <WindowContainerMarkdownContent
-          v-show="!window.content.editing"
-          :window="window"
-          :media="media"
-        />
-
-        <WindowContainerMarkdownForm
-          v-show="window.content.editing"
           :window="window"
           :media="media"
         />
       </va-scroll-container>
+
+      <WindowContainerMarkdownForm
+        v-show="window.content.editing"
+        :window="window"
+        :media="media"
+      />
     </div>
   </div>
 </template>

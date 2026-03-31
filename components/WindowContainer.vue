@@ -7,10 +7,12 @@ const props = defineProps<{
   window: ModalWindow;
 }>();
 
-const modal = ref(null);
-const modalTitle = ref(null);
+const modal = ref<HTMLElement | null>(null);
+const modalTitle = ref<HTMLElement | null>(null);
 const windowStore = useWindowStore();
-const { style } = useDraggable(modal, {
+const isMaximized = ref(false);
+
+const { x, y, isDragging } = useDraggable(modal, {
   handle: modalTitle,
   preventDefault: true,
   initialValue: {
@@ -18,6 +20,54 @@ const { style } = useDraggable(modal, {
     y: 60,
   },
 });
+
+const getWorkspaceBounds = () => {
+  const el = document.querySelector('.main-grid__content');
+  return el?.getBoundingClientRect() ?? null;
+};
+
+const containerStyle = computed(() => {
+  let cx = x.value;
+  let cy = y.value;
+
+  const bounds = getWorkspaceBounds();
+  const el = modal.value;
+  if (bounds && el) {
+    cx = Math.max(bounds.left, Math.min(cx, bounds.right - el.offsetWidth));
+    cy = Math.max(bounds.top, Math.min(cy, bounds.bottom - el.offsetHeight));
+  }
+
+  return {
+    left: `${cx}px`,
+    top: `${cy}px`,
+  };
+});
+
+const toggleMaximize = () => {
+  const bounds = getWorkspaceBounds();
+  if (!bounds) {
+    return;
+  }
+
+  const el = modal.value;
+  if (isMaximized.value) {
+    if (el) {
+      el.style.width = '';
+      el.style.height = '';
+    }
+    x.value = 60;
+    y.value = 60;
+    isMaximized.value = false;
+  } else {
+    x.value = bounds.left;
+    y.value = bounds.top;
+    if (el) {
+      el.style.width = `${bounds.width}px`;
+      el.style.height = `${bounds.height}px`;
+    }
+    isMaximized.value = true;
+  }
+};
 
 const statusIconName = computed(() => {
   switch (props.window.status) {
@@ -56,8 +106,11 @@ const statusLabel = computed(() => {
       v-show="window.active"
       ref="modal"
       class="window-container"
-      :class="windowStore.lastActiveWindowId === window.id ? 'window-container--top' : ''"
-      :style="style"
+      :class="{
+        'window-container--top': windowStore.lastActiveWindowId === window.id,
+        'window-container--dragging': isDragging,
+      }"
+      :style="containerStyle"
       @pointerdown.capture="windowStore.setLastActiveWindowId(window)"
     >
       <div
@@ -78,6 +131,14 @@ const statusLabel = computed(() => {
               size="large"
             />
           </va-popover>
+
+          <va-button
+            preset="plain"
+            :icon="isMaximized ? 'filter_none' : 'crop_square'"
+            color="text-primary"
+            size="large"
+            @click="toggleMaximize"
+          />
 
           <va-button
             preset="plain"

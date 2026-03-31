@@ -225,17 +225,12 @@ const submit = async () => {
         />
       </div>
 
-      <va-textarea
+      <MarkdownEditor
         v-if="media"
         v-model="body"
-        name="content"
-        class="markdown-editor"
         placeholder="Enter markdown here"
-        autosize
-        :min-rows="5"
-        :max-rows="25"
         :disabled="isDisabled"
-        @update:dirty="setDirty"
+        @dirty="setDirty"
       />
 
       <div class="vertical-form__actions">

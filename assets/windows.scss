@@ -93,7 +93,7 @@
   min-width: var(--window-min-width);
   max-width: min(var(--window-max-width), calc(100vw - 2 * var(--window-container-padding)));
   min-height: var(--window-min-height);
-  max-height: 80dvh;
+  max-height: calc(100dvh - var(--status-bar-height));
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -106,9 +106,10 @@
   border-radius: var(--window-container-border-radius);
   background-color: var(--window-container-background);
   box-shadow: 2px 2px 10px 0px #00000033;
-  transition:
-    opacity 0.2s ease-in-out,
-    transform 0.2s ease-in-out;
+
+  &.window-container--dragging {
+    user-select: none;
+  }
 
   &.window-container--top {
     z-index: calc(var(--window-z-index) + 1);
@@ -176,9 +177,10 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  overflow: hidden;
+  min-height: 0;
 
-  > div {
+  > .va-scroll-container {
     flex: 1;
     display: flex;
     align-items: stretch;
@@ -192,8 +194,7 @@
 .window-form {
   .vertical-form__actions {
     width: 100%;
-    position: sticky;
-    bottom: 0;
+    flex-shrink: 0;
     background-color: var(--window-container-background);
     justify-content: end;
     padding: 0.5rem;
@@ -205,18 +206,16 @@
   flex-direction: column;
   gap: 0.5rem;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
 
-  .markdown-editor {
-    --min-editor-height: 150px;
-    width: 100%;
-    min-width: calc(80ch - 4 * (var(--window-container-padding) + 1px));
-    min-height: var(--min-editor-height);
-    flex-grow: 1;
-
-    textarea {
-      min-height: var(--min-editor-height);
-    }
-  }
+.markdown-form-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .window-container-markdown-renderer {

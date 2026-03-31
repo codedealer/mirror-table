@@ -228,24 +228,17 @@ const submit = async () => {
           />
         </div>
 
-        <va-textarea
+        <MarkdownEditor
           v-model="widgetModel.content"
           label="Content"
-          required
           placeholder="Enter markdown here"
-          autosize
-          :min-rows="2"
-          :max-rows="25"
           :disabled="isDisabled"
         />
 
-        <va-textarea
+        <MarkdownEditor
           v-model="widgetModel.privateContent"
           label="Private Content"
           placeholder="This is only visible to the owner"
-          autosize
-          :min-rows="2"
-          :max-rows="25"
           :disabled="isDisabled"
         />
 

@@ -41,6 +41,13 @@
   transform-origin: center top;
 }
 
+.window-enter-active,
+.window-leave-active {
+  transition:
+    opacity 0.2s ease-in-out,
+    transform 0.2s ease-in-out;
+}
+
 .window-enter-from {
   opacity: 0;
 }
