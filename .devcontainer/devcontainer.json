@@ -28,6 +28,7 @@
   },
   "mounts": [
     "source=mirror-table-pnpm-store,target=/home/node/.pnpm-store,type=volume",
+    "source=${localEnv:HOME}/.gitconfig,target=/home/node/.gitconfig,type=bind,consistency=cached,readonly",
     "source=${localEnv:HOME}/.copilot,target=/home/node/.copilot,type=bind,consistency=cached"
   ],
   // Use 'postCreateCommand' to run commands after the container is created.
