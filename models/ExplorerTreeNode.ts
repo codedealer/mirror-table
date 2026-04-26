@@ -4,7 +4,6 @@ import { isScene } from '~/models/types';
 export const ExplorerTreeNodeFactory = (data: Scene | Category): TreeNode => {
   const nodeIsScene = isScene(data);
   return {
-    $folded: true,
     id: data.id,
     label: data.title,
     isFolder: !nodeIsScene,

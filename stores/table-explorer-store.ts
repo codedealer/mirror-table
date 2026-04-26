@@ -131,7 +131,6 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
     }
 
     rootNode.value = {
-      $folded: false,
       id: tableStore.table.rootCategoryId,
       label: tableStore.table.title,
       isFolder: true,
@@ -163,13 +162,10 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
     }
 
     if (node.loaded) {
-      node.$folded = !node.$folded;
-      return;
+      return true;
     }
 
-    if (await loadChildren(node)) {
-      node.$folded = false;
-    }
+    return await loadChildren(node);
   };
 
   const loadItem = async <T extends DocumentData>
@@ -264,10 +260,6 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
     } else {
       parent.children.splice(index, 0, node);
     }
-
-    if (parent.$folded) {
-      await toggleCategory(parent);
-    }
   };
 
   const loadScene = (id: string) => {
@@ -283,9 +275,9 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
    * @param title new title for a scene
    * @param parent the node that initiated the save (can be category or scene)
    * @param id this is the same as parent.id
-   * @param path indexes in nodes array that lead to the parent node
+   * @param categoryPath array of category IDs from root to parent
    */
-  const saveScene = async (title: string, parent: TreeNode, id?: string, path?: number[]) => {
+  const saveScene = async (title: string, parent: TreeNode, id?: string, categoryPath?: string[]) => {
     if (!tableStore.table || (!id && !parent.children)) {
       return;
     }
@@ -298,20 +290,8 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
 
     try {
       if (!id) {
-        if (!path) {
-          throw new Error('Path is required when creating a new scene');
-        }
-
-        const categoryPath = [tableStore.table.rootCategoryId];
-
-        for (let i = 0; i < path.length; i++) {
-          const p = path.slice(0, i + 1);
-          const node = getNodeByPath(nodes.value, p);
-          if (!node) {
-            throw new Error(`Node not found at path ${p.join(', ')}`);
-          }
-
-          categoryPath.push(node.id);
+        if (!categoryPath) {
+          throw new Error('Category path is required when creating a new scene');
         }
 
         const scene: WithFieldValue<Scene> = {
@@ -379,10 +359,6 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
       return; // this should never happen
     }
     parent.children.push(node);
-
-    if (parent.$folded) {
-      await toggleCategory(parent);
-    }
   };
 
   const trashScene = async (scene: Scene, value: boolean) => {

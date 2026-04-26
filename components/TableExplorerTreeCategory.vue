@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import type { Tree } from 'he-tree-vue';
+import type { Stat } from '@he-tree/tree-utils';
+import type { BaseTree } from '@he-tree/vue';
 import type { Category, TreeNode } from '~/models/types';
 
 const props = defineProps<{
   node: TreeNode;
-  index: number;
-  path: number[];
-  tree: Tree;
+  stat: Stat<TreeNode>;
 }>();
 
 const tableExplorerStore = useTableExplorerStore();
 const sceneStore = useSceneStore();
+
+const treeRef = inject<Ref<InstanceType<typeof BaseTree> | null>>('treeRef');
 
 const { item: category } = useExplorerItem<Category>(toRef(() => props.node));
 
@@ -33,6 +34,48 @@ const undoDeleteCategory = async () => {
 
   tableExplorerStore.setNodeLoading(props.node, false);
 };
+
+// Keep tree processor in sync when node children change (lazy load / reload)
+watch(() => props.node.children, (newChildren) => {
+  if (!newChildren)
+    return;
+  const proc = (treeRef?.value as any)?.processor;
+  if (!proc)
+    return;
+
+  const newIds = new Set(newChildren.map((c: TreeNode) => c.id));
+  // Remove stale stats (no longer present or stale object reference)
+  for (const oldStat of [...props.stat.children]) {
+    if (oldStat.parent === props.stat && (!newIds.has(oldStat.data.id) || !newChildren.includes(oldStat.data))) {
+      proc.remove(oldStat);
+    }
+  }
+  // Add stats for children not yet in the processor
+  for (let i = 0; i < newChildren.length; i++) {
+    if (!proc.has(newChildren[i])) {
+      proc.add(newChildren[i], props.stat, i);
+      continue;
+    }
+
+    const existingStat = proc.getStat(newChildren[i]);
+    if (existingStat.parent !== props.stat) {
+      proc.move(existingStat, props.stat, i);
+    }
+  }
+}, { flush: 'sync' });
+
+const handleToggle = async () => {
+  if (props.stat.open) {
+    // eslint-disable-next-line vue/no-mutating-props -- @he-tree/vue stat is designed to be mutated
+    props.stat.open = false;
+    return;
+  }
+  const result = await tableExplorerStore.toggleCategory(props.node);
+  if (result) {
+    // eslint-disable-next-line vue/no-mutating-props -- @he-tree/vue stat is designed to be mutated
+    props.stat.open = true;
+  }
+};
 </script>
 
 <template>
@@ -46,11 +89,11 @@ const undoDeleteCategory = async () => {
       :hover-opacity="1"
       :disabled="!category || node.loading || category.deleted"
       preset="plain"
-      @click="tableExplorerStore.toggleCategory(node)"
+      @click="handleToggle"
     >
       <div class="drive-node__icon">
         <va-icon
-          :name="node.$folded ? 'folder' : 'folder_open'"
+          :name="stat.open ? 'folder_open' : 'folder'"
           :class="node.loaded ? '' : 'drive-node__icon--undetermined'"
           color="primary"
           size="large"
@@ -91,7 +134,7 @@ const undoDeleteCategory = async () => {
       <TableExplorerTreeCategoryContextMenu
         v-if="!category.deleted"
         :node="node"
-        :path="path"
+        :stat="stat"
       />
     </div>
   </div>

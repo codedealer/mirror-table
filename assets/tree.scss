@@ -11,19 +11,6 @@
 .he-tree {
   padding: var(--va-tree-view-padding);
 
-  .tree-children:not(.tree-root) {
-    background: var(--va-tree-node-children-background);
-    .tree-children {
-      background-position-x: 35px;
-      .tree-children {
-        background-position-x: 56px;
-        .tree-children {
-          background-position-x: 77px;
-        }
-      }
-    }
-  }
-
   .tree-node {
     position: relative;
     padding: var(--va-tree-node-padding);
@@ -202,5 +189,72 @@
     &:last-child {
       margin-bottom: 0;
     }
+  }
+}
+
+// Drag-and-drop styles for Drive tree
+.drive-tree-container {
+  .he-tree {
+    // Draggable placeholder styling
+    .tree-placeholder {
+      background-color: var(--va-primary);
+      opacity: 0.15;
+      border-radius: var(--va-tree-node-border-radius);
+      min-height: 32px;
+    }
+  }
+}
+
+.drive-node__folder--open {
+  > .drive-node__label {
+    font-weight: 500;
+  }
+}
+
+.drive-node__folder--drop-target {
+  > .drive-node__label {
+    position: relative;
+
+    &:after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border: 1px solid var(--va-primary);
+      border-radius: var(--va-tree-node-border-radius);
+      pointer-events: none;
+    }
+  }
+}
+
+.drive-node__drag-open-target {
+  position: relative;
+  overflow: hidden;
+}
+
+.drive-node__drag-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--va-primary);
+  opacity: 0.5;
+  animation: drag-open-progress var(--drag-open-duration, 1200ms) linear forwards;
+  pointer-events: none;
+}
+
+@keyframes drag-open-progress {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.drive-node__active {
+  &:before {
+    background-color: var(--va-primary);
+    opacity: 0.08 !important;
   }
 }

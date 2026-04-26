@@ -1,13 +1,33 @@
 <script setup lang="ts">
+import type { Stat } from '@he-tree/tree-utils';
 import type { Category, TreeNode } from '~/models/types';
 import { useExplorerItem } from '#imports';
 
 const props = defineProps<{
   node: TreeNode;
-  path?: number[];
+  // stat is absent when this component is used in the tree header (root node)
+  stat?: Stat<TreeNode>;
 }>();
 
-const MAX_DEPTH = 3;
+/** Depth of this node in the tree (0 for root / header usage) */
+const level = computed(() => props.stat?.level ?? 0);
+
+/** Build the category ID path by traversing the stat parent chain */
+const buildCategoryPath = (): string[] => {
+  if (!props.stat) {
+    // Root context: path is just the root node itself
+    return [props.node.id];
+  }
+  const path: string[] = [];
+  let current: Stat<TreeNode> | null = props.stat;
+  while (current) {
+    if (current.data.isFolder) {
+      path.unshift(current.data.id);
+    }
+    current = current.parent;
+  }
+  return path;
+};
 
 const { item: category } = useExplorerItem<Category>(toRef(() => props.node));
 
@@ -69,7 +89,7 @@ const createScene = () => {
     props.node,
     undefined,
     undefined,
-    props.path ?? [],
+    buildCategoryPath(),
   );
 };
 
@@ -129,7 +149,7 @@ const deleteCategory = async () => {
   >
     <va-list class="drive-node__context-menu">
       <va-list-item
-        v-if="path && path.length < MAX_DEPTH"
+        v-if="level < TREE_MAX_DEPTH"
         href="#"
         @click="createCategory"
       >

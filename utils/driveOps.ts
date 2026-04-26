@@ -267,6 +267,26 @@ export type updateMetadataPayload = {
   };
 };
 
+export const moveFile = async (fileId: string, oldParentId: string, newParentId: string) => {
+  const driveStore = useDriveStore();
+  const client = await driveStore.getClient();
+
+  if (!fileId) {
+    throw new Error('File ID is empty');
+  }
+
+  if (!newParentId) {
+    throw new Error('New parent ID is empty');
+  }
+
+  await client.drive.files.update({
+    fileId,
+    addParents: newParentId,
+    removeParents: oldParentId,
+    fields: 'id, parents',
+  });
+};
+
 export const updateMetadata = async (
   id: string,
   metadata: updateMetadataPayload,

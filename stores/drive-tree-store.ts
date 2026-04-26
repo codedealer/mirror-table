@@ -8,7 +8,7 @@ import { acceptHMRUpdate, defineStore } from 'pinia';
 import { PreviewPropertiesFactory } from '~/models/PreviewProprerties';
 
 import { DriveFileExtensions } from '~/models/types';
-import { buildNodes } from '~/utils/driveOps';
+import { buildNodes, moveFile } from '~/utils/driveOps';
 import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
@@ -20,7 +20,6 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     loaded: false,
     loading: false,
     disabled: false,
-    $folded: false,
   } as DriveTreeNode);
 
   const nodes = computed(() => {
@@ -90,7 +89,6 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
           loaded: false,
           loading: false,
           disabled: false,
-          $folded: false,
         };
       } else {
         rootNode.value = structuredClone(toRaw(newRootNode));
@@ -168,36 +166,9 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     return await setRootFolder(parentNode);
   };
 
-  const toggleFold = async (node: DriveTreeNode, path: number[]) => {
-    const MAX_DEPTH = 3;
-
-    if (!node.isFolder) {
-      return false;
-    }
-
-    if (path.length > MAX_DEPTH) {
-      // instead of unfolding further, reload tree with this node as root
-      return await setRootFolder(node);
-    }
-
-    if (node.loaded) {
-      node.$folded = !node.$folded;
-      return true;
-    }
-
-    const result = await loadChildren(node);
-
-    if (result) {
-      node.$folded = false;
-    }
-
-    return result;
-  };
-
   const createChild = async (
     nameOrFile: string | File,
     parent: DriveTreeNode,
-    parentPath: number[] = [],
     appProperties?: AppProperties,
   ) => {
     let success = false;
@@ -210,10 +181,6 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
       // update and unfold the parent folder
       success = await loadChildren(parent);
-
-      if (parent.$folded) {
-        success = success && await toggleFold(parent, parentPath);
-      }
     } catch (e) {
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
@@ -233,7 +200,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
       await driveFileStore.removeFile(node.id, restore);
 
       if (node.isFolder && !restore) {
-        node.$folded = true;
+        // Folder will be collapsed by the tree component when disabled
       }
 
       node.disabled = !restore;
@@ -254,7 +221,6 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     kind: AssetPropertiesKind,
     ids: string[],
     parent: DriveTreeNode,
-    path?: number[],
   ) => {
     let images: DriveFile[] = [];
 
@@ -305,11 +271,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
       }
     }
 
-    const success = await loadChildren(parent);
-
-    if (success && parent.$folded) {
-      await toggleFold(parent, path ?? []);
-    }
+    await loadChildren(parent);
 
     setNodeLoading(parent, false);
   };
@@ -317,7 +279,6 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
   const importImages = async (
     kind: AssetPropertiesKind,
     parentNode: DriveTreeNode,
-    path?: number[],
   ) => {
     const { buildPicker } = usePicker();
     const userStore = useUserStore();
@@ -336,7 +297,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
           ) {
             const ids = result.docs.map(d => d.id);
 
-            void quickCreateAssets(kind, ids, parentNode, path);
+            void quickCreateAssets(kind, ids, parentNode);
           }
         },
       });
@@ -347,6 +308,36 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     }
   };
 
+  const moveNode = async (
+    node: DriveTreeNode,
+    oldParent: DriveTreeNode,
+    newParent: DriveTreeNode,
+  ) => {
+    try {
+      setNodeLoading(node, true);
+
+      await moveFile(node.id, oldParent.id, newParent.id);
+
+      // Update store data in-place so it stays consistent with the tree's visual state.
+      // Calling loadChildren would create new node objects and orphan existing stats.
+      if (oldParent.children) {
+        oldParent.children = oldParent.children.filter(c => c.id !== node.id);
+      }
+      if (newParent.loaded) {
+        const nextChildren = newParent.children ?? [];
+        if (!nextChildren.some(child => child.id === node.id)) {
+          newParent.children = [...nextChildren, node];
+        }
+      }
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+      console.error(e);
+    } finally {
+      setNodeLoading(node, false);
+    }
+  };
+
   return {
     nodes,
     rootNode,
@@ -354,9 +345,9 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     setRootFolder,
     setRootToParent,
     loadChildren,
-    toggleFold,
     createChild,
     removeFile,
+    moveNode,
     setNodeLoading,
     setNodeLabel,
     importImages,

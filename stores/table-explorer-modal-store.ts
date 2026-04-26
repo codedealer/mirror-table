@@ -8,7 +8,7 @@ export const useTableExplorerModalStore = defineStore('table-explorer-modal', ()
   const title = ref('');
   const docId = ref<string>();
   const parent = ref<TreeNode>();
-  const path = ref<number[]>();
+  const categoryPath = ref<string[]>();
   const modalType = ref<'scene' | 'category'>('scene');
 
   const cancel = () => {
@@ -17,7 +17,7 @@ export const useTableExplorerModalStore = defineStore('table-explorer-modal', ()
     parent.value = undefined;
     loading.value = false;
     docId.value = undefined;
-    path.value = undefined;
+    categoryPath.value = undefined;
   };
 
   const show = (
@@ -26,7 +26,7 @@ export const useTableExplorerModalStore = defineStore('table-explorer-modal', ()
     parentNode: TreeNode,
     name?: string,
     id?: string,
-    parentPath?: number[],
+    parentCategoryPath?: string[],
   ) => {
     cancel();
 
@@ -42,8 +42,8 @@ export const useTableExplorerModalStore = defineStore('table-explorer-modal', ()
       docId.value = id;
     }
 
-    if (parentPath) {
-      path.value = parentPath;
+    if (parentCategoryPath) {
+      categoryPath.value = parentCategoryPath;
     }
 
     modalState.value = true;
@@ -67,7 +67,7 @@ export const useTableExplorerModalStore = defineStore('table-explorer-modal', ()
         title.value,
         parent.value,
         docId.value,
-        path.value,
+        categoryPath.value,
       );
     } else {
       await tableExplorerStore.saveCategory(title.value, parent.value, docId.value);

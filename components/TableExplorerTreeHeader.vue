@@ -61,7 +61,6 @@ const searchScene = useSearchSceneFn();
 
         <TableExplorerTreeCategoryContextMenu
           :node="tableExplorerStore.rootNode"
-          :path="[]"
         />
       </div>
     </div>

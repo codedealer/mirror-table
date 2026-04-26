@@ -239,8 +239,10 @@ export interface ContextAction {
   alwaysVisible: boolean;
 }
 
+/** Maximum nesting depth for tree views before the root is automatically shifted */
+export const TREE_MAX_DEPTH = 3;
+
 export interface TreeNode {
-  $folded: boolean;
   id: string;
   label: string;
   isFolder: boolean;

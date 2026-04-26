@@ -1,14 +1,10 @@
 <script setup lang="ts">
-import type { Tree } from 'he-tree-vue';
 import type { Scene, TreeNode } from '~/models/types';
 import { useExplorerItem } from '~/composables/useExplorerItem';
 import { useSessionGroupsHere } from '~/composables/useSessionGroupsHere';
 
 const props = defineProps<{
   node: TreeNode;
-  index: number;
-  path: number[];
-  tree: Tree;
 }>();
 
 const { item: scene } = useExplorerItem<Scene>(toRef(() => props.node));

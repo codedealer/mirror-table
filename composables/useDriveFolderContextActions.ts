@@ -1,3 +1,4 @@
+import type { Stat } from '@he-tree/tree-utils';
 import type { ContextAction, DriveFile, TreeNode } from '~/models/types';
 import { generateSelectOptions } from '~/models/AssetProperties';
 import { AssetPropertiesKinds } from '~/models/types';
@@ -6,7 +7,7 @@ import { generateTemplates } from '~/models/WidgetProperties';
 export const useDriveFolderContextActions = (
   file: Ref<DriveFile | undefined>,
   node: Ref<TreeNode>,
-  path: Ref<number[] | undefined>,
+  stat: Ref<Stat<TreeNode> | undefined>,
 ) => {
   const tableStore = useTableStore();
   const driveTreeStore = useDriveTreeStore();
@@ -17,9 +18,9 @@ export const useDriveFolderContextActions = (
         ? tableStore.permissions.isOwner
         : file.value?.capabilities?.canAddChildren
     ),
-    // if path is undefined, we are in the root folder
+    // if stat is undefined, we are in the root folder header
     canDelete: (
-      path.value && file.value?.capabilities?.canDelete
+      stat.value && file.value?.capabilities?.canDelete
     ),
   }));
 
@@ -30,7 +31,7 @@ export const useDriveFolderContextActions = (
       return actions;
     }
 
-    if (!path.value) {
+    if (!stat.value) {
       actions.push({
         id: 'parent-folder',
         label: 'Go to parent folder',
@@ -55,7 +56,6 @@ export const useDriveFolderContextActions = (
           'New folder',
           DriveMimeTypes.FOLDER,
           node.value,
-          path.value,
         );
       },
       disabled: !permissions.value.canAddChildren,
@@ -74,7 +74,6 @@ export const useDriveFolderContextActions = (
           'New asset',
           DriveMimeTypes.MARKDOWN,
           node.value,
-          path.value,
           generateSelectOptions(),
         );
       },
@@ -94,7 +93,6 @@ export const useDriveFolderContextActions = (
           'New widget',
           DriveMimeTypes.WIDGET,
           node.value,
-          path.value,
           generateTemplates(),
         );
       },
@@ -111,7 +109,6 @@ export const useDriveFolderContextActions = (
         await driveTreeStore.importImages(
           AssetPropertiesKinds.IMAGE,
           node.value,
-          path.value,
         );
       },
       disabled: !permissions.value.canAddChildren,
@@ -127,7 +124,6 @@ export const useDriveFolderContextActions = (
         await driveTreeStore.importImages(
           AssetPropertiesKinds.COMPLEX,
           node.value,
-          path.value,
         );
       },
       disabled: !permissions.value.canAddChildren,

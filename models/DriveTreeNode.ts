@@ -1,7 +1,6 @@
 import type { DriveFile, DriveTreeNode } from '~/models/types';
 
 export const DriveTreeNodeFactory = (file: DriveFile): DriveTreeNode => ({
-  $folded: true,
   id: file.id,
   label: file.fileExtension ? stripFileExtension(file.name) : file.name,
   icon: undefined,

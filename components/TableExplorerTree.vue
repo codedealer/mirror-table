@@ -1,32 +1,38 @@
 <script setup lang="ts">
+import type { Stat } from '@he-tree/tree-utils';
+import type { TreeNode } from '~/models/types';
 import { TableExplorerTreeCategory, TableExplorerTreeScene } from '#components';
-import { Fold, Tree as NakedTree } from 'he-tree-vue';
-
-const Tree = NakedTree.mixPlugins([
-  Fold,
-]);
+import { BaseTree } from '@he-tree/vue';
+import '@he-tree/vue/style/default.css';
 
 const tableExplorerStore = useTableExplorerStore();
+
+const { nodes } = storeToRefs(tableExplorerStore);
+
+const treeRef = ref<InstanceType<typeof BaseTree> | null>(null);
+provide('treeRef', treeRef);
 </script>
 
 <template>
   <div class="drive-tree-container explorer-tree-container">
     <TableExplorerTreeHeader />
 
-    <Tree
-      :value="tableExplorerStore.nodes"
-      folding-transition-name="slide-fade"
+    <BaseTree
+      ref="treeRef"
+      v-model="nodes"
+      :default-open="false"
+      :indent="20"
+      :watermark="false"
+      children-key="children"
     >
-      <template #default="{ node, index, path, tree }">
+      <template #default="{ node, stat }: { node: TreeNode, stat: Stat<TreeNode> }">
         <component
           :is="node.isFolder ? TableExplorerTreeCategory : TableExplorerTreeScene"
           :node="node"
-          :index="index"
-          :path="path"
-          :tree="tree"
+          :stat="stat"
         />
       </template>
-    </Tree>
+    </BaseTree>
 
     <TableExplorerTreeModal />
   </div>
