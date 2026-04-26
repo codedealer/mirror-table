@@ -11,6 +11,10 @@
     "NUXT_PORT": "3000",
     "npm_config_store_dir": "/home/node/.pnpm-store"
   },
+  "remoteEnv": {
+    "no_proxy": "localhost,127.0.0.1,0.0.0.0,.local,vscode-remote",
+    "NO_PROXY": "localhost,127.0.0.1,0.0.0.0,.local,vscode-remote"
+  },
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -23,7 +27,8 @@
     }
   },
   "mounts": [
-    "source=mirror-table-pnpm-store,target=/home/node/.pnpm-store,type=volume"
+    "source=mirror-table-pnpm-store,target=/home/node/.pnpm-store,type=volume",
+    "source=${localEnv:HOME}/.copilot,target=/home/node/.copilot,type=bind,consistency=cached"
   ],
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "sudo corepack enable && corepack prepare pnpm@10.18.0 --activate && sudo mkdir -p /home/node/.pnpm-store && sudo chown -R node:node /home/node/.pnpm-store && pnpm install",
