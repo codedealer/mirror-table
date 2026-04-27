@@ -23,8 +23,34 @@ const createVisibleRootNode = (id = '') => {
   } as DriveTreeNode;
 };
 
+const reconcileNodes = (
+  existingChildren: DriveTreeNode[] | undefined,
+  nextChildren: DriveTreeNode[],
+) => {
+  const existingById = new Map((existingChildren ?? []).map(child => [child.id, child]));
+
+  return nextChildren.map((nextChild) => {
+    const existingChild = existingById.get(nextChild.id);
+
+    if (!existingChild || existingChild.isFolder !== nextChild.isFolder) {
+      return nextChild;
+    }
+
+    existingChild.label = nextChild.label;
+    existingChild.icon = nextChild.icon;
+    existingChild.disabled = nextChild.disabled;
+
+    if (!existingChild.isFolder) {
+      existingChild.loaded = nextChild.loaded;
+    }
+
+    return existingChild;
+  });
+};
+
 export const useDriveTreeStore = defineStore('drive-tree', () => {
   const visibleRootNode = ref<DriveTreeNode>(createVisibleRootNode());
+  const openFolderIds = ref(new Set<string>());
 
   const nodes = computed(() => {
     return visibleRootNode.value.children ?? [];
@@ -57,6 +83,18 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     }
   };
 
+  const setFolderOpen = (folderId: string, open: boolean) => {
+    const nextOpenFolderIds = new Set(openFolderIds.value);
+
+    if (open) {
+      nextOpenFolderIds.add(folderId);
+    } else {
+      nextOpenFolderIds.delete(folderId);
+    }
+
+    openFolderIds.value = nextOpenFolderIds;
+  };
+
   const loadChildren = async (node: DriveTreeNode) => {
     let success = false;
 
@@ -64,8 +102,9 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
       setNodeLoading(node, true);
 
       const driveFileStore = useDriveFileStore();
+      const nextChildren = buildNodes(await driveFileStore.listFilesInFolder(node.id));
 
-      node.children = buildNodes(await driveFileStore.listFilesInFolder(node.id));
+      node.children = reconcileNodes(node.children, nextChildren);
 
       node.loaded = true;
       success = true;
@@ -184,6 +223,9 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
       // update and unfold the parent folder
       success = await loadChildren(parent);
+      if (success) {
+        setFolderOpen(parent.id, true);
+      }
     } catch (e) {
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(e));
@@ -355,6 +397,8 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     moveNode,
     setNodeLoading,
     setNodeLabel,
+    openFolderIds,
+    setFolderOpen,
     importImages,
     showSearchModal: driveSearchStore.showSearchModal,
   };

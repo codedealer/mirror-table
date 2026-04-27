@@ -20,6 +20,9 @@ const props = defineProps<{
   stat: Stat<DriveTreeNode>;
 }>();
 
+const driveTreeStore = useDriveTreeStore();
+const { openFolderIds } = storeToRefs(driveTreeStore);
+
 const { file, label } = useDriveFile(toRef(() => props.node.id));
 
 const treeRef = inject<Ref<HeTreePublicInstance<DriveTreeNode> | null>>(driveTreeRefKey, ref(null));
@@ -39,22 +42,22 @@ useHeTreeChildrenSync({
 // ── Fold toggle ─────────────────────────────────────────────────────────────
 const toggleFold = async () => {
   if (props.stat.open) {
+    driveTreeStore.setFolderOpen(props.node.id, false);
     // eslint-disable-next-line vue/no-mutating-props -- @he-tree/vue stat is designed to be mutated
     props.stat.open = false;
     return;
   }
   if (props.stat.level >= TREE_MAX_DEPTH)
     return; // use double-click to change root instead
-  const driveTreeStore = useDriveTreeStore();
   if (!props.node.loaded) {
     await driveTreeStore.loadChildren(props.node);
   }
+  driveTreeStore.setFolderOpen(props.node.id, true);
   // eslint-disable-next-line vue/no-mutating-props -- @he-tree/vue stat is designed to be mutated
   props.stat.open = true;
 };
 
 const setRootFolder = () => {
-  const driveTreeStore = useDriveTreeStore();
   driveTreeStore.setVisibleRootFolder(props.node);
 };
 
@@ -67,9 +70,12 @@ const { actions } = useDriveFolderContextActions(
 );
 
 const undoTrashFolder = () => {
-  const driveTreeStore = useDriveTreeStore();
   driveTreeStore.removeFile(props.node, true);
 };
+
+const shouldBeOpen = computed(() => {
+  return openFolderIds.value.has(props.node.id);
+});
 
 const isDropTarget = computed(() => {
   return isDragging.value && hoveredFolderTarget.value?.data.id === props.node.id;
@@ -107,6 +113,30 @@ watch([() => isDragging.value, () => props.stat.open], () => {
   if (!isDragging.value || props.stat.open) {
     clearHoveredFolderTarget?.(props.node.id);
   }
+});
+
+watch([
+  () => props.node.loaded,
+  () => props.node.loading,
+  () => props.stat.open,
+  shouldBeOpen,
+], async ([loaded, loading, statOpen, nextShouldBeOpen]) => {
+  if (!nextShouldBeOpen || statOpen || loading) {
+    return;
+  }
+
+  if (!loaded) {
+    const success = await driveTreeStore.loadChildren(props.node);
+    if (!success) {
+      return;
+    }
+  }
+
+  // eslint-disable-next-line vue/no-mutating-props -- @he-tree/vue stat is designed to be mutated
+  props.stat.open = true;
+}, {
+  flush: 'post',
+  immediate: true,
 });
 </script>
 

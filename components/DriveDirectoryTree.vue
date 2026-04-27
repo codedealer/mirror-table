@@ -32,6 +32,7 @@ const {
   setPendingFolderDropTarget,
   eachDraggable,
   eachDroppable,
+  rootDroppable,
   handleBeforeDragStart,
   handleAfterDrop,
 } = useDriveTreeController();
@@ -56,6 +57,7 @@ provide(driveTreeSetPendingFolderDropTargetKey, setPendingFolderDropTarget);
         :indent="20"
         :each-draggable="eachDraggable"
         :each-droppable="eachDroppable"
+        :root-droppable="rootDroppable"
         :drag-open="false"
         :watermark="false"
         update-behavior="disabled"

@@ -196,11 +196,14 @@
 .drive-tree-container {
   .he-tree {
     // Draggable placeholder styling
-    .tree-placeholder {
-      background-color: var(--va-primary);
-      opacity: 0.15;
+    .he-tree-drag-placeholder {
+      background:
+        linear-gradient(90deg, transparent 0, transparent calc(var(--node-icon-size) + var(--drive-node-gap)), var(--va-background-secondary) calc(var(--node-icon-size) + var(--drive-node-gap)), var(--va-background-secondary) 100%);
+      border: 1px dashed var(--va-primary);
       border-radius: var(--va-tree-node-border-radius);
-      min-height: 32px;
+      box-sizing: border-box;
+      min-height: calc(var(--node-icon-size) + (var(--va-tree-node-padding) * 2));
+      opacity: 0.7;
     }
   }
 }

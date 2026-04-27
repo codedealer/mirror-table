@@ -26,6 +26,16 @@ export const useDriveTreeController = () => {
     clearHoverTimer();
   });
 
+  const clearHoveredFolderTarget = (folderId?: string) => {
+    if (folderId && hoveredFolderTarget.value?.data.id !== folderId) {
+      return;
+    }
+
+    clearHoverTimer();
+    hoveredFolderTarget.value = null;
+    dragOpenProgress.value = null;
+  };
+
   const clearDragState = () => {
     clearHoverTimer();
     isDragging.value = false;
@@ -64,19 +74,10 @@ export const useDriveTreeController = () => {
 
       if (hoveredFolderTarget.value === stat) {
         stat.open = true;
+        driveTreeStore.setFolderOpen(stat.data.id, true);
         dragOpenProgress.value = null;
       }
     }, DRAG_OPEN_DELAY);
-  };
-
-  const clearHoveredFolderTarget = (folderId?: string) => {
-    if (folderId && hoveredFolderTarget.value?.data.id !== folderId) {
-      return;
-    }
-
-    clearHoverTimer();
-    hoveredFolderTarget.value = null;
-    dragOpenProgress.value = null;
   };
 
   const setPendingFolderDropTarget = (stat: Stat<DriveTreeNode>) => {
@@ -95,21 +96,20 @@ export const useDriveTreeController = () => {
     return stat.data.isFolder && !stat.data.disabled;
   };
 
-  const isInvalidFolderTarget = (
-    targetStat: Stat<DriveTreeNode>,
-    draggedStat: Stat<DriveTreeNode>,
-  ) => {
-    let current: Stat<DriveTreeNode> | null = targetStat;
+  const rootDroppable = () => {
+    return true;
+  };
 
-    while (current) {
-      if (current === draggedStat) {
-        return true;
-      }
-
-      current = current.parent as Stat<DriveTreeNode> | null;
+  const restoreOriginalPosition = (draggedStat: Stat<DriveTreeNode>) => {
+    const startInfo = dragContext.startInfo;
+    if (!startInfo) {
+      return;
     }
 
-    return false;
+    const startParentStat = startInfo.parent as Stat<DriveTreeNode> | null;
+    startInfo.tree.batchUpdate(() => {
+      startInfo.tree.move(draggedStat, startParentStat, startInfo.indexBeforeDrop);
+    });
   };
 
   const handleBeforeDragStart = () => {
@@ -124,26 +124,32 @@ export const useDriveTreeController = () => {
       return;
     }
 
-    const draggedStat = ctx.startInfo.dragNode as Stat<DriveTreeNode>;
+    const startInfo = ctx.startInfo;
+    const targetInfo = ctx.targetInfo;
+    const draggedStat = startInfo.dragNode as Stat<DriveTreeNode>;
     const draggedNode = draggedStat.data;
-    const oldParentNode: DriveTreeNode = ctx.startInfo.parent
-      ? (ctx.startInfo.parent as Stat<DriveTreeNode>).data
+    const oldParentStat = startInfo.parent as Stat<DriveTreeNode> | null;
+    const oldParentId = oldParentStat?.data.id ?? driveTreeStore.visibleRootNode.id;
+    const oldParentNode: DriveTreeNode = oldParentStat
+      ? oldParentStat.data
       : driveTreeStore.visibleRootNode;
 
-    const explicitTarget = pendingFolderDropTarget.value ?? hoveredFolderTarget.value;
-    const resolvedTargetStat = explicitTarget && !isInvalidFolderTarget(explicitTarget, draggedStat)
-      ? explicitTarget
-      : (draggedStat.parent as Stat<DriveTreeNode> | null);
+    const resolvedTargetStat = pendingFolderDropTarget.value
+      ?? (targetInfo?.parent as Stat<DriveTreeNode> | null)
+      ?? (draggedStat.parent as Stat<DriveTreeNode> | null);
+    const newParentId = resolvedTargetStat?.data.id ?? driveTreeStore.visibleRootNode.id;
+    const droppedInSameParent = newParentId === oldParentId;
 
     clearDragState();
+
+    if (droppedInSameParent) {
+      restoreOriginalPosition(draggedStat);
+      return;
+    }
 
     const newParentNode: DriveTreeNode = resolvedTargetStat
       ? resolvedTargetStat.data
       : driveTreeStore.visibleRootNode;
-
-    if (newParentNode.id === oldParentNode.id) {
-      return;
-    }
 
     await driveTreeStore.moveNode(draggedNode, oldParentNode, newParentNode);
 
@@ -152,12 +158,8 @@ export const useDriveTreeController = () => {
       return;
     }
 
-    if (resolvedTargetStat && !resolvedTargetStat.open) {
-      if (!newParentNode.loaded) {
-        await driveTreeStore.loadChildren(newParentNode);
-      }
-
-      resolvedTargetStat.open = true;
+    if (resolvedTargetStat?.open) {
+      driveTreeStore.setFolderOpen(newParentNode.id, true);
     }
   };
 
@@ -171,6 +173,7 @@ export const useDriveTreeController = () => {
     setPendingFolderDropTarget,
     eachDraggable,
     eachDroppable,
+    rootDroppable,
     handleBeforeDragStart,
     handleAfterDrop,
   };
