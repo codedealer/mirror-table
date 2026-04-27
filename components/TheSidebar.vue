@@ -42,6 +42,17 @@ const openLayers = () => {
   dynamicPanelStore.open(DynamicPanelModelTypes.LEFT, DynamicPanelContentTypes.LAYERS);
 };
 
+const isPanelContentActive = (content: (typeof DynamicPanelContentTypes)[keyof typeof DynamicPanelContentTypes]) => {
+  return Object.values(DynamicPanelModelTypes).some(model =>
+    dynamicPanelStore.models[model] && dynamicPanelStore.contents[model] === content,
+  );
+};
+
+const isSessionsActive = computed(() => isPanelContentActive(DynamicPanelContentTypes.SESSIONS));
+const isWidgetsActive = computed(() => isPanelContentActive(DynamicPanelContentTypes.WIDGETS));
+const isExplorerActive = computed(() => isPanelContentActive(DynamicPanelContentTypes.EXPLORER));
+const isLayersActive = computed(() => isPanelContentActive(DynamicPanelContentTypes.LAYERS));
+
 const canvasToolStore = useCanvasToolStore();
 const hotkeyStore = useHotkeyStore();
 const toggleHotkeyModal = () => {
@@ -157,7 +168,7 @@ hotkeyStore.registerHotkey({
 
 <template>
   <va-sidebar minimized minimized-width="48px" class="toolbar centered-icons">
-    <va-sidebar-item @click="openSessions">
+    <va-sidebar-item :active="isSessionsActive" active-color="#fa45ab20" hover-color="primary" @click="openSessions">
       <va-sidebar-item-content>
         <va-badge
           overlap
@@ -175,7 +186,7 @@ hotkeyStore.registerHotkey({
 
     <va-divider />
 
-    <va-sidebar-item @click="openWidgets">
+    <va-sidebar-item :active="isWidgetsActive" active-color="#fa45ab20" hover-color="primary" @click="openWidgets">
       <va-sidebar-item-content>
         <div class="toolbar-button">
           <va-badge :dot="showIndicator" overlap>
@@ -189,7 +200,7 @@ hotkeyStore.registerHotkey({
       </va-sidebar-item-content>
     </va-sidebar-item>
 
-    <va-sidebar-item @click="openExplorer">
+    <va-sidebar-item :active="isExplorerActive" active-color="#fa45ab20" hover-color="primary" @click="openExplorer">
       <va-sidebar-item-content>
         <div class="toolbar-button">
           <va-icon name="filter" size="large" color="primary" />
@@ -200,7 +211,7 @@ hotkeyStore.registerHotkey({
       </va-sidebar-item-content>
     </va-sidebar-item>
 
-    <va-sidebar-item @click="openLayers">
+    <va-sidebar-item :active="isLayersActive" active-color="#fa45ab20" hover-color="primary" @click="openLayers">
       <va-sidebar-item-content>
         <div class="toolbar-button">
           <va-icon name="layers" size="large" color="primary" />
