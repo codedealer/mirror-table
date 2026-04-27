@@ -23,7 +23,7 @@ pnpm install
 When working on the application it is recommended to install a lint pre-commit hook:
 
 ```bash
-pnpm exec husky install # First time only
+pnpm run prepare # First time only
 ```
 
 Start the development server on http://localhost:3000

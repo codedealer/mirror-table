@@ -32,7 +32,7 @@
     "source=${localEnv:HOME}/.copilot,target=/home/node/.copilot,type=bind,consistency=cached"
   ],
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "sudo corepack enable && corepack prepare pnpm@10.18.0 --activate && sudo mkdir -p /home/node/.pnpm-store && sudo chown -R node:node /home/node/.pnpm-store && pnpm install",
+  "postCreateCommand": "sudo corepack enable && corepack prepare pnpm@10.18.0 --activate && sudo mkdir -p /home/node/.pnpm-store && sudo chown -R node:node /home/node/.pnpm-store && rm -rf .husky/_ && pnpm install",
   "postStartCommand": "sudo mkdir -p /home/node/.pnpm-store && sudo chown -R node:node /home/node/.pnpm-store",
   // Configure tool-specific properties.
   "customizations": {

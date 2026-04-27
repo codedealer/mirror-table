@@ -34,7 +34,7 @@ Mirror Table is a **real-time collaborative virtual canvas application** built f
 pnpm install
 
 # Install pre-commit hooks (first time only)
-pnpm exec husky install
+pnpm run prepare
 
 # Development server (http://localhost:3000)
 pnpm run dev
