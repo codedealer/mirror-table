@@ -1,4 +1,4 @@
-import Buffer from 'node:buffer';
+import { Buffer } from 'node:buffer';
 import process from 'node:process';
 
 const TERMINAL_TOOLS = new Set([
