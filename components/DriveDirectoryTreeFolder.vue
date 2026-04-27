@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import type { Stat } from '@he-tree/tree-utils';
-import type { Draggable } from '@he-tree/vue';
 import type { DriveTreeNode } from '~/models/types';
+import type { HeTreePublicInstance } from '~/utils/heTree';
 import { useDriveFolderContextActions } from '~/composables/useDriveFolderContextActions';
 import { TREE_MAX_DEPTH } from '~/models/types';
 import clickOrDoubleClick from '~/utils/clickOrDoubleClick';
+import {
+  driveTreeClearHoveredFolderTargetKey,
+  driveTreeDragOpenProgressKey,
+  driveTreeHoveredFolderTargetKey,
+  driveTreeIsDraggingKey,
+  driveTreeRefKey,
+  driveTreeSetHoveredFolderTargetKey,
+  driveTreeSetPendingFolderDropTargetKey,
+} from '~/utils/heTree';
 
 const props = defineProps<{
   node: DriveTreeNode;
@@ -13,45 +22,19 @@ const props = defineProps<{
 
 const { file, label } = useDriveFile(toRef(() => props.node.id));
 
-const treeRef = inject<Ref<InstanceType<typeof Draggable> | null>>('treeRef');
-const isDragging = inject<Ref<boolean>>('isDragging', ref(false));
-const hoveredFolderTarget = inject<Ref<Stat<DriveTreeNode> | null>>('hoveredFolderTarget', ref(null));
-const dragOpenProgress = inject<Ref<{ folderId: string; startedAt: number; duration: number } | null>>('dragOpenProgress', ref(null));
-const setHoveredFolderTarget = inject<((stat: Stat<DriveTreeNode>) => void) | undefined>('setHoveredFolderTarget');
-const clearHoveredFolderTarget = inject<((folderId?: string) => void) | undefined>('clearHoveredFolderTarget');
-const setPendingFolderDropTarget = inject<((stat: Stat<DriveTreeNode>) => void) | undefined>('setPendingFolderDropTarget');
+const treeRef = inject<Ref<HeTreePublicInstance<DriveTreeNode> | null>>(driveTreeRefKey, ref(null));
+const isDragging = inject(driveTreeIsDraggingKey, ref(false));
+const hoveredFolderTarget = inject(driveTreeHoveredFolderTargetKey, ref(null));
+const dragOpenProgress = inject(driveTreeDragOpenProgressKey, ref(null));
+const setHoveredFolderTarget = inject(driveTreeSetHoveredFolderTargetKey);
+const clearHoveredFolderTarget = inject(driveTreeClearHoveredFolderTargetKey);
+const setPendingFolderDropTarget = inject(driveTreeSetPendingFolderDropTargetKey);
 
-// ── Sync tree processor when children change (lazy load / reload) ───────────
-watch(() => props.node.children, (newChildren) => {
-  if (!newChildren)
-    return;
-  const proc = (treeRef?.value as any)?.processor;
-  if (!proc)
-    return;
-
-  const newIds = new Set(newChildren.map(c => c.id));
-  // Remove stale stats still parented to this stat
-  for (const oldStat of [...props.stat.children]) {
-    if (
-      oldStat.parent === props.stat
-      && (!newIds.has(oldStat.data.id) || !newChildren.includes(oldStat.data))
-    ) {
-      proc.remove(oldStat);
-    }
-  }
-  // Add stats for children not yet in the processor
-  for (let i = 0; i < newChildren.length; i++) {
-    if (!proc.has(newChildren[i])) {
-      proc.add(newChildren[i], props.stat, i);
-      continue;
-    }
-
-    const existingStat = proc.getStat(newChildren[i]);
-    if (existingStat.parent !== props.stat) {
-      proc.move(existingStat, props.stat, i);
-    }
-  }
-}, { flush: 'sync' });
+useHeTreeChildrenSync({
+  node: toRef(() => props.node),
+  stat: toRef(() => props.stat),
+  tree: treeRef,
+});
 
 // ── Fold toggle ─────────────────────────────────────────────────────────────
 const toggleFold = async () => {
@@ -72,7 +55,7 @@ const toggleFold = async () => {
 
 const setRootFolder = () => {
   const driveTreeStore = useDriveTreeStore();
-  driveTreeStore.setRootFolder(props.node);
+  driveTreeStore.setVisibleRootFolder(props.node);
 };
 
 const onClickOrDoubleClick = clickOrDoubleClick(toggleFold, setRootFolder);

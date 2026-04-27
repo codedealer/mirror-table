@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { Stat } from '@he-tree/tree-utils';
 import type { TreeNode } from '~/models/types';
+import type { HeTreePublicInstance } from '~/utils/heTree';
 import { TableExplorerTreeCategory, TableExplorerTreeScene } from '#components';
 import { BaseTree } from '@he-tree/vue';
+import { explorerTreeRefKey } from '~/utils/heTree';
 import '@he-tree/vue/style/default.css';
 
 const tableExplorerStore = useTableExplorerStore();
@@ -10,7 +12,7 @@ const tableExplorerStore = useTableExplorerStore();
 const { nodes } = storeToRefs(tableExplorerStore);
 
 const treeRef = ref<InstanceType<typeof BaseTree> | null>(null);
-provide('treeRef', treeRef);
+provide(explorerTreeRefKey, treeRef as Ref<HeTreePublicInstance<TreeNode> | null>);
 </script>
 
 <template>

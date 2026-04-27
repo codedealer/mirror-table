@@ -17,7 +17,7 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
   const formTitle = ref('');
   const fileName = ref('');
   const mimeType = ref<typeof DriveMimeTypes[keyof typeof DriveMimeTypes]>();
-  const fileOptions = ref<SelectOption[]>();
+  const fileOptions = ref<SelectOption[]>([]);
   const selectedOption = ref<SelectOption>();
   const fileParent = ref<DriveTreeNode>();
 
@@ -26,7 +26,7 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
     fileName.value = '';
     mimeType.value = undefined;
     fileParent.value = undefined;
-    fileOptions.value = undefined;
+    fileOptions.value = [];
     selectedOption.value = undefined;
   };
 
@@ -41,9 +41,9 @@ export const useDriveTreeModalStore = defineStore('drive-tree-modal', () => {
     formTitle.value = title;
     mimeType.value = type;
     fileParent.value = parent;
-    fileOptions.value = options;
+    fileOptions.value = options ?? [];
 
-    if (fileOptions.value && fileOptions.value.length > 0) {
+    if (fileOptions.value.length > 0) {
       selectedOption.value = fileOptions.value[0];
     }
 

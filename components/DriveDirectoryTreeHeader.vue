@@ -4,11 +4,11 @@ import { useDriveFolderContextActions } from '~/composables/useDriveFolderContex
 const driveTreeStore = useDriveTreeStore();
 
 const setRoot = () => {
-  driveTreeStore.setRootFolder();
+  driveTreeStore.resetVisibleRootFolder();
 };
 
 const { file } = useDriveFile(
-  toRef(() => driveTreeStore.rootNode.id),
+  toRef(() => driveTreeStore.visibleRootNode.id),
   {
     strategy: DataRetrievalStrategies.LAZY,
   },
@@ -16,7 +16,7 @@ const { file } = useDriveFile(
 
 const { actions } = useDriveFolderContextActions(
   file,
-  toRef(() => driveTreeStore.rootNode),
+  toRef(() => driveTreeStore.visibleRootNode),
   toRef(() => undefined),
 );
 </script>
@@ -32,8 +32,8 @@ const { actions } = useDriveFolderContextActions(
             preset="plain"
             color="primary"
             size="medium"
-            :loading="driveTreeStore.rootNode.loading"
-            :disabled="driveTreeStore.rootNode.disabled"
+            :loading="driveTreeStore.visibleRootNode.loading"
+            :disabled="driveTreeStore.visibleRootNode.disabled"
             @click="setRoot"
           >
             <div class="drive-node__icon">
@@ -48,9 +48,9 @@ const { actions } = useDriveFolderContextActions(
         </va-popover>
       </div>
       <div
-        v-show="!driveTreeStore.isRootFolder"
+        v-show="!driveTreeStore.isCanonicalRootVisible"
         class="drive-directory-tree-header__folder-title"
-        :title="driveTreeStore.rootNode.label"
+        :title="driveTreeStore.visibleRootNode.label"
       >
         <va-icon
           name="double_arrow"
@@ -58,7 +58,7 @@ const { actions } = useDriveFolderContextActions(
           size="small"
           style="vertical-align: bottom;"
         />
-        {{ driveTreeStore.rootNode.label }}
+        {{ driveTreeStore.visibleRootNode.label }}
       </div>
       <div class="drive-directory-tree-header__actions">
         <va-popover

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Stat } from '@he-tree/tree-utils';
-import type { BaseTree } from '@he-tree/vue';
 import type { Category, TreeNode } from '~/models/types';
+import type { HeTreePublicInstance } from '~/utils/heTree';
+import { explorerTreeRefKey } from '~/utils/heTree';
 
 const props = defineProps<{
   node: TreeNode;
@@ -11,7 +12,7 @@ const props = defineProps<{
 const tableExplorerStore = useTableExplorerStore();
 const sceneStore = useSceneStore();
 
-const treeRef = inject<Ref<InstanceType<typeof BaseTree> | null>>('treeRef');
+const treeRef = inject<Ref<HeTreePublicInstance<TreeNode> | null>>(explorerTreeRefKey, ref(null));
 
 const { item: category } = useExplorerItem<Category>(toRef(() => props.node));
 
@@ -35,34 +36,11 @@ const undoDeleteCategory = async () => {
   tableExplorerStore.setNodeLoading(props.node, false);
 };
 
-// Keep tree processor in sync when node children change (lazy load / reload)
-watch(() => props.node.children, (newChildren) => {
-  if (!newChildren)
-    return;
-  const proc = (treeRef?.value as any)?.processor;
-  if (!proc)
-    return;
-
-  const newIds = new Set(newChildren.map((c: TreeNode) => c.id));
-  // Remove stale stats (no longer present or stale object reference)
-  for (const oldStat of [...props.stat.children]) {
-    if (oldStat.parent === props.stat && (!newIds.has(oldStat.data.id) || !newChildren.includes(oldStat.data))) {
-      proc.remove(oldStat);
-    }
-  }
-  // Add stats for children not yet in the processor
-  for (let i = 0; i < newChildren.length; i++) {
-    if (!proc.has(newChildren[i])) {
-      proc.add(newChildren[i], props.stat, i);
-      continue;
-    }
-
-    const existingStat = proc.getStat(newChildren[i]);
-    if (existingStat.parent !== props.stat) {
-      proc.move(existingStat, props.stat, i);
-    }
-  }
-}, { flush: 'sync' });
+useHeTreeChildrenSync({
+  node: toRef(() => props.node),
+  stat: toRef(() => props.stat),
+  tree: treeRef,
+});
 
 const handleToggle = async () => {
   if (props.stat.open) {

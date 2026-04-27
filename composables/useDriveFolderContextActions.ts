@@ -14,7 +14,7 @@ export const useDriveFolderContextActions = (
 
   const permissions = computed(() => ({
     canAddChildren: (
-      driveTreeStore.isRootFolder
+      driveTreeStore.isCanonicalRootVisible
         ? tableStore.permissions.isOwner
         : file.value?.capabilities?.canAddChildren
     ),
@@ -37,9 +37,9 @@ export const useDriveFolderContextActions = (
         label: 'Go to parent folder',
         icon: { name: 'drive_folder_upload', color: 'primary-dark' },
         action: async () => {
-          await driveTreeStore.setRootToParent();
+          await driveTreeStore.setVisibleRootToParent();
         },
-        disabled: driveTreeStore.isRootFolder,
+        disabled: driveTreeStore.isCanonicalRootVisible,
         pinned: true,
         alwaysVisible: true,
       });
