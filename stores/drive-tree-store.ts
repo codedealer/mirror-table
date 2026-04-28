@@ -353,6 +353,59 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     }
   };
 
+  const importTextAssets = async (parentNode: DriveTreeNode) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.md,text/markdown';
+    input.multiple = true;
+    input.style.display = 'none';
+
+    const cleanup = () => input.remove();
+
+    input.addEventListener('cancel', cleanup);
+
+    input.addEventListener('change', async () => {
+      cleanup();
+
+      const selectedFiles = Array.from(input.files ?? []);
+
+      if (!selectedFiles.length) {
+        return;
+      }
+
+      setNodeLoading(parentNode, true);
+
+      const driveFileStore = useDriveFileStore();
+      const notificationStore = useNotificationStore();
+
+      for (const file of selectedFiles) {
+        if (!file.name.toLowerCase().endsWith('.md')) {
+          notificationStore.error(`Skipped "${file.name}": only .md files are supported`);
+          continue;
+        }
+
+        const appProperties = AssetPropertiesFactory({
+          type: AppPropertiesTypes.ASSET,
+          kind: AssetPropertiesKinds.TEXT,
+        });
+
+        try {
+          await driveFileStore.createFile(file, parentNode.id, appProperties);
+        } catch (e) {
+          console.error(e);
+          notificationStore.error(extractErrorMessage(e));
+          break;
+        }
+      }
+
+      await loadChildren(parentNode);
+      setNodeLoading(parentNode, false);
+    });
+
+    document.body.appendChild(input);
+    input.click();
+  };
+
   const moveNode = async (
     node: DriveTreeNode,
     oldParent: DriveTreeNode,
@@ -400,6 +453,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     openFolderIds,
     setFolderOpen,
     importImages,
+    importTextAssets,
     showSearchModal: driveSearchStore.showSearchModal,
   };
 });

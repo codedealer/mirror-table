@@ -197,8 +197,13 @@
   .he-tree {
     // Draggable placeholder styling
     .he-tree-drag-placeholder {
-      background:
-        linear-gradient(90deg, transparent 0, transparent calc(var(--node-icon-size) + var(--drive-node-gap)), var(--va-background-secondary) calc(var(--node-icon-size) + var(--drive-node-gap)), var(--va-background-secondary) 100%);
+      background: linear-gradient(
+        90deg,
+        transparent 0,
+        transparent calc(var(--node-icon-size) + var(--drive-node-gap)),
+        var(--va-background-secondary) calc(var(--node-icon-size) + var(--drive-node-gap)),
+        var(--va-background-secondary) 100%
+      );
       border: 1px dashed var(--va-primary);
       border-radius: var(--va-tree-node-border-radius);
       box-sizing: border-box;

@@ -132,6 +132,18 @@ export const useDriveFolderContextActions = (
     });
 
     actions.push({
+      id: 'import-text-asset',
+      label: 'Import: text assets',
+      icon: { name: 'article', color: 'secondary' },
+      action: async () => {
+        await driveTreeStore.importTextAssets(node.value);
+      },
+      disabled: !permissions.value.canAddChildren,
+      pinned: false,
+      alwaysVisible: false,
+    });
+
+    actions.push({
       id: 'delete',
       label: 'Delete',
       icon: { name: 'delete', color: 'danger' },
