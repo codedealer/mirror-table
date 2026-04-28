@@ -3,7 +3,9 @@
 {
   "name": "mirror-table",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:24-bookworm",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "remoteUser": "node",
   "updateRemoteUserUID": true,
   "containerEnv": {
@@ -28,12 +30,13 @@
   },
   "mounts": [
     "source=mirror-table-pnpm-store,target=/home/node/.pnpm-store,type=volume",
+    "source=mirror-table-vscode-workspace-storage,target=/home/node/.vscode-server/data/User/workspaceStorage,type=volume",
     "source=${localEnv:HOME}/.gitconfig,target=/home/node/.gitconfig,type=bind,consistency=cached,readonly",
     "source=${localEnv:HOME}/.copilot,target=/home/node/.copilot,type=bind,consistency=cached"
   ],
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "sudo corepack enable && corepack prepare pnpm@10.18.0 --activate && sudo mkdir -p /home/node/.pnpm-store && sudo chown -R node:node /home/node/.pnpm-store && rm -rf .husky/_ && pnpm install",
-  "postStartCommand": "sudo mkdir -p /home/node/.pnpm-store && sudo chown -R node:node /home/node/.pnpm-store",
+  "postCreateCommand": "sudo corepack enable && corepack prepare pnpm@10.18.0 --activate && rm -rf .husky/_ && pnpm install",
+  "postStartCommand": "sudo mkdir -p /home/node/.pnpm-store /home/node/.vscode-server/data/User/workspaceStorage && sudo chown -R node:node /home/node/.pnpm-store /home/node/.vscode-server",
   // Configure tool-specific properties.
   "customizations": {
     "vscode": {
