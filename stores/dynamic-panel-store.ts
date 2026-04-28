@@ -2,6 +2,8 @@ import type { DynamicPanelContentType, DynamicPanelModelType } from '~/models/ty
 
 export const useDynamicPanelStore = defineStore('dynamic-panel', () => {
   const tableStore = useTableStore();
+  const userStore = useUserStore();
+  const { profile } = storeToRefs(userStore);
 
   // Track pinned state per content type, default is true (pinned)
   const pinnedStates = ref<Partial<Record<DynamicPanelContentType, boolean>>>({
@@ -10,6 +12,29 @@ export const useDynamicPanelStore = defineStore('dynamic-panel', () => {
     [DynamicPanelContentTypes.LAYERS]: true,
     [DynamicPanelContentTypes.WIDGETS]: true,
   });
+
+  // Sync pinned states from profile; reset to defaults first so user B doesn't inherit user A's state
+  watch(profile, (prof) => {
+    pinnedStates.value = {
+      [DynamicPanelContentTypes.EXPLORER]: true,
+      [DynamicPanelContentTypes.SESSIONS]: true,
+      [DynamicPanelContentTypes.LAYERS]: true,
+      [DynamicPanelContentTypes.WIDGETS]: true,
+    };
+    if (!prof) {
+      return;
+    }
+    const sidebar = prof.settings.layout?.sidebar;
+    if (sidebar) {
+      for (const key of Object.keys(DynamicPanelContentTypes) as Array<keyof typeof DynamicPanelContentTypes>) {
+        const panelType = DynamicPanelContentTypes[key];
+        const saved = sidebar[panelType]?.pinned;
+        if (saved !== undefined) {
+          pinnedStates.value[panelType] = saved;
+        }
+      }
+    }
+  }, { immediate: true });
 
   const _models = ref<Record<DynamicPanelModelType, boolean>>({
     [DynamicPanelModelTypes.LEFT]: false,
@@ -91,10 +116,17 @@ export const useDynamicPanelStore = defineStore('dynamic-panel', () => {
     return pinnedStates.value[contentType] ?? true;
   };
 
-  const togglePin = (contentType: DynamicPanelContentType | null) => {
+  const togglePin = async (contentType: DynamicPanelContentType | null) => {
     if (!contentType)
       return;
-    pinnedStates.value[contentType] = !isPinned(contentType);
+    const newPinned = !isPinned(contentType);
+    pinnedStates.value[contentType] = newPinned;
+    try {
+      await userStore.updateLayoutPanelPin(contentType, newPinned);
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+    }
   };
 
   return {

@@ -39,10 +39,29 @@ export interface BuildPickerOptions {
   callback?: (result: google.picker.ResponseObject) => void;
 }
 
+export interface ProfileLayoutPanelSettings {
+  pinned?: boolean;
+}
+
+export interface ProfileLayoutLayersSettings extends ProfileLayoutPanelSettings {
+  activeGroups?: Partial<Record<SelectionGroup, boolean>>;
+}
+
+export interface ProfileLayoutSidebarSettings {
+  explorer?: ProfileLayoutPanelSettings;
+  sessions?: ProfileLayoutPanelSettings;
+  widgets?: ProfileLayoutPanelSettings;
+  layers?: ProfileLayoutLayersSettings;
+}
+
+/** /users/:id/ */
 export interface Profile {
   settings: {
     driveFolderId: string;
     searchFolderId: string;
+    layout?: {
+      sidebar?: ProfileLayoutSidebarSettings;
+    };
   };
 }
 

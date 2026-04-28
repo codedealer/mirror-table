@@ -1,5 +1,5 @@
 import type { User } from 'firebase/auth';
-import type { Profile } from '~/models/types';
+import type { DynamicPanelContentType, Profile, SelectionGroup } from '~/models/types';
 import { doc, onSnapshot, setDoc, updateDoc } from '@firebase/firestore';
 import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 import { ProfileFactory } from '~/models/Profile';
@@ -127,6 +127,36 @@ export const useUserStore = defineStore('user', () => {
     await updateDoc(profileRef, update);
   };
 
+  const updateLayoutPanelPin = async (
+    panelType: DynamicPanelContentType,
+    pinned: boolean,
+  ) => {
+    if (!user.value || !profile.value) {
+      return;
+    }
+    const profileRef = doc($db, 'users', user.value.uid).withConverter(
+      firestoreDataConverter<Profile>(),
+    );
+    await updateDoc(profileRef, {
+      [`settings.layout.sidebar.${panelType}.pinned`]: pinned,
+    });
+  };
+
+  const updateLayoutGroupActive = async (
+    group: SelectionGroup,
+    active: boolean,
+  ) => {
+    if (!user.value || !profile.value) {
+      return;
+    }
+    const profileRef = doc($db, 'users', user.value.uid).withConverter(
+      firestoreDataConverter<Profile>(),
+    );
+    await updateDoc(profileRef, {
+      [`settings.layout.sidebar.layers.activeGroups.${group}`]: active,
+    });
+  };
+
   return {
     user,
     profile,
@@ -135,6 +165,8 @@ export const useUserStore = defineStore('user', () => {
     isAuthenticated,
     updateProfile,
     updateProfileSettings,
+    updateLayoutPanelPin,
+    updateLayoutGroupActive,
   };
 });
 

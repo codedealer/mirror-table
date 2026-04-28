@@ -11,6 +11,8 @@ import {
 
 export const useLayersStore = defineStore('layers', () => {
   const sceneStore = useSceneStore();
+  const userStore = useUserStore();
+  const { profile } = storeToRefs(userStore);
 
   // by default OWNER can see hidden elements
   const hideHiddenElements = ref(false);
@@ -57,8 +59,33 @@ export const useLayersStore = defineStore('layers', () => {
     activeGroups.value[group] = true;
   }
 
-  const toggleGroup = (group: SelectionGroup) => {
-    activeGroups.value[group] = !activeGroups.value[group];
+  // Sync active groups from profile; reset to defaults first so user B doesn't inherit user A's state
+  watch(profile, (prof) => {
+    for (const group of Object.values(SelectionGroups)) {
+      activeGroups.value[group] = true;
+    }
+    if (!prof) {
+      return;
+    }
+    const saved = prof.settings.layout?.sidebar?.layers?.activeGroups;
+    if (saved) {
+      for (const [key, value] of Object.entries(saved)) {
+        if (value !== undefined) {
+          activeGroups.value[Number(key) as SelectionGroup] = value;
+        }
+      }
+    }
+  }, { immediate: true });
+
+  const toggleGroup = async (group: SelectionGroup) => {
+    const newActive = !activeGroups.value[group];
+    activeGroups.value[group] = newActive;
+    try {
+      await userStore.updateLayoutGroupActive(group, newActive);
+    } catch (e) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+    }
   };
 
   const toggleHiddenElements = () => {
