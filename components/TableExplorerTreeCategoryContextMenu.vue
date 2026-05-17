@@ -2,6 +2,7 @@
 import type { Stat } from '@he-tree/tree-utils';
 import type { Category, TreeNode } from '~/models/types';
 import { useExplorerItem } from '#imports';
+import { TREE_MAX_DEPTH } from '~/models/types';
 
 const props = defineProps<{
   node: TreeNode;
@@ -18,19 +19,21 @@ const buildCategoryPath = (): string[] => {
     // Root context: path is just the root node itself
     return [props.node.id];
   }
+
   const path: string[] = [];
   let current: Stat<TreeNode> | null = props.stat;
+
   while (current) {
     if (current.data.isFolder) {
       path.unshift(current.data.id);
     }
     current = current.parent;
   }
+
   return path;
 };
 
 const { item: category } = useExplorerItem<Category>(toRef(() => props.node));
-
 const { here } = useSessionGroupsHere(category);
 
 const sceneStore = useSceneStore();
@@ -91,6 +94,15 @@ const createScene = () => {
     undefined,
     buildCategoryPath(),
   );
+};
+
+const importImagesAsScenes = async () => {
+  if (!category.value) {
+    return;
+  }
+
+  const { importImagesAsScenes: importImagesAsScenesWorkflow } = useTableImportImagesAsScenes();
+  await importImagesAsScenesWorkflow(props.node, buildCategoryPath());
 };
 
 const editCategory = () => {
@@ -181,6 +193,25 @@ const deleteCategory = async () => {
         <va-list-item-section>
           <va-list-item-label caption>
             Create new scene
+          </va-list-item-label>
+        </va-list-item-section>
+      </va-list-item>
+
+      <va-list-item
+        v-if="category"
+        href="#"
+        @click="importImagesAsScenes"
+      >
+        <va-list-item-section icon>
+          <va-icon
+            name="add_photo_alternate"
+            color="secondary"
+            size="small"
+          />
+        </va-list-item-section>
+        <va-list-item-section>
+          <va-list-item-label caption>
+            Import: images as scenes
           </va-list-item-label>
         </va-list-item-section>
       </va-list-item>

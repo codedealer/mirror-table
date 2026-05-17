@@ -88,11 +88,11 @@ const undoDeleteScene = () => {
 
     <div v-if="scene" class="drive-node__actions">
       <va-popover
+        v-if="scene.deleted"
         message="Undo"
         stick-to-edges
       >
         <va-button
-          v-show="scene.deleted"
           preset="plain"
           color="primary-dark"
           size="medium"
@@ -117,7 +117,7 @@ const undoDeleteScene = () => {
       </div>
 
       <TableExplorerTreeSceneContextMenu
-        v-show="!scene.deleted"
+        v-if="!scene.deleted"
         :node="node"
       />
     </div>

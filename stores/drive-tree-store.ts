@@ -5,9 +5,7 @@ import type {
   DriveTreeNode,
 } from '~/models/types';
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import { PreviewPropertiesFactory } from '~/models/PreviewProprerties';
 
-import { DriveFileExtensions } from '~/models/types';
 import { buildNodes, moveFile } from '~/utils/driveOps';
 import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
@@ -130,7 +128,15 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     try {
       visibleRootNode.value = newVisibleRootNode === undefined
         ? createVisibleRootNode(canonicalRootId.value)
-        : structuredClone(toRaw(newVisibleRootNode));
+        : {
+            id: newVisibleRootNode.id,
+            label: newVisibleRootNode.label,
+            isFolder: newVisibleRootNode.isFolder,
+            loaded: false,
+            loading: false,
+            disabled: newVisibleRootNode.disabled,
+            ...(newVisibleRootNode.icon !== undefined && { icon: newVisibleRootNode.icon }),
+          };
 
       visibleRootNode.value.loading = true;
 
@@ -262,95 +268,13 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     node.label = label;
   };
 
-  const quickCreateAssets = async (
-    kind: AssetPropertiesKind,
-    ids: string[],
-    parent: DriveTreeNode,
-  ) => {
-    let images: DriveFile[] = [];
-
-    setNodeLoading(parent, true);
-
-    const driveFileStore = useDriveFileStore();
-
-    try {
-      ({ files: images } = await driveFileStore.getFiles(ids));
-    } catch (e) {
-      console.error(e);
-      const notificationStore = useNotificationStore();
-      notificationStore.error(extractErrorMessage(e));
-    }
-
-    // create an asset for each image, set images as preview
-    for (const image of images) {
-      const fileName = stripFileExtension(image.name);
-      const fileType = DriveMimeTypes.MARKDOWN;
-      const fileExtension = DriveFileExtensions[fileType];
-
-      const fileObject = new File(
-        [],
-        `${fileName}.${fileExtension}`,
-        { type: fileType },
-      );
-
-      const appProperties = AssetPropertiesFactory({
-        type: AppPropertiesTypes.ASSET,
-        kind,
-      });
-
-      appProperties.preview = PreviewPropertiesFactory({
-        id: image.id,
-        nativeWidth: image.imageMediaMetadata!.width,
-        nativeHeight: image.imageMediaMetadata!.height,
-      });
-
-      console.log(`Creating asset for ${image.name}`);
-      try {
-        await driveFileStore.createFile(fileObject, parent.id, appProperties);
-      } catch (e) {
-        console.error(e);
-        const notificationStore = useNotificationStore();
-        notificationStore.error(extractErrorMessage(e));
-
-        break;
-      }
-    }
-
-    await loadChildren(parent);
-
-    setNodeLoading(parent, false);
-  };
-
   const importImages = async (
     kind: AssetPropertiesKind,
     parentNode: DriveTreeNode,
   ) => {
-    const { buildPicker } = usePicker();
-    const userStore = useUserStore();
+    const { importImagesAsAssets } = useTableImportImagesAsScenes();
 
-    try {
-      await buildPicker({
-        parentId: userStore.profile!.settings.driveFolderId,
-        uploadParentId: parentNode.id,
-        template: PickerViewTemplates.IMAGES,
-        allowMultiSelect: true,
-        allowUpload: true,
-        callback: (result) => {
-          if (
-            result.action === google.picker.Action.PICKED
-            && result.docs.length > 0
-          ) {
-            const ids = result.docs.map(d => d.id);
-
-            void quickCreateAssets(kind, ids, parentNode);
-          }
-        },
-      });
-    } catch (e) {
-      console.error(e);
-      const notificationStore = useNotificationStore();
-      notificationStore.error(extractErrorMessage(e));
-    }
+    await importImagesAsAssets(kind, parentNode);
   };
 
   const importTextAssets = async (parentNode: DriveTreeNode) => {

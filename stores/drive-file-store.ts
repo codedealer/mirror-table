@@ -437,6 +437,7 @@ export const useDriveFileStore = defineStore('drive-file', () => {
         },
         { notifyOnError: true },
       );
+      return result.id;
     } else {
       throw new Error('App Properties are not filled');
     }

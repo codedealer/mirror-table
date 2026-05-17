@@ -64,6 +64,7 @@ const handleToggle = async () => {
       :color="isActive ? 'primary' : 'text-primary'"
       hover-behavior="opacity"
       class="drive-node__label"
+      :loading="node.loading"
       :hover-opacity="1"
       :disabled="!category || node.loading || category.deleted"
       preset="plain"
@@ -96,11 +97,11 @@ const handleToggle = async () => {
 
     <div v-if="category" class="drive-node__actions">
       <va-popover
+        v-if="category.deleted"
         message="Undo"
         stick-to-edges
       >
         <va-button
-          v-show="category.deleted"
           preset="plain"
           color="primary-dark"
           size="medium"

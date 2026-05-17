@@ -270,6 +270,29 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
     return loadItem<Scene>(id, scenesRef.value);
   };
 
+  const trashSceneById = async (sceneId: string, value: boolean) => {
+    if (!scenesRef.value) {
+      throw new Error('Loading scene when firestore is not ready');
+    }
+
+    const docRef = doc(scenesRef.value, sceneId);
+
+    try {
+      await updateDoc(docRef, {
+        deleted: value,
+      });
+    } catch (e) {
+      console.error(e);
+      const notificationStore = useNotificationStore();
+      notificationStore.error(extractErrorMessage(e));
+      return;
+    }
+
+    if (sceneId in scenes.value) {
+      scenes.value[sceneId].deleted = value;
+    }
+  };
+
   /**
    * Save a scene to firestore.
    * @param title new title for a scene
@@ -278,8 +301,12 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
    * @param categoryPath array of category IDs from root to parent
    */
   const saveScene = async (title: string, parent: TreeNode, id?: string, categoryPath?: string[]) => {
-    if (!tableStore.table || (!id && !parent.children)) {
+    if (!tableStore.table) {
       return;
+    }
+
+    if (!id && !parent.children) {
+      parent.children = [];
     }
 
     const _sceneRef = id
@@ -287,6 +314,7 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
       : doc(collection($db, 'tables', tableStore.table.id, 'scenes'));
 
     const sceneRef = _sceneRef.withConverter(firestoreDataConverter<Scene>());
+    const sceneId = sceneRef.id;
 
     try {
       if (!id) {
@@ -317,28 +345,18 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
           title,
           searchIndex: generateFirestoreSearchIndex(title),
         });
-
-        // update the node
-        const { item } = useExplorerItem(toRef(() => parent));
-
-        if (!item.value) {
-          throw new Error('Scene not found after update');
-        }
-
-        item.value.title = title;
-
-        return;
       }
     } catch (error) {
       console.error(error);
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(error));
+      throw error;
     }
 
     // update the cache
     let newScene: Scene | undefined;
     try {
-      newScene = await loadScene(sceneRef.id);
+      newScene = await loadScene(sceneId);
 
       if (!newScene) {
         throw new Error('Scene not found after saving');
@@ -347,41 +365,47 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
       scenes.value[newScene.id] = newScene;
     } catch (error) {
       console.error(error);
+      if (!id) {
+        try {
+          await trashSceneById(sceneId, true);
+        } catch (cleanupError) {
+          console.error(cleanupError);
+          const notificationStore = useNotificationStore();
+          notificationStore.error(
+            `Failed to clean up scene "${title}" after cache hydration failed: ${extractErrorMessage(cleanupError)}`,
+          );
+        }
+      }
+
       const notificationStore = useNotificationStore();
       notificationStore.error(extractErrorMessage(error));
-      return;
+      const sceneSaveError = error instanceof Error
+        ? error as Error & { sceneId?: string }
+        : new Error(extractErrorMessage(error)) as Error & { sceneId?: string };
+      sceneSaveError.sceneId = sceneId;
+      throw sceneSaveError;
     }
 
     // update the tree
-    const node = ExplorerTreeNodeFactory(newScene);
+    if (id) {
+      const { item } = useExplorerItem(toRef(() => parent));
 
-    if (!parent.children) {
-      return; // this should never happen
+      if (!item.value) {
+        throw new Error('Scene not found after update');
+      }
+
+      item.value.title = newScene.title;
+    } else {
+      const node = ExplorerTreeNodeFactory(newScene);
+
+      parent.children?.push(node);
     }
-    parent.children.push(node);
+
+    return sceneRef.id;
   };
 
   const trashScene = async (scene: Scene, value: boolean) => {
-    if (!scenesRef.value) {
-      throw new Error('Loading scene when firestore is not ready');
-    }
-
-    const docRef = doc(scenesRef.value, scene.id);
-
-    try {
-      await updateDoc(docRef, {
-        deleted: value,
-      });
-    } catch (e) {
-      console.error(e);
-      const notificationStore = useNotificationStore();
-      notificationStore.error(extractErrorMessage(e));
-      return;
-    }
-
-    if (scene.id in scenes.value) {
-      scenes.value[scene.id].deleted = value;
-    }
+    return await trashSceneById(scene.id, value);
   };
 
   const trashCategory = async (category: Category, value: boolean) => {
@@ -455,6 +479,7 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
     loadScene,
     saveScene,
     trashScene,
+    trashSceneById,
     trashCategory,
   };
 });

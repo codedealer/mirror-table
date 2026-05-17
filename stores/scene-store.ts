@@ -5,12 +5,15 @@ import type {
   Scene,
   SceneElement,
   SceneElementScreen,
+  SelectionGroup,
 } from '~/models/types';
 import type { WithIdPlaceholders } from '~/utils/replaceIdPlaceholder';
 import { collection, deleteDoc, doc, orderBy, query, setDoc, updateDoc, where, writeBatch } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 import { SceneElementCanvasObjectAssetFactory } from '~/models/SceneElementCanvasObjectAsset';
 import { SceneElementCanvasObjectTextFactory } from '~/models/SceneElementCanvasObjectText';
+import { SelectionGroups } from '~/models/types';
+import { replaceIdPlaceholder } from '~/utils/replaceIdPlaceholder';
 
 export const useSceneStore = defineStore('scene', () => {
   const { $db } = useNuxtApp();
@@ -76,6 +79,7 @@ export const useSceneStore = defineStore('scene', () => {
 
     try {
       await setDoc(docRef, element);
+      return docRef.id;
     } catch (e) {
       const notificationStore = useNotificationStore();
       notificationStore.error('Failed to add scene element.');
@@ -83,11 +87,16 @@ export const useSceneStore = defineStore('scene', () => {
     }
   };
 
-  const addAsset = async (
+  const addAssetToScene = async (
+    sceneId: string,
     asset: DriveAsset,
     position?: { x: number; y: number },
+    options?: {
+      enabled?: boolean;
+      selectionGroup?: SelectionGroup;
+    },
   ) => {
-    if (!scene.value) {
+    if (!tableStore.table) {
       return;
     }
 
@@ -112,16 +121,48 @@ export const useSceneStore = defineStore('scene', () => {
       const sceneElement = SceneElementCanvasObjectAssetFactory(
         ID_PLACEHOLDER,
         asset,
-        scene.value.owner,
+        tableStore.table.owner,
         positioningFunction,
       );
 
-      await addElement(sceneElement);
+      sceneElement.enabled = options?.enabled ?? false;
+      sceneElement.selectionGroup = options?.selectionGroup ?? SelectionGroups.HIDDEN;
+
+      const sceneElementsRef = collection(
+        $db,
+        'tables',
+        tableStore.table.id,
+        'scenes',
+        sceneId,
+        'elements',
+      ).withConverter(firestoreDataConverter<SceneElement>());
+
+      const docRef = doc(sceneElementsRef);
+      const element = replaceIdPlaceholder(sceneElement, docRef.id);
+
+      await setDoc(docRef, element);
+
+      return docRef.id;
     } catch (error) {
       const notificationStore = useNotificationStore();
       notificationStore.error('Failed to add asset to the scene.');
       console.error(error);
     }
+  };
+
+  const addAsset = async (
+    asset: DriveAsset,
+    position?: { x: number; y: number },
+    options?: {
+      enabled?: boolean;
+      selectionGroup?: SelectionGroup;
+    },
+  ) => {
+    if (!scene.value) {
+      return;
+    }
+
+    return await addAssetToScene(scene.value.id, asset, position, options);
   };
 
   const addText = async (
@@ -263,6 +304,7 @@ export const useSceneStore = defineStore('scene', () => {
     scene,
     sceneElements,
     addElement,
+    addAssetToScene,
     addAsset,
     addText,
     addScreen,
