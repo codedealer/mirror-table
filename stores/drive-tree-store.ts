@@ -6,7 +6,7 @@ import type {
 } from '~/models/types';
 import { acceptHMRUpdate, defineStore } from 'pinia';
 
-import { buildNodes, moveFile } from '~/utils/driveOps';
+import { buildNodes, convertToBlob, moveFile } from '~/utils/driveOps';
 import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
@@ -278,56 +278,134 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
   };
 
   const importTextAssets = async (parentNode: DriveTreeNode) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.md,text/markdown';
-    input.multiple = true;
-    input.style.display = 'none';
+    const userStore = useUserStore();
+    const notificationStore = useNotificationStore();
+    const workspaceFolderId = userStore.profile?.settings.driveFolderId;
 
-    const cleanup = () => input.remove();
+    if (!workspaceFolderId) {
+      notificationStore.error('User workspace folder not configured');
+      return;
+    }
 
-    input.addEventListener('cancel', cleanup);
+    try {
+      const { buildPicker } = usePicker();
 
-    input.addEventListener('change', async () => {
-      cleanup();
+      const pickedDocs = await new Promise<Array<{ id: string; name?: string }> | null>((resolve, reject) => {
+        void buildPicker({
+          parentId: workspaceFolderId,
+          uploadParentId: parentNode.id,
+          template: PickerViewTemplates.ALL,
+          allowMultiSelect: true,
+          allowUpload: true,
+          callback: (result) => {
+            if (
+              result.action === google.picker.Action.PICKED
+              && result.docs.length > 0
+            ) {
+              resolve(
+                result.docs
+                  .map(doc => ({ id: doc.id, name: doc.name }))
+                  .filter(doc => !!doc.id),
+              );
+              return;
+            }
 
-      const selectedFiles = Array.from(input.files ?? []);
+            if (
+              result.action === google.picker.Action.CANCEL
+              || result.action === google.picker.Action.PICKED
+            ) {
+              resolve(null);
+            }
+          },
+        }).catch(reject);
+      });
 
-      if (!selectedFiles.length) {
+      if (!pickedDocs?.length) {
         return;
       }
 
+      const driveFileStore = useDriveFileStore();
+
       setNodeLoading(parentNode, true);
 
-      const driveFileStore = useDriveFileStore();
-      const notificationStore = useNotificationStore();
+      let successCount = 0;
+      let failureCount = 0;
 
-      for (const file of selectedFiles) {
-        if (!file.name.toLowerCase().endsWith('.md')) {
-          notificationStore.error(`Skipped "${file.name}": only .md files are supported`);
-          continue;
+      try {
+        for (const pickedDoc of pickedDocs) {
+          const fallbackName = pickedDoc.name || pickedDoc.id;
+
+          try {
+            const { file, error } = await driveFileStore.getFile(
+              pickedDoc.id,
+              DataRetrievalStrategies.SOURCE,
+            );
+
+            if (error || !file) {
+              throw error ?? new Error(`Selected file "${fallbackName}" not found`);
+            }
+
+            if (file.mimeType !== DriveMimeTypes.MARKDOWN) {
+              notificationStore.error(`Skipped "${file.name || fallbackName}": only .md files are supported`);
+              continue;
+            }
+
+            const appProperties = AssetPropertiesFactory({
+              type: AppPropertiesTypes.ASSET,
+              kind: AssetPropertiesKinds.TEXT,
+            });
+
+            // Picker uploads already create the file in uploadParentId.
+            // Reuse the selected file when it is already in the target folder.
+            const isAlreadyInTargetFolder = !!file.parents?.includes(parentNode.id);
+            if (isAlreadyInTargetFolder) {
+              await driveFileStore.saveFile(file.id, appProperties);
+              successCount++;
+              continue;
+            }
+
+            const media = await driveFileStore.downloadMedia(
+              file,
+              DataRetrievalStrategies.SOURCE,
+              DataRetrievalStrategies.SOURCE,
+            );
+
+            if (!media) {
+              throw new Error(`Failed to download "${file.name || fallbackName}"`);
+            }
+
+            const fileName = file.name.toLowerCase().endsWith('.md') ? file.name : `${file.name}.md`;
+            const markdownBlob = convertToBlob(media);
+            const markdownFile = new File([markdownBlob], fileName, { type: DriveMimeTypes.MARKDOWN });
+
+            await driveFileStore.createFile(markdownFile, parentNode.id, appProperties);
+            successCount++;
+          } catch (e) {
+            failureCount++;
+            console.error(e);
+            notificationStore.error(`Failed to import "${fallbackName}": ${extractErrorMessage(e)}`);
+          }
         }
 
-        const appProperties = AssetPropertiesFactory({
-          type: AppPropertiesTypes.ASSET,
-          kind: AssetPropertiesKinds.TEXT,
-        });
-
-        try {
-          await driveFileStore.createFile(file, parentNode.id, appProperties);
-        } catch (e) {
-          console.error(e);
-          notificationStore.error(extractErrorMessage(e));
-          break;
+        if (successCount > 0) {
+          await loadChildren(parentNode);
+          setFolderOpen(parentNode.id, true);
         }
+      } finally {
+        setNodeLoading(parentNode, false);
       }
 
-      await loadChildren(parentNode);
-      setNodeLoading(parentNode, false);
-    });
-
-    document.body.appendChild(input);
-    input.click();
+      if (successCount > 0) {
+        notificationStore.success(
+          failureCount > 0
+            ? `Imported ${successCount} text asset(s), ${failureCount} failed`
+            : `Successfully imported ${successCount} text asset(s)`,
+        );
+      }
+    } catch (e) {
+      notificationStore.error(extractErrorMessage(e));
+      console.error(e);
+    }
   };
 
   const moveNode = async (
