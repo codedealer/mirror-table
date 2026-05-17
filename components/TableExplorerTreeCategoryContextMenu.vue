@@ -102,7 +102,14 @@ const importImagesAsScenes = async () => {
   }
 
   const { importImagesAsScenes: importImagesAsScenesWorkflow } = useTableImportImagesAsScenes();
-  await importImagesAsScenesWorkflow(props.node, buildCategoryPath());
+  const hasImportedScenes = await importImagesAsScenesWorkflow(props.node, buildCategoryPath());
+
+  if (!hasImportedScenes || !props.stat) {
+    return;
+  }
+
+  // eslint-disable-next-line vue/no-mutating-props -- @he-tree/vue stat is designed to be mutated
+  props.stat.open = true;
 };
 
 const editCategory = () => {

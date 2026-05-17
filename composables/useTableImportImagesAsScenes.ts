@@ -110,14 +110,14 @@ export const useTableImportImagesAsScenes = () => {
   const importImagesAsAssets = async (
     kind: AssetPropertiesKind,
     parentNode: DriveTreeNode,
-  ) => {
+  ): Promise<boolean> => {
     const userStore = useUserStore();
     const driveTreeStore = useDriveTreeStore();
     const workspaceFolderId = userStore.profile?.settings.driveFolderId;
 
     if (!workspaceFolderId) {
       notificationStore.error('User workspace folder not configured');
-      return;
+      return false;
     }
 
     try {
@@ -127,7 +127,7 @@ export const useTableImportImagesAsScenes = () => {
       });
 
       if (!pickedImageIds?.length) {
-        return;
+        return false;
       }
 
       driveTreeStore.setNodeLoading(parentNode, true);
@@ -135,7 +135,7 @@ export const useTableImportImagesAsScenes = () => {
       const images = await loadImages(pickedImageIds);
       if (!images.length) {
         notificationStore.error('No valid images to import');
-        return;
+        return false;
       }
 
       let successCount = 0;
@@ -153,17 +153,23 @@ export const useTableImportImagesAsScenes = () => {
         }
       }
 
-      await driveTreeStore.loadChildren(parentNode);
-
       if (successCount > 0) {
+        await driveTreeStore.loadChildren(parentNode);
+        driveTreeStore.setFolderOpen(parentNode.id, true);
+
         notificationStore.success(
           failureCount > 0
             ? `Imported ${successCount} image asset(s), ${failureCount} failed`
             : `Successfully imported ${successCount} image asset(s)`,
         );
+
+        return true;
       }
+
+      return false;
     } catch (error) {
       notificationStore.error(extractErrorMessage(error));
+      return false;
     } finally {
       driveTreeStore.setNodeLoading(parentNode, false);
     }
@@ -172,18 +178,18 @@ export const useTableImportImagesAsScenes = () => {
   const importImagesAsScenes = async (
     parentNode: TreeNode,
     categoryPath: string[],
-  ) => {
+  ): Promise<boolean> => {
     const userStore = useUserStore();
     const workspaceFolderId = userStore.profile?.settings.driveFolderId;
 
     if (!tableStore.table) {
       notificationStore.error('Table not loaded');
-      return;
+      return false;
     }
 
     if (!workspaceFolderId) {
       notificationStore.error('User workspace folder not configured');
-      return;
+      return false;
     }
 
     try {
@@ -195,7 +201,7 @@ export const useTableImportImagesAsScenes = () => {
       });
 
       if (!pickedImageIds?.length) {
-        return;
+        return false;
       }
 
       tableExplorerStore.setNodeLoading(parentNode, true);
@@ -203,7 +209,7 @@ export const useTableImportImagesAsScenes = () => {
       const images = await loadImages(pickedImageIds);
       if (!images.length) {
         notificationStore.error('No valid images to import');
-        return;
+        return false;
       }
 
       let successCount = 0;
@@ -225,10 +231,14 @@ export const useTableImportImagesAsScenes = () => {
           // title is empty because the asset is meant to be a background
           createdAsset = await createImageAsset(image, '', AssetPropertiesKinds.IMAGE, assetFolderId);
 
-          await sceneStore.addAssetToScene(createdSceneId, createdAsset, undefined, {
+          const sceneElementId = await sceneStore.addAssetToScene(createdSceneId, createdAsset, undefined, {
             enabled: true,
             selectionGroup: SelectionGroups.BACKGROUND,
           });
+
+          if (!sceneElementId) {
+            throw new Error(`Failed to add image background to scene "${sceneTitle}"`);
+          }
 
           successCount++;
         } catch (error) {
@@ -266,9 +276,14 @@ export const useTableImportImagesAsScenes = () => {
             ? `Imported ${successCount} scene(s), ${failureCount} failed`
             : `Successfully imported ${successCount} scene(s)`,
         );
+
+        return true;
       }
+
+      return false;
     } catch (error) {
       notificationStore.error(extractErrorMessage(error));
+      return false;
     } finally {
       tableExplorerStore.setNodeLoading(parentNode, false);
     }
