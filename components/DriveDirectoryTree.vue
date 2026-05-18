@@ -26,13 +26,13 @@ const {
   isDragging,
   hoveredFolderTarget,
   dragOpenProgress,
-  clearDragState,
   clearHoveredFolderTarget,
   setHoveredFolderTarget,
   setPendingFolderDropTarget,
   eachDraggable,
   eachDroppable,
   rootDroppable,
+  handleTreeLeave,
   handleBeforeDragStart,
   handleAfterDrop,
 } = useDriveTreeController();
@@ -65,7 +65,7 @@ provide(driveTreeSetPendingFolderDropTargetKey, setPendingFolderDropTarget);
         :node-key="(stat: Stat<DriveTreeNode>) => stat.data.id"
         @before-drag-start="handleBeforeDragStart"
         @after-drop="handleAfterDrop"
-        @leave="clearDragState"
+        @leave="handleTreeLeave"
       >
         <template #default="{ node, stat }: { node: DriveTreeNode, stat: Stat<DriveTreeNode> }">
           <component

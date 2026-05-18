@@ -1,13 +1,15 @@
 import type { Stat } from '@he-tree/tree-utils';
 import type { DriveTreeNode } from '~/models/types';
-import type { DriveTreeDragOpenProgress } from '~/utils/heTree';
+import type { CanvasDropEligibility, DriveTreeDragOpenProgress } from '~/utils/heTree';
 import { dragContext } from '@he-tree/vue';
+import { useEventListener } from '@vueuse/core';
 import { TREE_MAX_DEPTH } from '~/models/types';
 
 const DRAG_OPEN_DELAY = 1200;
 
 export const useDriveTreeController = () => {
   const driveTreeStore = useDriveTreeStore();
+  const { draggedFileDragPayload } = storeToRefs(driveTreeStore);
 
   const isDragging = ref(false);
   const hoveredFolderTarget = ref<Stat<DriveTreeNode> | null>(null);
@@ -42,6 +44,31 @@ export const useDriveTreeController = () => {
     hoveredFolderTarget.value = null;
     pendingFolderDropTarget.value = null;
     dragOpenProgress.value = null;
+    draggedFileDragPayload.value = null;
+  };
+
+  const clearTreeDragUiState = () => {
+    clearHoverTimer();
+    isDragging.value = false;
+    hoveredFolderTarget.value = null;
+    pendingFolderDropTarget.value = null;
+    dragOpenProgress.value = null;
+  };
+
+  // Drag sessions can finish outside both tree and canvas (for example, dropping on browser chrome).
+  // Always clear shared payload at dragend so a stale payload cannot be reused by a later, unrelated drag.
+  const handleGlobalDragEnd = () => {
+    clearDragState();
+  };
+
+  if (import.meta.client) {
+    useEventListener(window, 'dragend', handleGlobalDragEnd);
+  }
+
+  const handleTreeLeave = () => {
+    // Leaving the tree is expected for external drops (for example, canvas).
+    // Keep the shared drag payload until drop completes, but reset folder-target UI state.
+    clearTreeDragUiState();
   };
 
   const setHoveredFolderTarget = (stat: Stat<DriveTreeNode>) => {
@@ -112,9 +139,21 @@ export const useDriveTreeController = () => {
     });
   };
 
-  const handleBeforeDragStart = () => {
+  const handleBeforeDragStart = (draggedStat?: Stat<DriveTreeNode>) => {
     clearDragState();
     isDragging.value = true;
+
+    if (!draggedStat) {
+      return;
+    }
+
+    const nodeId = draggedStat.data.id;
+    const eligibility: CanvasDropEligibility = draggedStat.data.sendToSceneAvailable ? 'eligible' : 'ineligible';
+
+    draggedFileDragPayload.value = {
+      nodeId,
+      eligibility,
+    };
   };
 
   const handleAfterDrop = async () => {
@@ -133,6 +172,18 @@ export const useDriveTreeController = () => {
     const oldParentNode: DriveTreeNode = oldParentStat
       ? oldParentStat.data
       : driveTreeStore.visibleRootNode;
+
+    // External drops occur when the drag finishes outside this tree.
+    // Root drops inside the tree can still have parent=null, so rely on tree identity.
+    const droppedInThisTree = targetInfo?.tree === startInfo.tree;
+    const isExternalDrop = !pendingFolderDropTarget.value && !droppedInThisTree;
+
+    // For external drops (canvas), keep shared payload until target drop lifecycle consumes it.
+    // This avoids racing source-side cleanup against canvas drop handlers.
+    if (isExternalDrop) {
+      clearTreeDragUiState();
+      return;
+    }
 
     const resolvedTargetStat = pendingFolderDropTarget.value
       ?? (targetInfo?.parent as Stat<DriveTreeNode> | null)
@@ -167,6 +218,7 @@ export const useDriveTreeController = () => {
     isDragging,
     hoveredFolderTarget,
     dragOpenProgress,
+    draggedFileDragPayload,
     clearDragState,
     clearHoveredFolderTarget,
     setHoveredFolderTarget,
@@ -174,6 +226,7 @@ export const useDriveTreeController = () => {
     eachDraggable,
     eachDroppable,
     rootDroppable,
+    handleTreeLeave,
     handleBeforeDragStart,
     handleAfterDrop,
   };

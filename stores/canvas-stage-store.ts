@@ -103,6 +103,62 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     return scaledContainer;
   };
 
+  /**
+   * Convert browser coordinates (from drop event) to stage coordinates,
+   * accounting for scroll offset, stage transform, and scale.
+   * Clamps the position to keep the full asset within canvas bounds.
+   *
+   * @param clientX Browser x coordinate
+   * @param clientY Browser y coordinate
+   * @param assetWidth Asset width (unscaled)
+   * @param assetHeight Asset height (unscaled)
+   * @param assetScaleX Asset scale X (default 1)
+   * @param assetScaleY Asset scale Y (default 1)
+   * @returns Stage coordinates (x, y) or null if stage not available
+   */
+  const browserCoordsToStageCoords = (
+    clientX: number,
+    clientY: number,
+    assetWidth: number,
+    assetHeight: number,
+    assetScaleX: number = 1,
+    assetScaleY: number = 1,
+  ): { x: number; y: number } | null => {
+    if (!stage.value) {
+      return null;
+    }
+
+    // Sync Konva pointer state with the browser drop event coordinates.
+    stage.value.setPointersPositions({ clientX, clientY });
+
+    // Use getRelativePointerPosition which accounts for stage transform
+    const relativePos = stage.value.getRelativePointerPosition();
+    if (!relativePos) {
+      return null;
+    }
+
+    // Calculate visual dimensions with scale
+    const visualWidth = assetWidth * assetScaleX;
+    const visualHeight = assetHeight * assetScaleY;
+
+    // Calculate field bounds (stage has field padding)
+    const minX = 0;
+    const minY = 0;
+    const maxX = fieldWidth.value;
+    const maxY = fieldHeight.value;
+
+    // Clamp position so asset stays fully within bounds
+    // Position is the center of the asset, so we need to account for half the visual size
+    let x = relativePos.x;
+    let y = relativePos.y;
+
+    // Clamp to keep full asset in bounds
+    x = Math.max(minX + visualWidth / 2, Math.min(maxX - visualWidth / 2, x));
+    y = Math.max(minY + visualHeight / 2, Math.min(maxY - visualHeight / 2, y));
+
+    return { x, y };
+  };
+
   return {
     _stageNode,
     _stage,
@@ -119,6 +175,7 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     stageConfig,
     applyConfig,
     fitToStage,
+    browserCoordsToStageCoords,
   };
 });
 

@@ -274,6 +274,7 @@ export interface TreeNode {
 
 export interface DriveTreeNode extends TreeNode {
   id: string; // coincides with DriveFile.id
+  sendToSceneAvailable?: boolean;
   children?: DriveTreeNode[];
 }
 

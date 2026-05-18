@@ -4,6 +4,7 @@ import type {
   DriveFile,
   DriveTreeNode,
 } from '~/models/types';
+import type { DriveFileDragPayload } from '~/utils/heTree';
 import { acceptHMRUpdate, defineStore } from 'pinia';
 
 import { buildNodes, convertToBlob, moveFile } from '~/utils/driveOps';
@@ -37,6 +38,7 @@ const reconcileNodes = (
     existingChild.label = nextChild.label;
     existingChild.icon = nextChild.icon;
     existingChild.disabled = nextChild.disabled;
+    existingChild.sendToSceneAvailable = nextChild.sendToSceneAvailable;
 
     if (!existingChild.isFolder) {
       existingChild.loaded = nextChild.loaded;
@@ -49,6 +51,7 @@ const reconcileNodes = (
 export const useDriveTreeStore = defineStore('drive-tree', () => {
   const visibleRootNode = ref<DriveTreeNode>(createVisibleRootNode());
   const openFolderIds = ref(new Set<string>());
+  const draggedFileDragPayload = ref<DriveFileDragPayload | null>(null);
 
   const nodes = computed(() => {
     return visibleRootNode.value.children ?? [];
@@ -442,6 +445,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     nodes,
     canonicalRootId,
     visibleRootNode,
+    draggedFileDragPayload,
     isCanonicalRootVisible,
     setVisibleRootFolder,
     resetVisibleRootFolder,

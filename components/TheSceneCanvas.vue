@@ -9,6 +9,18 @@ const canvasStageStore = useCanvasStageStore();
 const canvasToolStore = useCanvasToolStore();
 const sessionStore = useSessionStore();
 const hotkeyStore = useHotkeyStore();
+const tableStore = useTableStore();
+const sceneStore = useSceneStore();
+const driveFileStore = useDriveFileStore();
+const notificationStore = useNotificationStore();
+const driveTreeStore = useDriveTreeStore();
+
+const { draggedFileDragPayload } = storeToRefs(driveTreeStore);
+const isCanvasDragHovering = ref(false);
+
+const clearDraggedPayload = () => {
+  driveTreeStore.draggedFileDragPayload = null;
+};
 
 const selectTool = useSelectTool();
 hotkeyStore.registerHotkey({
@@ -76,7 +88,107 @@ const repositionStage = () => {
   });
 };
 
-const tableStore = useTableStore();
+/**
+ * Handle dragenter event on canvas
+ */
+const onCanvasDragEnter = (e: DragEvent) => {
+  if (tableStore.mode !== TableModes.OWN || !draggedFileDragPayload.value) {
+    return;
+  }
+
+  // Allow hover affordance while eligibility is resolving. Drop still enforces final eligibility.
+  if (draggedFileDragPayload.value.eligibility === 'ineligible') {
+    return;
+  }
+
+  e.preventDefault();
+  e.dataTransfer!.dropEffect = 'copy';
+  isCanvasDragHovering.value = true;
+};
+
+/**
+ * Handle dragover event on canvas (required to allow drop)
+ */
+const onCanvasDragOver = (e: DragEvent) => {
+  if (tableStore.mode !== TableModes.OWN || !draggedFileDragPayload.value) {
+    return;
+  }
+
+  if (draggedFileDragPayload.value.eligibility === 'ineligible') {
+    isCanvasDragHovering.value = false;
+    return;
+  }
+
+  e.preventDefault();
+  e.dataTransfer!.dropEffect = 'copy';
+  isCanvasDragHovering.value = true;
+};
+
+/**
+ * Handle dragleave event on canvas
+ */
+const onCanvasDragLeave = (e: DragEvent) => {
+  // Only clear hover if leaving the canvas field entirely
+  if (e.target === canvasField.value) {
+    isCanvasDragHovering.value = false;
+  }
+};
+
+/**
+ * Handle drop event on canvas
+ */
+const onCanvasDrop = async (e: DragEvent) => {
+  e.preventDefault();
+  isCanvasDragHovering.value = false;
+
+  try {
+    // Validate preconditions
+    if (!canvasStageStore.stage || tableStore.mode !== TableModes.OWN || !draggedFileDragPayload.value || !sceneStore.scene) {
+      return;
+    }
+
+    const fileId = draggedFileDragPayload.value.nodeId;
+
+    // Fetch file lazily only on real canvas drop.
+    const { file: driveAsset } = await driveFileStore.getFile(fileId);
+    if (
+      !driveAsset
+      || !isDriveAsset(driveAsset)
+      || driveAsset.appProperties.kind === AssetPropertiesKinds.TEXT
+      || !driveAsset.appProperties.preview
+      || !driveAsset.capabilities?.canDownload
+    ) {
+      return; // Silent no-op for non-assets
+    }
+
+    // Get drop position from event
+    if (e.clientX == null || e.clientY == null) {
+      return;
+    }
+
+    // Use the coordinate converter from canvas stage store
+    const stageCoords = canvasStageStore.browserCoordsToStageCoords(
+      e.clientX,
+      e.clientY,
+      driveAsset.appProperties.preview?.nativeWidth ?? 200,
+      driveAsset.appProperties.preview?.nativeHeight ?? 200,
+      driveAsset.appProperties.preview?.scaleX ?? 1,
+      driveAsset.appProperties.preview?.scaleY ?? 1,
+    );
+
+    if (!stageCoords) {
+      return; // No-op if coordinate conversion fails
+    }
+
+    // Insert asset at drop position
+    await sceneStore.addAsset(driveAsset, stageCoords, { enabled: false });
+  } catch (error) {
+    notificationStore.error('Failed to add asset to canvas.');
+    console.error(error);
+  } finally {
+    clearDraggedPayload();
+  }
+};
 
 onMounted(() => {
   repositionStage();
@@ -94,6 +206,13 @@ onMounted(() => {
       });
     }
   }, { deep: true });
+  // Attach drop event listeners to canvasField
+  if (canvasField.value) {
+    useEventListener(canvasField, 'dragenter', onCanvasDragEnter);
+    useEventListener(canvasField, 'dragover', onCanvasDragOver);
+    useEventListener(canvasField, 'dragleave', onCanvasDragLeave);
+    useEventListener(canvasField, 'drop', onCanvasDrop);
+  }
 });
 
 useEventListener(
@@ -114,7 +233,9 @@ useEventListener(
     <div
       ref="canvasField"
       :style="fieldDimensions"
-      class="canvas-container__field scroll-enabled"
+      class="canvas-container__field scroll-enabled" :class="[
+        { 'canvas-container__field--drop-active': isCanvasDragHovering },
+      ]"
     >
       <TheSceneCanvasStage />
     </div>
@@ -122,5 +243,9 @@ useEventListener(
 </template>
 
 <style scoped lang="scss">
-
+.canvas-container__field--drop-active {
+  background: linear-gradient(135deg, rgba(250, 69, 171, 0.08) 0%, rgba(250, 69, 171, 0.04) 100%);
+  border: 2px dashed rgba(250, 69, 171, 0.3);
+  border-radius: 4px;
+}
 </style>
