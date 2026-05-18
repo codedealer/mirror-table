@@ -22,6 +22,10 @@ const clearDraggedPayload = () => {
   driveTreeStore.draggedFileDragPayload = null;
 };
 
+const clearCanvasDragHover = () => {
+  isCanvasDragHovering.value = false;
+};
+
 const selectTool = useSelectTool();
 hotkeyStore.registerHotkey({
   id: 'select-tool',
@@ -193,6 +197,12 @@ const onCanvasDrop = async (e: DragEvent) => {
 onMounted(() => {
   repositionStage();
 
+  watch(draggedFileDragPayload, (payload) => {
+    if (!payload) {
+      clearCanvasDragHover();
+    }
+  });
+
   const { activeSession } = storeToRefs(sessionStore);
   watch(activeSession, (session) => {
     if (tableStore.mode !== TableModes.PRESENTATION) {
@@ -221,6 +231,12 @@ useEventListener(
   repositionStage,
   { passive: true },
 );
+
+// Ensure canvas drag overlay is cleared when drag ends outside canvas handlers.
+if (import.meta.client) {
+  useEventListener(window, 'dragend', clearCanvasDragHover);
+  useEventListener(window, 'drop', clearCanvasDragHover);
+}
 </script>
 
 <template>

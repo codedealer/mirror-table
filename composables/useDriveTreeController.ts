@@ -38,21 +38,15 @@ export const useDriveTreeController = () => {
     dragOpenProgress.value = null;
   };
 
-  const clearDragState = () => {
+  const clearDragState = ({ keepSharedPayload = false }: { keepSharedPayload?: boolean } = {}) => {
     clearHoverTimer();
     isDragging.value = false;
     hoveredFolderTarget.value = null;
     pendingFolderDropTarget.value = null;
     dragOpenProgress.value = null;
-    draggedFileDragPayload.value = null;
-  };
-
-  const clearTreeDragUiState = () => {
-    clearHoverTimer();
-    isDragging.value = false;
-    hoveredFolderTarget.value = null;
-    pendingFolderDropTarget.value = null;
-    dragOpenProgress.value = null;
+    if (!keepSharedPayload) {
+      draggedFileDragPayload.value = null;
+    }
   };
 
   // Drag sessions can finish outside both tree and canvas (for example, dropping on browser chrome).
@@ -68,7 +62,7 @@ export const useDriveTreeController = () => {
   const handleTreeLeave = () => {
     // Leaving the tree is expected for external drops (for example, canvas).
     // Keep the shared drag payload until drop completes, but reset folder-target UI state.
-    clearTreeDragUiState();
+    clearDragState({ keepSharedPayload: true });
   };
 
   const setHoveredFolderTarget = (stat: Stat<DriveTreeNode>) => {
@@ -163,15 +157,9 @@ export const useDriveTreeController = () => {
       return;
     }
 
-    const startInfo = ctx.startInfo;
-    const targetInfo = ctx.targetInfo;
+    const { startInfo, targetInfo } = ctx;
     const draggedStat = startInfo.dragNode as Stat<DriveTreeNode>;
     const draggedNode = draggedStat.data;
-    const oldParentStat = startInfo.parent as Stat<DriveTreeNode> | null;
-    const oldParentId = oldParentStat?.data.id ?? driveTreeStore.visibleRootNode.id;
-    const oldParentNode: DriveTreeNode = oldParentStat
-      ? oldParentStat.data
-      : driveTreeStore.visibleRootNode;
 
     // External drops occur when the drag finishes outside this tree.
     // Root drops inside the tree can still have parent=null, so rely on tree identity.
@@ -181,9 +169,15 @@ export const useDriveTreeController = () => {
     // For external drops (canvas), keep shared payload until target drop lifecycle consumes it.
     // This avoids racing source-side cleanup against canvas drop handlers.
     if (isExternalDrop) {
-      clearTreeDragUiState();
+      clearDragState({ keepSharedPayload: true });
       return;
     }
+
+    const oldParentStat = startInfo.parent as Stat<DriveTreeNode> | null;
+    const oldParentId = oldParentStat?.data.id ?? driveTreeStore.visibleRootNode.id;
+    const oldParentNode: DriveTreeNode = oldParentStat
+      ? oldParentStat.data
+      : driveTreeStore.visibleRootNode;
 
     const resolvedTargetStat = pendingFolderDropTarget.value
       ?? (targetInfo?.parent as Stat<DriveTreeNode> | null)
