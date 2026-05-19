@@ -346,6 +346,36 @@ const generateFileFormData = (
   return form;
 };
 
+const generateRawFileFormData = (
+  file: File,
+  parentId = '',
+  metadataPayload?: Pick<updateMetadataPayload, 'name' | 'contentHints'>,
+) => {
+  const metadata: Record<string, any> = {
+    name: metadataPayload?.name ?? (file.name || 'Untitled'),
+    mimeType: file.type,
+  };
+
+  if (typeof metadataPayload?.contentHints === 'object' && metadataPayload.contentHints.indexableText) {
+    metadata.contentHints = metadataPayload.contentHints;
+  }
+
+  if (parentId.length) {
+    metadata.parents = [parentId];
+  }
+
+  const metadataBlob = new Blob(
+    [JSON.stringify(metadata)],
+    { type: 'application/json' },
+  );
+
+  const form = new FormData();
+  form.append('metadata', metadataBlob);
+  form.append('file', file);
+
+  return form;
+};
+
 export const updateMedia = async (
   fileId: string,
   file: File,
@@ -388,6 +418,31 @@ export const uploadMedia = async (
   }
 
   const form = generateFileFormData(file, metadata, folderId);
+
+  const driveStore = useDriveStore();
+  const authInfo = await driveStore.getAuthorizationInfo();
+
+  const response = await $fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${authInfo.accessToken}`,
+    },
+    body: form,
+  });
+
+  return response as UploadMediaReturnType;
+};
+
+export const uploadRawMedia = async (
+  file: File,
+  folderId: string,
+  metadata?: Pick<updateMetadataPayload, 'name' | 'contentHints'>,
+) => {
+  if (!folderId) {
+    throw new Error('Folder ID is empty when uploading a file');
+  }
+
+  const form = generateRawFileFormData(file, folderId, metadata);
 
   const driveStore = useDriveStore();
   const authInfo = await driveStore.getAuthorizationInfo();

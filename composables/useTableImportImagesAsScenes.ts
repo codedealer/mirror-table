@@ -3,7 +3,137 @@ import { AssetPropertiesFactory } from '~/models/AssetProperties';
 import { PreviewPropertiesFactory } from '~/models/PreviewProprerties';
 import { AppPropertiesTypes, AssetPropertiesKinds, DataRetrievalStrategies, DriveFileExtensions, DriveMimeTypes, isObject, PickerViewTemplates, SelectionGroups } from '~/models/types';
 import { stripFileExtension } from '~/utils';
+import { uploadRawMedia } from '~/utils/driveOps';
 import { extractErrorMessage } from '~/utils/extractErrorMessage';
+
+export interface ImportImageFilesAsAssetsResult {
+  assets: DriveAsset[];
+  successCount: number;
+  failureCount: number;
+}
+
+export interface ImportImageFilesAsAssetsProgress {
+  completedCount: number;
+  totalCount: number;
+  successCount: number;
+  failureCount: number;
+}
+
+export interface ImportImageFilesAsAssetsOptions {
+  onFileDone?: (progress: ImportImageFilesAsAssetsProgress) => void;
+}
+
+export const uploadImageFileToDrive = async (
+  file: File,
+  parentFolderId: string,
+): Promise<DriveFile> => {
+  if (!file.type.startsWith('image/')) {
+    throw new Error(`Unsupported image file type: ${file.type || 'unknown'}`);
+  }
+
+  const driveFileStore = useDriveFileStore();
+  const uploadedFile = await uploadRawMedia(file, parentFolderId);
+
+  if (!uploadedFile.id) {
+    throw new Error(`Failed to upload image "${file.name}"`);
+  }
+
+  const { file: driveImage } = await driveFileStore.getFile(uploadedFile.id, DataRetrievalStrategies.SOURCE);
+
+  if (!driveImage?.imageMediaMetadata) {
+    throw new Error(`Uploaded file "${file.name}" is not a valid Drive image`);
+  }
+
+  return driveImage;
+};
+
+export const createImageAssetFromDriveImage = async (
+  image: DriveFile,
+  kind: AssetPropertiesKind,
+  parentFolderId: string,
+  assetTitle?: string,
+): Promise<DriveAsset> => {
+  if (!image.imageMediaMetadata) {
+    throw new Error('Image does not have image metadata');
+  }
+
+  const driveFileStore = useDriveFileStore();
+
+  const resolvedTitle = assetTitle ?? (stripFileExtension(image.name) || image.name || 'Untitled');
+  const fileExtension = DriveFileExtensions[DriveMimeTypes.MARKDOWN];
+  const fileName = `${resolvedTitle}.${fileExtension}`;
+  const fileObject = new File([], fileName, { type: DriveMimeTypes.MARKDOWN });
+
+  const appProperties = AssetPropertiesFactory({
+    type: AppPropertiesTypes.ASSET,
+    kind,
+    title: resolvedTitle,
+    showTitle: '',
+  });
+
+  appProperties.preview = PreviewPropertiesFactory({
+    id: image.id,
+    nativeWidth: image.imageMediaMetadata.width,
+    nativeHeight: image.imageMediaMetadata.height,
+  });
+
+  const assetFileId = await driveFileStore.createFile(fileObject, parentFolderId, appProperties);
+
+  if (!assetFileId) {
+    throw new Error(`Failed to create asset file "${fileName}"`);
+  }
+
+  const { file: assetFile } = await driveFileStore.getFile(assetFileId, DataRetrievalStrategies.SOURCE);
+
+  if (!assetFile || !assetFile.appProperties) {
+    throw new Error(`Failed to load asset file after creating "${fileName}"`);
+  }
+
+  return assetFile as DriveAsset;
+};
+
+export const importImageFilesAsAssets = async (
+  files: File[],
+  kind: AssetPropertiesKind,
+  parentFolderId: string,
+  options?: ImportImageFilesAsAssetsOptions,
+): Promise<ImportImageFilesAsAssetsResult> => {
+  const result: ImportImageFilesAsAssetsResult = {
+    assets: [],
+    successCount: 0,
+    failureCount: 0,
+  };
+
+  const totalCount = files.filter(file => file.type.startsWith('image/')).length;
+  let completedCount = 0;
+
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) {
+      continue;
+    }
+
+    try {
+      const uploadedImage = await uploadImageFileToDrive(file, parentFolderId);
+      const title = stripFileExtension(file.name) || file.name || 'Untitled';
+      const createdAsset = await createImageAssetFromDriveImage(uploadedImage, kind, parentFolderId, title);
+
+      result.assets.push(createdAsset);
+      result.successCount++;
+    } catch {
+      result.failureCount++;
+    } finally {
+      completedCount++;
+      options?.onFileDone?.({
+        completedCount,
+        totalCount,
+        successCount: result.successCount,
+        failureCount: result.failureCount,
+      });
+    }
+  }
+
+  return result;
+};
 
 /**
  * Shared image import workflow used by the Drive tree and the Table Explorer.
@@ -58,55 +188,6 @@ export const useTableImportImagesAsScenes = () => {
     return error.sceneId;
   };
 
-  const createImageAsset = async (
-    image: DriveFile,
-    assetTitle: string,
-    kind: AssetPropertiesKind,
-    parentFolderId?: string,
-  ): Promise<DriveAsset> => {
-    if (!image.imageMediaMetadata) {
-      throw new Error('Image does not have image metadata');
-    }
-
-    const userStore = useUserStore();
-    const workspaceFolderId = userStore.profile?.settings.driveFolderId;
-
-    if (!workspaceFolderId) {
-      throw new Error('User workspace folder not configured');
-    }
-
-    const fileExtension = DriveFileExtensions[DriveMimeTypes.MARKDOWN];
-    const fileName = `${assetTitle || stripFileExtension(image.name)}.${fileExtension}`;
-    const fileObject = new File([], fileName, { type: DriveMimeTypes.MARKDOWN });
-
-    const appProperties = AssetPropertiesFactory({
-      type: AppPropertiesTypes.ASSET,
-      kind,
-      title: assetTitle,
-      showTitle: '',
-    });
-
-    appProperties.preview = PreviewPropertiesFactory({
-      id: image.id,
-      nativeWidth: image.imageMediaMetadata.width,
-      nativeHeight: image.imageMediaMetadata.height,
-    });
-
-    const assetFileId = await driveFileStore.createFile(fileObject, parentFolderId ?? workspaceFolderId, appProperties);
-
-    if (!assetFileId) {
-      throw new Error(`Failed to create asset file "${fileName}"`);
-    }
-
-    const { file: assetFile } = await driveFileStore.getFile(assetFileId, DataRetrievalStrategies.SOURCE);
-
-    if (!assetFile || !assetFile.appProperties) {
-      throw new Error(`Failed to load asset file after creating "${fileName}"`);
-    }
-
-    return assetFile as DriveAsset;
-  };
-
   const importImagesAsAssets = async (
     kind: AssetPropertiesKind,
     parentNode: DriveTreeNode,
@@ -145,7 +226,7 @@ export const useTableImportImagesAsScenes = () => {
         const title = stripFileExtension(image.name) || image.name || 'Untitled';
 
         try {
-          await createImageAsset(image, title, kind, parentNode.id);
+          await createImageAssetFromDriveImage(image, kind, parentNode.id, title);
           successCount++;
         } catch (error) {
           failureCount++;
@@ -229,7 +310,7 @@ export const useTableImportImagesAsScenes = () => {
           }
 
           // title is empty because the asset is meant to be a background
-          createdAsset = await createImageAsset(image, '', AssetPropertiesKinds.IMAGE, assetFolderId);
+          createdAsset = await createImageAssetFromDriveImage(image, AssetPropertiesKinds.IMAGE, assetFolderId, '');
 
           const sceneElementId = await sceneStore.addAssetToScene(createdSceneId, createdAsset, undefined, {
             enabled: true,

@@ -12,6 +12,11 @@ _Avoid_: Internal drop, folder move drop
 A drag-and-drop operation whose destination is the scene canvas surface.
 _Avoid_: External drop, scene drag
 
+**Canvas Drop Source**:
+The origin of a Canvas Drop payload.
+Allowed values: DriveTree Source, File Source.
+_Avoid_: External drop type, drop variant
+
 **Eligible Asset**:
 A Drive asset that is allowed to be added to a scene.
 _Avoid_: Valid file, supported file
@@ -19,6 +24,10 @@ _Avoid_: Valid file, supported file
 **Unsupported Drop**:
 A drop involving folders or ineligible files that must not create scene content.
 _Avoid_: Invalid drag, bad drop
+
+**Ambiguous Drop**:
+A drop that contains actionable payload from both Canvas Drop Sources at once.
+_Avoid_: Mixed source drop, conflicting drop
 
 **Drop Position**:
 The stage-space coordinates where a canvas drop is applied.
@@ -31,6 +40,8 @@ _Avoid_: Screen point, browser point
 - A **Canvas Drop** creates a scene element only when the dragged item is an **Eligible Asset**
 - An **Unsupported Drop** produces no scene element
 - A **Canvas Drop** resolves a **Drop Position** in stage space
+- A **Canvas Drop** always has a **Canvas Drop Source**
+- An **Ambiguous Drop** is rejected and does not create scene content
 
 ## Example dialogue
 

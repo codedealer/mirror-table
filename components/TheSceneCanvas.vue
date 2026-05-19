@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useDebounceFn, useEventListener, useResizeObserver } from '@vueuse/core';
 import TheSceneCanvasStage from '~/components/TheSceneCanvasStage.vue';
+import { importImageFilesAsAssets } from '~/composables/useTableImportImagesAsScenes';
 
 const canvasContainer = ref<HTMLDivElement | null>(null);
 const canvasField = ref<HTMLDivElement | null>(null);
@@ -14,9 +15,19 @@ const sceneStore = useSceneStore();
 const driveFileStore = useDriveFileStore();
 const notificationStore = useNotificationStore();
 const driveTreeStore = useDriveTreeStore();
+const userStore = useUserStore();
 
 const { draggedFileDragPayload } = storeToRefs(driveTreeStore);
 const isCanvasDragHovering = ref(false);
+const isExternalImageDragHovering = ref(false);
+const isExternalImageImporting = ref(false);
+const externalImageImportCompleted = ref(0);
+const externalImageImportTotal = ref(0);
+const dropUploadMode = ref<AssetPropertiesKind>(AssetPropertiesKinds.IMAGE);
+const MAX_EXTERNAL_DROP_IMAGE_FILES = 20;
+
+type CanvasDropSource = 'drive-tree' | 'external-images';
+const canvasDropSource = ref<CanvasDropSource | null>(null);
 
 const clearDraggedPayload = () => {
   driveTreeStore.draggedFileDragPayload = null;
@@ -24,6 +35,213 @@ const clearDraggedPayload = () => {
 
 const clearCanvasDragHover = () => {
   isCanvasDragHovering.value = false;
+  isExternalImageDragHovering.value = false;
+  canvasDropSource.value = null;
+  dropUploadMode.value = AssetPropertiesKinds.IMAGE;
+};
+
+const hasDriveTreePayload = (payload: typeof draggedFileDragPayload.value) => {
+  return !!payload && payload.eligibility !== 'ineligible';
+};
+
+const extractDroppedFiles = (dataTransfer: DataTransfer | null | undefined): File[] => {
+  if (!dataTransfer) {
+    return [];
+  }
+
+  const files = Array.from(dataTransfer.files ?? []);
+
+  if (files.length) {
+    return files;
+  }
+
+  const itemFiles = Array.from(dataTransfer.items ?? [])
+    .filter(item => item.kind === 'file')
+    .map(item => item.getAsFile())
+    .filter((file): file is File => !!file);
+
+  return itemFiles;
+};
+
+const extractDroppedImageFiles = (dataTransfer: DataTransfer | null | undefined): File[] => {
+  return extractDroppedFiles(dataTransfer)
+    .filter(file => file.type.startsWith('image/'));
+};
+
+const isExternalImageDragEvent = (event: DragEvent) => {
+  // During dragenter/dragover the browser hides file contents for security.
+  // The only reliable signal is dataTransfer.types which includes 'Files' (capital F)
+  // when the drag originates from the OS file system.
+  return Array.from(event.dataTransfer?.types ?? []).includes('Files');
+};
+
+const updateDropUploadMode = (event: DragEvent) => {
+  dropUploadMode.value = event.shiftKey
+    ? AssetPropertiesKinds.COMPLEX
+    : AssetPropertiesKinds.IMAGE;
+};
+
+const startExternalImageImportProgress = (total: number) => {
+  isExternalImageImporting.value = true;
+  externalImageImportCompleted.value = 0;
+  externalImageImportTotal.value = total;
+};
+
+const clearExternalImageImportProgress = () => {
+  isExternalImageImporting.value = false;
+  externalImageImportCompleted.value = 0;
+  externalImageImportTotal.value = 0;
+};
+
+const isDropOverlayVisible = computed(() => {
+  return isCanvasDragHovering.value || isExternalImageImporting.value;
+});
+
+const dropOverlayTitle = computed(() => {
+  if (isExternalImageImporting.value) {
+    return 'Importing dropped images';
+  }
+
+  if (!isCanvasDragHovering.value) {
+    return '';
+  }
+
+  if (canvasDropSource.value === 'drive-tree') {
+    return 'Add to scene';
+  }
+
+  return dropUploadMode.value === AssetPropertiesKinds.COMPLEX
+    ? 'Upload as asset'
+    : 'Upload as image';
+});
+
+const dropOverlaySubtitle = computed(() => {
+  if (isExternalImageImporting.value) {
+    return `${externalImageImportCompleted.value}/${externalImageImportTotal.value} processed`;
+  }
+
+  if (!isCanvasDragHovering.value || !isExternalImageDragHovering.value) {
+    return '';
+  }
+
+  return 'Hold shift to upload as asset';
+});
+
+const handleDriveTreeAssetDrop = async (event: DragEvent) => {
+  if (!canvasStageStore.stage || !draggedFileDragPayload.value || !sceneStore.scene) {
+    return;
+  }
+
+  const fileId = draggedFileDragPayload.value.nodeId;
+
+  const { file: driveAsset } = await driveFileStore.getFile(fileId);
+  if (
+    !driveAsset
+    || !isDriveAsset(driveAsset)
+    || driveAsset.appProperties.kind === AssetPropertiesKinds.TEXT
+    || !driveAsset.appProperties.preview
+    || !driveAsset.capabilities?.canDownload
+  ) {
+    return;
+  }
+
+  if (event.clientX == null || event.clientY == null) {
+    return;
+  }
+
+  const stageCoords = canvasStageStore.browserCoordsToStageCoords(
+    event.clientX,
+    event.clientY,
+    driveAsset.appProperties.preview?.nativeWidth ?? 200,
+    driveAsset.appProperties.preview?.nativeHeight ?? 200,
+    driveAsset.appProperties.preview?.scaleX ?? 1,
+    driveAsset.appProperties.preview?.scaleY ?? 1,
+  );
+
+  if (!stageCoords) {
+    return;
+  }
+
+  await sceneStore.addAsset(driveAsset, stageCoords, { enabled: false });
+};
+
+const handleExternalImageDrop = async (event: DragEvent, imageFiles: File[]) => {
+  if (!canvasStageStore.stage || !sceneStore.scene) {
+    return;
+  }
+
+  if (event.clientX == null || event.clientY == null) {
+    return;
+  }
+
+  const preferredParentId = driveTreeStore.visibleRootNode.id;
+  const fallbackParentId = userStore.profile?.settings.driveFolderId;
+  const parentFolderId = preferredParentId || fallbackParentId;
+
+  if (!parentFolderId) {
+    notificationStore.error('User workspace folder not configured');
+    return;
+  }
+
+  const filesToProcess = imageFiles.slice(0, MAX_EXTERNAL_DROP_IMAGE_FILES);
+  const skippedCount = Math.max(imageFiles.length - filesToProcess.length, 0);
+  if (skippedCount > 0) {
+    notificationStore.add({
+      message: `Imported first ${MAX_EXTERNAL_DROP_IMAGE_FILES} image file(s). Skipped ${skippedCount}.`,
+      icon: 'warning_amber',
+      color: 'var(--va-warning)',
+    });
+  }
+
+  const mode = event.shiftKey
+    ? AssetPropertiesKinds.COMPLEX
+    : AssetPropertiesKinds.IMAGE;
+
+  const stageCoords = canvasStageStore.browserCoordsToStageCoords(
+    event.clientX,
+    event.clientY,
+    1,
+    1,
+    1,
+    1,
+  );
+
+  if (!stageCoords) {
+    return;
+  }
+
+  startExternalImageImportProgress(filesToProcess.length);
+
+  try {
+    const { assets, successCount, failureCount } = await importImageFilesAsAssets(
+      filesToProcess,
+      mode,
+      parentFolderId,
+      {
+        onFileDone: ({ completedCount, totalCount }) => {
+          externalImageImportCompleted.value = completedCount;
+          externalImageImportTotal.value = totalCount;
+        },
+      },
+    );
+
+    for (const asset of assets) {
+      await sceneStore.addAsset(asset, stageCoords, { enabled: false });
+    }
+
+    if (successCount > 0) {
+      notificationStore.success(
+        failureCount > 0
+          ? `Imported ${successCount} image asset(s), ${failureCount} failed`
+          : `Successfully imported ${successCount} image asset(s)`,
+      );
+      return;
+    }
+
+    notificationStore.error('Failed to import dropped image files');
+  } finally {
+    clearExternalImageImportProgress();
+  }
 };
 
 const selectTool = useSelectTool();
@@ -96,29 +314,44 @@ const repositionStage = () => {
  * Handle dragenter event on canvas
  */
 const onCanvasDragEnter = (e: DragEvent) => {
-  if (tableStore.mode !== TableModes.OWN || !draggedFileDragPayload.value) {
+  if (tableStore.mode !== TableModes.OWN) {
     return;
   }
 
-  // Allow hover affordance while eligibility is resolving. Drop still enforces final eligibility.
-  if (draggedFileDragPayload.value.eligibility === 'ineligible') {
+  const hasDrivePayload = hasDriveTreePayload(draggedFileDragPayload.value);
+  const hasExternalImages = isExternalImageDragEvent(e);
+
+  if (!hasDrivePayload && !hasExternalImages) {
     return;
   }
 
   e.preventDefault();
   e.dataTransfer!.dropEffect = 'copy';
   isCanvasDragHovering.value = true;
+
+  if (hasExternalImages) {
+    canvasDropSource.value = 'external-images';
+    isExternalImageDragHovering.value = true;
+    updateDropUploadMode(e);
+    return;
+  }
+
+  canvasDropSource.value = 'drive-tree';
+  isExternalImageDragHovering.value = false;
 };
 
 /**
  * Handle dragover event on canvas (required to allow drop)
  */
 const onCanvasDragOver = (e: DragEvent) => {
-  if (tableStore.mode !== TableModes.OWN || !draggedFileDragPayload.value) {
+  if (tableStore.mode !== TableModes.OWN) {
     return;
   }
 
-  if (draggedFileDragPayload.value.eligibility === 'ineligible') {
+  const hasDrivePayload = hasDriveTreePayload(draggedFileDragPayload.value);
+  const hasExternalImages = isExternalImageDragEvent(e);
+
+  if (!hasDrivePayload && !hasExternalImages) {
     isCanvasDragHovering.value = false;
     return;
   }
@@ -126,16 +359,28 @@ const onCanvasDragOver = (e: DragEvent) => {
   e.preventDefault();
   e.dataTransfer!.dropEffect = 'copy';
   isCanvasDragHovering.value = true;
+
+  if (hasExternalImages) {
+    canvasDropSource.value = 'external-images';
+    isExternalImageDragHovering.value = true;
+    updateDropUploadMode(e);
+    return;
+  }
+
+  canvasDropSource.value = 'drive-tree';
+  isExternalImageDragHovering.value = false;
 };
 
 /**
  * Handle dragleave event on canvas
  */
 const onCanvasDragLeave = (e: DragEvent) => {
-  // Only clear hover if leaving the canvas field entirely
-  if (e.target === canvasField.value) {
-    isCanvasDragHovering.value = false;
+  const relatedTarget = e.relatedTarget as Node | null;
+  if (canvasField.value && relatedTarget && canvasField.value.contains(relatedTarget)) {
+    return;
   }
+
+  clearCanvasDragHover();
 };
 
 /**
@@ -143,53 +388,44 @@ const onCanvasDragLeave = (e: DragEvent) => {
  */
 const onCanvasDrop = async (e: DragEvent) => {
   e.preventDefault();
-  isCanvasDragHovering.value = false;
 
   try {
-    // Validate preconditions
-    if (!canvasStageStore.stage || tableStore.mode !== TableModes.OWN || !draggedFileDragPayload.value || !sceneStore.scene) {
+    if (tableStore.mode !== TableModes.OWN || !sceneStore.scene) {
       return;
     }
 
-    const fileId = draggedFileDragPayload.value.nodeId;
+    const hasDrivePayload = hasDriveTreePayload(draggedFileDragPayload.value);
+    const droppedFiles = extractDroppedFiles(e.dataTransfer);
+    const droppedImageFiles = extractDroppedImageFiles(e.dataTransfer);
+    const hasExternalImages = droppedImageFiles.length > 0;
 
-    // Fetch file lazily only on real canvas drop.
-    const { file: driveAsset } = await driveFileStore.getFile(fileId);
-    if (
-      !driveAsset
-      || !isDriveAsset(driveAsset)
-      || driveAsset.appProperties.kind === AssetPropertiesKinds.TEXT
-      || !driveAsset.appProperties.preview
-      || !driveAsset.capabilities?.canDownload
-    ) {
-      return; // Silent no-op for non-assets
-    }
-
-    // Get drop position from event
-    if (e.clientX == null || e.clientY == null) {
+    if (hasDrivePayload && hasExternalImages) {
+      notificationStore.add({
+        message: 'Ambiguous drop source. Please drop either a Drive tree item or image files.',
+        icon: 'warning_amber',
+        color: 'var(--va-warning)',
+      });
       return;
     }
 
-    // Use the coordinate converter from canvas stage store
-    const stageCoords = canvasStageStore.browserCoordsToStageCoords(
-      e.clientX,
-      e.clientY,
-      driveAsset.appProperties.preview?.nativeWidth ?? 200,
-      driveAsset.appProperties.preview?.nativeHeight ?? 200,
-      driveAsset.appProperties.preview?.scaleX ?? 1,
-      driveAsset.appProperties.preview?.scaleY ?? 1,
-    );
-
-    if (!stageCoords) {
-      return; // No-op if coordinate conversion fails
+    if (hasDrivePayload) {
+      await handleDriveTreeAssetDrop(e);
+      return;
     }
 
-    // Insert asset at drop position
-    await sceneStore.addAsset(driveAsset, stageCoords, { enabled: false });
+    if (hasExternalImages) {
+      await handleExternalImageDrop(e, droppedImageFiles);
+      return;
+    }
+
+    if (droppedFiles.length > 0) {
+      notificationStore.error('Unsupported drop');
+    }
   } catch (error) {
     notificationStore.error('Failed to add asset to canvas.');
     console.error(error);
   } finally {
+    clearCanvasDragHover();
     clearDraggedPayload();
   }
 };
@@ -216,13 +452,6 @@ onMounted(() => {
       });
     }
   }, { deep: true });
-  // Attach drop event listeners to canvasField
-  if (canvasField.value) {
-    useEventListener(canvasField, 'dragenter', onCanvasDragEnter);
-    useEventListener(canvasField, 'dragover', onCanvasDragOver);
-    useEventListener(canvasField, 'dragleave', onCanvasDragLeave);
-    useEventListener(canvasField, 'drop', onCanvasDrop);
-  }
 });
 
 useEventListener(
@@ -231,6 +460,13 @@ useEventListener(
   repositionStage,
   { passive: true },
 );
+
+// Attach drag/drop event listeners at setup level so VueUse's internal watch
+// runs during the normal setup flush (not inside onMounted's post-flush cycle).
+useEventListener(canvasField, 'dragenter', onCanvasDragEnter);
+useEventListener(canvasField, 'dragover', onCanvasDragOver);
+useEventListener(canvasField, 'dragleave', onCanvasDragLeave);
+useEventListener(canvasField, 'drop', onCanvasDrop);
 
 // Ensure canvas drag overlay is cleared when drag ends outside canvas handlers.
 if (import.meta.client) {
@@ -246,11 +482,23 @@ if (import.meta.client) {
       v-if="canvasToolStore.activeTool"
     />
 
+    <div v-if="isDropOverlayVisible" class="canvas-container__drop-overlay">
+      <div class="canvas-container__drop-title">
+        {{ dropOverlayTitle }}
+      </div>
+      <div v-if="dropOverlaySubtitle" class="canvas-container__drop-subtitle">
+        {{ dropOverlaySubtitle }}
+      </div>
+    </div>
+
     <div
       ref="canvasField"
       :style="fieldDimensions"
       class="canvas-container__field scroll-enabled" :class="[
-        { 'canvas-container__field--drop-active': isCanvasDragHovering },
+        {
+          'canvas-container__field--drop-active': isDropOverlayVisible,
+          'canvas-container__field--uploading': isExternalImageImporting,
+        },
       ]"
     >
       <TheSceneCanvasStage />
@@ -259,9 +507,38 @@ if (import.meta.client) {
 </template>
 
 <style scoped lang="scss">
+.canvas-container__drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.canvas-container__drop-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: rgba(250, 69, 171, 0.95);
+}
+
+.canvas-container__drop-subtitle {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: rgba(250, 69, 171, 0.72);
+}
+
 .canvas-container__field--drop-active {
+  position: relative;
   background: linear-gradient(135deg, rgba(250, 69, 171, 0.08) 0%, rgba(250, 69, 171, 0.04) 100%);
-  border: 2px dashed rgba(250, 69, 171, 0.3);
   border-radius: 4px;
+}
+
+.canvas-container__field--uploading {
+  background: linear-gradient(135deg, rgba(250, 69, 171, 0.13) 0%, rgba(250, 69, 171, 0.06) 100%);
 }
 </style>
