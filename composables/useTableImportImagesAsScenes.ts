@@ -64,12 +64,16 @@ export const createImageAssetFromDriveImage = async (
   const fileName = `${resolvedTitle}.${fileExtension}`;
   const fileObject = new File([], fileName, { type: DriveMimeTypes.MARKDOWN });
 
-  const appProperties = AssetPropertiesFactory({
+  const propRecord: Record<string, string> = {
     type: AppPropertiesTypes.ASSET,
     kind,
-    title: resolvedTitle,
-    showTitle: '',
-  });
+  };
+
+  if (assetTitle) {
+    propRecord.title = assetTitle;
+  }
+
+  const appProperties = AssetPropertiesFactory(propRecord);
 
   appProperties.preview = PreviewPropertiesFactory({
     id: image.id,
@@ -310,7 +314,7 @@ export const useTableImportImagesAsScenes = () => {
           }
 
           // title is empty because the asset is meant to be a background
-          createdAsset = await createImageAssetFromDriveImage(image, AssetPropertiesKinds.IMAGE, assetFolderId, '');
+          createdAsset = await createImageAssetFromDriveImage(image, AssetPropertiesKinds.IMAGE, assetFolderId);
 
           const sceneElementId = await sceneStore.addAssetToScene(createdSceneId, createdAsset, undefined, {
             enabled: true,
