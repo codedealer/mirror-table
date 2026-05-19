@@ -160,6 +160,20 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     return await setVisibleRootFolder();
   };
 
+  const refreshVisibleRootFolder = async (options?: { onlyIfFolderId?: string }) => {
+    const visibleRootId = visibleRootNode.value.id;
+
+    if (!visibleRootId) {
+      return false;
+    }
+
+    if (options?.onlyIfFolderId && options.onlyIfFolderId !== visibleRootId) {
+      return false;
+    }
+
+    return await loadChildren(visibleRootNode.value);
+  };
+
   watch([profile, isReady], async ([profile, isReady]) => {
     if (visibleRootNode.value.loading || visibleRootNode.value.loaded || !isReady || !profile) {
       return;
@@ -449,6 +463,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     isCanonicalRootVisible,
     setVisibleRootFolder,
     resetVisibleRootFolder,
+    refreshVisibleRootFolder,
     setVisibleRootToParent,
     loadChildren,
     createChild,

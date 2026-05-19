@@ -230,6 +230,8 @@ const handleExternalImageDrop = async (event: DragEvent, imageFiles: File[]) => 
     }
 
     if (successCount > 0) {
+      await driveTreeStore.refreshVisibleRootFolder({ onlyIfFolderId: parentFolderId });
+
       notificationStore.success(
         failureCount > 0
           ? `Imported ${successCount} image asset(s), ${failureCount} failed`

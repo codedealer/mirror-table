@@ -356,6 +356,7 @@ export const useTableImportImagesAsScenes = () => {
 
       if (successCount > 0) {
         await tableExplorerStore.loadChildren(parentNode);
+        await driveTreeStore.refreshVisibleRootFolder({ onlyIfFolderId: assetFolderId });
         notificationStore.success(
           failureCount > 0
             ? `Imported ${successCount} scene(s), ${failureCount} failed`
