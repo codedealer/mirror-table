@@ -1,7 +1,7 @@
 {
   "type": "module",
   "private": true,
-  "packageManager": "pnpm@10.18.0",
+  "packageManager": "pnpm@11.17.0",
   "engines": {
     "node": ">=24.11.0",
     "pnpm": ">=10.0.0"
@@ -45,6 +45,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^3.10.0",
     "@babel/eslint-parser": "^7.25.9",
+    "@nuxt/kit": "^3.18.0",
     "@types/gapi": "^0.0.47",
     "@types/gapi.client.drive-v3": "^0.0.4",
     "@types/google.accounts": "^0.0.14",

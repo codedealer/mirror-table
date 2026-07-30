@@ -11,9 +11,11 @@
   "containerEnv": {
     "NUXT_HOST": "0.0.0.0",
     "NUXT_PORT": "3000",
-    "npm_config_store_dir": "/home/node/.pnpm-store"
+    "PNPM_HOME": "/home/node/.local/share/pnpm",
+    "PNPM_STORE_DIR": "/home/node/.pnpm-store"
   },
   "remoteEnv": {
+    "PATH": "/home/node/.local/bin:${containerEnv:PNPM_HOME}:${containerEnv:PATH}",
     "no_proxy": "localhost,127.0.0.1,0.0.0.0,.local,vscode-remote",
     "NO_PROXY": "localhost,127.0.0.1,0.0.0.0,.local,vscode-remote"
   },
@@ -32,11 +34,13 @@
     "source=mirror-table-pnpm-store,target=/home/node/.pnpm-store,type=volume",
     "source=mirror-table-vscode-workspace-storage,target=/home/node/.vscode-server/data/User/workspaceStorage,type=volume",
     "source=${localEnv:HOME}/.gitconfig,target=/home/node/.gitconfig,type=bind,consistency=cached,readonly",
-    "source=${localEnv:HOME}/.copilot,target=/home/node/.copilot,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.copilot,target=/home/node/.copilot,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.pi,target=/home/node/.pi,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.omnigent,target=/home/node/.omnigent,type=bind,consistency=cached"
   ],
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "sudo corepack enable && corepack prepare pnpm@10.18.0 --activate && rm -rf .husky/_ && pnpm install",
-  "postStartCommand": "sudo mkdir -p /home/node/.pnpm-store /home/node/.vscode-server/data/User/workspaceStorage && sudo chown -R node:node /home/node/.pnpm-store /home/node/.vscode-server",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "sudo mkdir -p /home/node/.pnpm-store /home/node/.local/share/pnpm /home/node/.vscode-server/data/User/workspaceStorage /home/node/.pi /home/node/.omnigent && sudo chown -R node:node /home/node/.pnpm-store /home/node/.local/share/pnpm /home/node/.vscode-server /home/node/.pi /home/node/.omnigent",
   // Configure tool-specific properties.
   "customizations": {
     "vscode": {
