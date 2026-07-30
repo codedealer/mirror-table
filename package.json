@@ -59,8 +59,8 @@
     "material-design-icons-iconfont": "^6.7.0",
     "nuxt": "^3.18.0",
     "sass": "^1.83.0",
-    "simple-git-hooks": "^2.13.1",
     "sass-loader": "^16.0.4",
+    "simple-git-hooks": "^2.13.1",
     "typescript": "^5.7.2"
   },
   "simple-git-hooks": {
