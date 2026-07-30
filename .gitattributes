@@ -3,8 +3,6 @@
 
 # Ensure shell hooks/scripts keep LF so shebangs work cross-platform
 *.sh text eol=lf
-.husky/* text eol=lf
-.husky/_/* text eol=lf
 
 # Keep Windows-specific scripts CRLF
 *.bat text eol=crlf

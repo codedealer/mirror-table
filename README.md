@@ -20,11 +20,7 @@ pnpm install
 
 ## Development Server
 
-When working on the application it is recommended to install a lint pre-commit hook:
-
-```bash
-pnpm run prepare # First time only
-```
+The pre-commit hook is installed automatically during `pnpm install` and runs `lint-staged` before each commit.
 
 Start the development server on http://localhost:3000
 

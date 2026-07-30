@@ -120,9 +120,6 @@ importers:
       eslint-plugin-format:
         specifier: ^1.0.2
         version: 1.0.2(eslint@9.36.0(jiti@2.6.1)(supports-color@10.2.2))
-      husky:
-        specifier: ^9.1.7
-        version: 9.1.7
       lint-staged:
         specifier: ^15.2.11
         version: 15.5.2(supports-color@10.2.2)
@@ -138,6 +135,9 @@ importers:
       sass-loader:
         specifier: ^16.0.4
         version: 16.0.5(sass@1.93.2)
+      simple-git-hooks:
+        specifier: ^2.13.1
+        version: 2.13.1
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -927,8 +927,8 @@ packages:
   '@maxim_mazurok/gapi.client.discovery-v1@0.6.20200806':
     resolution: {integrity: sha512-QN6aGmIbLXcJW0SEf8tz9UWCpQTBMy2u4xSuZ04YofzMGknhWwMeUecySLntCZYAEstHzDoSgwxCf5Gb8GqIRQ==}
 
-  '@maxim_mazurok/gapi.client.drive-v3@0.3.20260720':
-    resolution: {integrity: sha512-PexiExzULSlZPQSOjIdZByocQMFcGTQg5/AfyQvCgl6MZCtnw6qdBUqzuegvMsKhLgNbOzgJ5Xbtc0W3Tnj56Q==}
+  '@maxim_mazurok/gapi.client.drive-v3@0.3.20260723':
+    resolution: {integrity: sha512-jD52mI84xdhul51lYGJXH367SwHiRIVAJrKf8MNtTjqMR/KveBmeTiAuWZcLOnV1I2nvNbY5AoryTJVgc381ag==}
 
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
@@ -3328,11 +3328,6 @@ packages:
     resolution: {integrity: sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ==}
     engines: {node: '>=16.17.0'}
 
-  husky@9.1.7:
-    resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   idb@7.1.1:
     resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
 
@@ -4735,6 +4730,10 @@ packages:
   signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
+
+  simple-git-hooks@2.13.1:
+    resolution: {integrity: sha512-WszCLXwT4h2k1ufIXAgsbiTOazqqevFCIncOuUBZJ91DdvWcC5+OFkluWRQPrcuSYd8fjq+o2y1QfWqYMoAToQ==}
+    hasBin: true
 
   simple-git@3.28.0:
     resolution: {integrity: sha512-Rs/vQRwsn1ILH1oBUy8NucJlXmnnLeLCfcvbSehkPzbv3wwoFWIdtfd6Ndo6ZPhlPsCZ60CPI4rxurnwAa+a2w==}
@@ -6414,7 +6413,7 @@ snapshots:
       '@types/gapi.client': 1.0.8
       '@types/gapi.client.discovery-v1': 0.0.4
 
-  '@maxim_mazurok/gapi.client.drive-v3@0.3.20260720':
+  '@maxim_mazurok/gapi.client.drive-v3@0.3.20260723':
     dependencies:
       '@types/gapi.client': 1.0.8
       '@types/gapi.client.discovery-v1': 0.0.4
@@ -7118,7 +7117,7 @@ snapshots:
 
   '@types/gapi.client.drive-v3@0.0.4':
     dependencies:
-      '@maxim_mazurok/gapi.client.drive-v3': 0.3.20260720
+      '@maxim_mazurok/gapi.client.drive-v3': 0.3.20260723
 
   '@types/gapi.client@1.0.8': {}
 
@@ -9086,8 +9085,6 @@ snapshots:
 
   human-signals@5.0.0: {}
 
-  husky@9.1.7: {}
-
   idb@7.1.1: {}
 
   idb@8.0.3: {}
@@ -10884,6 +10881,8 @@ snapshots:
   shell-quote@1.8.3: {}
 
   signal-exit@4.1.0: {}
+
+  simple-git-hooks@2.13.1: {}
 
   simple-git@3.28.0(supports-color@10.2.2):
     dependencies:

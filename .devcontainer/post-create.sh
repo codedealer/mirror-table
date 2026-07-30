@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-rm -rf .husky/_
-
 corepack prepare pnpm@11.17.0 --activate
 
 pnpm config set store-dir /home/node/.pnpm-store
