@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const route = useRoute();
+const showDevLab = computed(() => import.meta.dev && route.path === '/dashboard');
 </script>
 
 <template>
@@ -11,6 +13,17 @@
       </va-navbar-item>
     </template>
     <template #right>
+      <va-navbar-item v-if="showDevLab">
+        <va-button
+          icon="science"
+          preset="plain"
+          color="primary"
+          @click="navigateTo('/dev')"
+        >
+          Prototype Lab
+        </va-button>
+      </va-navbar-item>
+
       <va-navbar-item>
         <a
           href="https://github.com/codedealer/mirror-table"
