@@ -2,6 +2,7 @@
 name: dev-prototype
 description: "Use to prototype UI components without authentication or production data in a separate dev-only route."
 ---
+
 # Development Prototypes
 
 Use `/dev` for UI prototypes that should not require authentication, a table, or any production data. The route is available only while Nuxt runs in development mode; the global route middleware returns a 404 for it in production.
