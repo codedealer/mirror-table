@@ -1,4 +1,4 @@
-import type { DocumentData, QueryDocumentSnapshot, SnapshotOptions, WithFieldValue } from '@firebase/firestore';
+import type { DocumentData, QueryDocumentSnapshot, SnapshotOptions, WithFieldValue } from 'firebase/firestore';
 
 const firestoreDataConverter = <T>() => ({
   toFirestore: (data: WithFieldValue<T>) => data,

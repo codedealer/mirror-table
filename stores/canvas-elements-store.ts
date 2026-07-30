@@ -7,8 +7,8 @@ import type {
   SceneElementCanvasObjectAssetProperties,
   SceneElementScreen,
 } from '~/models/types';
-import { collection, deleteDoc, doc, query, setDoc, where } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
+import { collection, deleteDoc, doc, query, setDoc, where } from 'firebase/firestore';
 import {
   DataRetrievalStrategies,
   isAssetProperties,

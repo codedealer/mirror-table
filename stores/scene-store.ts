@@ -8,8 +8,8 @@ import type {
   SelectionGroup,
 } from '~/models/types';
 import type { WithIdPlaceholders } from '~/utils/replaceIdPlaceholder';
-import { collection, deleteDoc, doc, orderBy, query, setDoc, updateDoc, where, writeBatch } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
+import { collection, deleteDoc, doc, orderBy, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
 import { SceneElementCanvasObjectAssetFactory } from '~/models/SceneElementCanvasObjectAsset';
 import { SceneElementCanvasObjectTextFactory } from '~/models/SceneElementCanvasObjectText';
 import { SelectionGroups } from '~/models/types';

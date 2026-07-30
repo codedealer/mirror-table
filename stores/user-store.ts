@@ -1,6 +1,6 @@
 import type { User } from 'firebase/auth';
 import type { DynamicPanelContentType, Profile, SelectionGroup } from '~/models/types';
-import { doc, onSnapshot, setDoc, updateDoc } from '@firebase/firestore';
+import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
 import { ProfileFactory } from '~/models/Profile';
 import { useGoogleAuthStore } from '~/stores/google-auth-store';

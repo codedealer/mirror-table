@@ -1,4 +1,4 @@
-import type { UpdateData } from '@firebase/firestore';
+import type { UpdateData } from 'firebase/firestore';
 import type { NestedPartial } from '~/models/types';
 
 const makeFirestoreUpdateData = <T>(obj: NestedPartial<T>, prefix = ''): UpdateData<T> => {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { TableCard } from '~/models/types';
-import { collection, orderBy, query } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
+import { collection, orderBy, query } from 'firebase/firestore';
 
 const userStore = useUserStore();
 const { $db } = useNuxtApp();

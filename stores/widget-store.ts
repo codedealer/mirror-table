@@ -1,6 +1,6 @@
 import type { NestedPartial, Widget } from '~/models/types';
-import { collection, deleteDoc, doc, getDoc, orderBy, query, setDoc, updateDoc, where } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
+import { collection, deleteDoc, doc, getDoc, orderBy, query, setDoc, updateDoc, where } from 'firebase/firestore';
 
 export const useWidgetStore = defineStore('widget', () => {
   const { $db } = useNuxtApp();

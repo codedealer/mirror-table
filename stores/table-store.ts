@@ -1,4 +1,4 @@
-import type { WithFieldValue } from '@firebase/firestore';
+import type { WithFieldValue } from 'firebase/firestore';
 import type {
   BaseScene,
   DynamicPanelModelType,
@@ -7,8 +7,8 @@ import type {
   TablePermissions,
   TableSession,
 } from '~/models/types';
-import { collection, deleteField, query, where } from '@firebase/firestore';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
+import { collection, deleteField, query, where } from 'firebase/firestore';
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import { TableModes } from '~/models/types';
 

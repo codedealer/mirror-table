@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Scene } from '~/models/types';
-import { collection, getDocs, limit, query, where } from '@firebase/firestore';
 import { onKeyStroke, useDebounceFn } from '@vueuse/core';
+import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import ItemSelector from '~/components/ItemSelector.vue';
 
 const selectedScene = ref<Scene>();

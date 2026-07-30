@@ -3,7 +3,7 @@ import type {
   DocumentData,
   Query,
   WithFieldValue,
-} from '@firebase/firestore';
+} from 'firebase/firestore';
 import type { Category, Scene, TreeNode } from '~/models/types';
 import {
   collection,
@@ -18,7 +18,7 @@ import {
   updateDoc,
   where,
   writeBatch,
-} from '@firebase/firestore';
+} from 'firebase/firestore';
 
 export const useTableExplorerStore = defineStore('table-explorer', () => {
   const tableStore = useTableStore();

@@ -5,9 +5,9 @@ import type {
   WidgetCandelaPlayer,
   WidgetProperties,
 } from '~/models/types';
-import { collection, doc } from '@firebase/firestore';
 import { useDebounceFn } from '@vueuse/core';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
+import { collection, doc } from 'firebase/firestore';
 import { ModalWindowStatus, WidgetTemplates } from '~/models/types';
 
 const props = defineProps<{

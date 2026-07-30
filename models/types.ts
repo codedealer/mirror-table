@@ -1,4 +1,4 @@
-import type { Timestamp } from '@firebase/firestore-types';
+import type { Timestamp } from 'firebase/firestore';
 import type { DBSchema } from 'idb';
 import type Konva from 'konva';
 import type { DefineComponent } from 'vue';

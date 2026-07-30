@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { DriveWidget, ModalWindow, WidgetMarkdown, WidgetProperties } from '~/models/types';
-import { collection, doc } from '@firebase/firestore';
 import { useDebounceFn } from '@vueuse/core';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
+import { collection, doc } from 'firebase/firestore';
 import { ModalWindowStatus } from '~/models/types';
 
 const props = defineProps<{
