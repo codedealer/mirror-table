@@ -26,6 +26,8 @@ export default antfu(
       'service-account.json',
       'nuxt.config.ts',
       '**/*.md',
+      'utils/dice-grammar.gen.js',
+      'utils/dice-grammar.gen.d.ts',
     ],
   },
   {

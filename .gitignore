@@ -58,6 +58,10 @@ typings/
 
 # dotenv environment variables file
 .env
+
+# Generated peggy parser (see package.json "dice:grammar" script)
+utils/dice-grammar.gen.js
+utils/dice-grammar.gen.d.ts
 .env.build
 
 # parcel-bundler cache (https://parceljs.org/)

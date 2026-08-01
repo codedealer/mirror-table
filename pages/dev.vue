@@ -68,8 +68,10 @@ const selectPrototype = (prototype: PrototypeId) => {
         v-if="activePrototype === 'dice-roller'"
         class="prototype-view__content"
       >
-        <VaCardTitle>Dice roller input</VaCardTitle>
-        <VaCardContent>The first prototype will be built here.</VaCardContent>
+        <VaCardTitle>Dice roller</VaCardTitle>
+        <VaCardContent>
+          <DiceRoller />
+        </VaCardContent>
       </VaCard>
 
       <VaCard

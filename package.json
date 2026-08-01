@@ -8,12 +8,17 @@
   },
   "scripts": {
     "prepare": "simple-git-hooks",
+    "dice:grammar": "peggy --format es --dts -o utils/dice-grammar.gen.js utils/dice-grammar.peggy",
+    "predev": "pnpm run dice:grammar",
+    "prebuild": "pnpm run dice:grammar",
+    "pretest": "pnpm run dice:grammar",
     "build": "nuxt build",
     "dev": "nuxt dev --no-fork",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "lint": "eslint --fix . --ext .js,.ts,.vue ./"
+    "lint": "eslint --fix . --ext .js,.ts,.vue ./",
+    "test": "vitest run"
   },
   "dependencies": {
     "@he-tree/vue": "^2.10.2",
@@ -53,15 +58,18 @@
     "@types/node": "^22.10.2",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9.16.0",
     "eslint-plugin-format": "^1.0.2",
     "lint-staged": "^15.2.11",
     "material-design-icons-iconfont": "^6.7.0",
     "nuxt": "^3.18.0",
+    "peggy": "^5.1.0",
     "sass": "^1.83.0",
     "sass-loader": "^16.0.4",
     "simple-git-hooks": "^2.13.1",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm exec lint-staged"

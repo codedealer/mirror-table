@@ -28,6 +28,24 @@ Start the development server on http://localhost:3000
 pnpm run dev
 ```
 
+## Dice Roller Engine
+
+The app includes a dice roller for tabletop games, supporting most common syntax patterns.
+
+The parser is generated from the PEG grammar in `utils/dice-grammar.peggy`. Regenerate it after changing the grammar with:
+
+```bash
+pnpm run dice:grammar
+```
+
+This runs automatically before `dev`, `build` and `test` (via `predev`/`prebuild`/`pretest`), so you normally don't need to run it manually.
+
+Run the test suite (Vitest, tests colocated as `*.spec.ts` next to their source file, e.g. `utils/dice-parser.spec.ts`) with:
+
+```bash
+pnpm run test
+```
+
 ## Production
 
 Build the application for production:
