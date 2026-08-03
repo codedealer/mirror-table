@@ -116,6 +116,7 @@ describe('evaluateAST', () => {
       baseDice: { count: 1, sides: 6 },
       advantage: false,
       disadvantage: false,
+      extraDice: 1,
     }, createConstantRNG(1))).rejects.toSatisfy((err: unknown) => {
       return isDiceProfileRequiredError(err) && err.requiredProfile === 'nimble5e';
     });
@@ -130,5 +131,41 @@ describe('evaluateAST', () => {
     }, createConstantRNG(10))).rejects.toSatisfy((err: unknown) => {
       return isDiceProfileRequiredError(err) && err.requiredProfile === 'dnd5e';
     });
+  });
+
+  it('resolves positional explosion (![N]) at an arbitrary non-primary index', async () => {
+    const pool: DicePoolNode = {
+      type: 'DICE_POOL',
+      count: 2,
+      sides: 6,
+      modifiers: [{ type: 'EXPLODE', condition: 'MAX', compounding: false, targetDieIndex: 1 }],
+    };
+
+    // Rolls: [3, 6]. targetDieIndex: 1 (die #2, i.e. ![2]) restricts explosion to the second die only.
+    const result = await evaluateAST(pool, createSequenceRNG([3, 6, 4]));
+
+    expect(result.total).toBe(13); // 3 (untouched) + 6 (exploded) + 4 (explosion result)
+    const [{ dice }] = result.breakdown;
+    expect(dice[0].flags.exploded).toBeUndefined();
+    expect(dice[1].flags.exploded).toBe(true);
+  });
+
+  it('restricts reroll to the positional target die ([N]), leaving other dice untouched', async () => {
+    const pool: DicePoolNode = {
+      type: 'DICE_POOL',
+      count: 2,
+      sides: 6,
+      modifiers: [{ type: 'REROLL', condition: 'EXACT', threshold: 5, once: false, targetDieIndex: 1 }],
+    };
+
+    // Initial rolls: [5, 5]. targetDieIndex: 1 (die #2, i.e. r5[2]) restricts the reroll to the second die only.
+    const result = await evaluateAST(pool, createSequenceRNG([5, 5, 2]));
+
+    expect(result.total).toBe(7); // 5 (untouched) + 2 (rerolled)
+    const [{ dice }] = result.breakdown;
+    expect(dice[0].finalValue).toBe(5);
+    expect(dice[0].flags.rerolled).toBeUndefined();
+    expect(dice[1].finalValue).toBe(2);
+    expect(dice[1].flags.rerolled).toBe(true);
   });
 });

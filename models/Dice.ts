@@ -62,6 +62,7 @@ export interface RerollModifier {
   condition: 'EXACT' | 'LESS_EQUAL';
   threshold: number;
   once: boolean; // ro vs r
+  targetDieIndex?: number; // Optional positional targeting via `[N]` (0-based)
 }
 
 export interface ValueBumpModifier {
@@ -77,6 +78,7 @@ export interface NimbleDamageIntentNode {
   baseDice: { count: number; sides: number };
   advantage: boolean;
   disadvantage: boolean;
+  extraDice: number; // M, defaults to 1 at parse time; only meaningful when advantage/disadvantage stacks
   flatModifier?: number;
 }
 

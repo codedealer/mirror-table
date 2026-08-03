@@ -59,13 +59,14 @@ Number
 // ---- System intent shorthands ----
 
 NimbleIntentTerm
-  = "nd" _ base:DiceCountSides advDis:(m:("a" / "d") !([lh]) { return m; })? mod:(_ "+" _ n:Integer { return n; })?
+  = "nd" _ base:DiceCountSides advDis:(m:("a" / "d") !([lh]) extra:Integer? { return { mode: m, extra: extra ?? 1 }; })? mod:(_ "+" _ n:Integer { return n; })?
     {
       return {
         type: 'NIMBLE_DAMAGE_INTENT',
         baseDice: base,
-        advantage: advDis === 'a',
-        disadvantage: advDis === 'd',
+        advantage: advDis?.mode === 'a',
+        disadvantage: advDis?.mode === 'd',
+        extraDice: advDis?.extra ?? 1,
         flatModifier: mod ?? undefined,
       };
     }
@@ -107,11 +108,16 @@ KeepDropModifier
   / "dl" n:Integer { return { type: 'DROP', target: 'LOWEST', count: n }; }
   / "k" n:Integer { return { type: 'KEEP', target: 'HIGHEST', count: n }; }
 
+// `[N]` is the only positional-target spelling (1-based, converted to 0-based here) -
+// kept distinct from a bare `N` face-value condition to avoid the `!1` ambiguity.
+PositionalTarget
+  = "[" n:Integer "]" { return { targetDieIndex: n - 1 }; }
+
 ExplodeModifier
   = "!" rest:(
         "!" { return { compounding: true, condition: 'MAX' }; }
       / "p" { return { compounding: false, condition: 'MAX', targetDieIndex: 0 }; }
-      / "1" ![0-9] { return { compounding: false, condition: 'MAX', targetDieIndex: 0 }; }
+      / pos:PositionalTarget { return { compounding: false, condition: 'MAX', ...pos }; }
       / ">=" n:Integer { return { compounding: false, condition: 'GREATER_EQUAL', threshold: n }; }
       / "<=" n:Integer { return { compounding: false, condition: 'LESS_EQUAL', threshold: n }; }
       / n:Integer { return { compounding: false, condition: 'EXACT', threshold: n }; }
@@ -120,8 +126,8 @@ ExplodeModifier
     { return { type: 'EXPLODE', ...rest }; }
 
 RerollModifier
-  = "ro" cond:RerollCondition { return { type: 'REROLL', once: true, ...cond }; }
-  / "r" cond:RerollCondition { return { type: 'REROLL', once: false, ...cond }; }
+  = "ro" cond:RerollCondition pos:PositionalTarget? { return { type: 'REROLL', once: true, ...cond, ...pos }; }
+  / "r" cond:RerollCondition pos:PositionalTarget? { return { type: 'REROLL', once: false, ...cond, ...pos }; }
 
 RerollCondition
   = "<=" n:Integer { return { condition: 'LESS_EQUAL', threshold: n }; }

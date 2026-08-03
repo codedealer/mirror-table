@@ -12,20 +12,22 @@ export const NimbleProfile: SystemProfile = {
   lowerAST: (node: ASTNode): ASTNode => {
     if (node.type === 'NIMBLE_DAMAGE_INTENT') {
       const { count, sides } = node.baseDice;
+      const { extraDice } = node;
+      const stacked = node.advantage || node.disadvantage;
       const remainingCount = count - 1;
 
-      // 1. Primary Die Pool (Explodes on MAX, handles Advantage/Disadvantage)
+      // 1. Primary Die Pool (Explodes on MAX, handles Advantage/Disadvantage stacking of M extra dice)
       const primaryModifiers: DiceModifier[] = [];
       if (node.advantage) {
-        primaryModifiers.push({ type: 'DROP', target: 'LOWEST', count: 1 });
+        primaryModifiers.push({ type: 'DROP', target: 'LOWEST', count: extraDice });
       } else if (node.disadvantage) {
-        primaryModifiers.push({ type: 'DROP', target: 'HIGHEST', count: 1 });
+        primaryModifiers.push({ type: 'DROP', target: 'HIGHEST', count: extraDice });
       }
       primaryModifiers.push({ type: 'EXPLODE', condition: 'MAX', compounding: false });
 
       const primaryPool: DicePoolNode = {
         type: 'DICE_POOL',
-        count: node.advantage || node.disadvantage ? 2 : 1,
+        count: stacked ? 1 + extraDice : 1,
         sides,
         modifiers: primaryModifiers,
       };

@@ -111,11 +111,16 @@ const applyRerolls = async (
   if (!rerollMods.length)
     return;
 
-  for (const die of dice) {
-    if (die.flags.dropped)
-      continue;
+  const survivors = dice.filter(die => !die.flags.dropped);
 
-    for (const mod of rerollMods) {
+  for (const mod of rerollMods) {
+    // Positional targeting (`[N]`) resolves against surviving dice in original order,
+    // same as explode's positional targeting - a dropped die can never be targeted.
+    const targets = typeof mod.targetDieIndex === 'number'
+      ? [survivors[mod.targetDieIndex]].filter((die): die is DieResult => !!die)
+      : survivors;
+
+    for (const die of targets) {
       let iterations = 0;
       while (matchesRerollCondition(mod, die.finalValue) && iterations < MAX_ITERATIONS_PER_DIE) {
         if (!hasDiceBudget(ctx))
@@ -194,7 +199,7 @@ const applyExplosions = async (
     // Snapshot the pool before this modifier runs - dice pushed by explosions must
     // not be re-visited as fresh "targets" by this same modifier's outer loop.
     const survivors = dice.filter(die => !die.flags.dropped);
-    // Positional targeting (`!p`/`!1`) resolves against surviving dice in original
+    // Positional targeting (`!p`/`![N]`) resolves against surviving dice in original
     // order, not the raw original array index - a dropped die can never be targeted,
     // and combining `!p` with `kh`/`dl` in the same pool targets the correct survivor.
     const targets = typeof mod.targetDieIndex === 'number'

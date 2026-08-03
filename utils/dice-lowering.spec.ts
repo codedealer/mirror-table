@@ -9,6 +9,7 @@ describe('nimbleProfile', () => {
       baseDice: { count: 3, sides: 6 },
       advantage: true,
       disadvantage: false,
+      extraDice: 1,
     };
 
     expect(lowerAST(intent, NimbleProfile)).toEqual({
@@ -28,12 +29,64 @@ describe('nimbleProfile', () => {
     });
   });
 
+  it('stacks advantage across M extra dice: (1+M)dX with DROP LOWEST M, plus a secondary pool', () => {
+    const intent: NimbleDamageIntentNode = {
+      type: 'NIMBLE_DAMAGE_INTENT',
+      baseDice: { count: 3, sides: 6 },
+      advantage: true,
+      disadvantage: false,
+      extraDice: 2,
+    };
+
+    expect(lowerAST(intent, NimbleProfile)).toEqual({
+      type: 'GROUPED_POOL',
+      pools: [
+        {
+          type: 'DICE_POOL',
+          count: 3,
+          sides: 6,
+          modifiers: [
+            { type: 'DROP', target: 'LOWEST', count: 2 },
+            { type: 'EXPLODE', condition: 'MAX', compounding: false },
+          ],
+        },
+        { type: 'DICE_POOL', count: 2, sides: 6, modifiers: [] },
+      ],
+    });
+  });
+
+  it('stacks disadvantage across M extra dice: (1+M)dX with DROP HIGHEST M', () => {
+    const intent: NimbleDamageIntentNode = {
+      type: 'NIMBLE_DAMAGE_INTENT',
+      baseDice: { count: 1, sides: 8 },
+      advantage: false,
+      disadvantage: true,
+      extraDice: 3,
+    };
+
+    expect(lowerAST(intent, NimbleProfile)).toEqual({
+      type: 'GROUPED_POOL',
+      pools: [
+        {
+          type: 'DICE_POOL',
+          count: 4,
+          sides: 8,
+          modifiers: [
+            { type: 'DROP', target: 'HIGHEST', count: 3 },
+            { type: 'EXPLODE', condition: 'MAX', compounding: false },
+          ],
+        },
+      ],
+    });
+  });
+
   it('attaches a flat modifier as a binary addition', () => {
     const intent: NimbleDamageIntentNode = {
       type: 'NIMBLE_DAMAGE_INTENT',
       baseDice: { count: 1, sides: 6 },
       advantage: false,
       disadvantage: false,
+      extraDice: 1,
       flatModifier: 4,
     };
 
@@ -108,6 +161,7 @@ describe('lowerAST', () => {
       baseDice: { count: 1, sides: 6 },
       advantage: false,
       disadvantage: false,
+      extraDice: 1,
     };
     const ast = {
       type: 'BINARY_OP' as const,
