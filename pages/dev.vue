@@ -5,11 +5,6 @@ const prototypes = [
     label: 'Dice roller',
     description: 'Input and notation experiments.',
   },
-  {
-    id: 'controls',
-    label: 'Control samples',
-    description: 'A small reference view for future UI work.',
-  },
 ] as const;
 
 type PrototypeId = typeof prototypes[number]['id'];
@@ -71,24 +66,6 @@ const selectPrototype = (prototype: PrototypeId) => {
         <VaCardTitle>Dice roller</VaCardTitle>
         <VaCardContent>
           <DiceRoller />
-        </VaCardContent>
-      </VaCard>
-
-      <VaCard
-        v-else
-        class="prototype-view__content"
-      >
-        <VaCardTitle>Control samples</VaCardTitle>
-        <VaCardContent>
-          <div class="prototype-controls">
-            <VaButton>
-              Primary action
-            </VaButton>
-            <VaButton preset="secondary">
-              Secondary action
-            </VaButton>
-            <VaInput label="Example field" placeholder="A future control" />
-          </div>
         </VaCardContent>
       </VaCard>
     </div>
