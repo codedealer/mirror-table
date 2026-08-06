@@ -29,6 +29,8 @@ watchEffect(() => {
     <div class="main-grid__status">
       <TheWindowManager />
 
+      <DiceRollerPanel />
+
       <ClientOnly>
         <TheDriveParentModal />
         <TheNotifications />
@@ -36,7 +38,3 @@ watchEffect(() => {
     </div>
   </div>
 </template>
-
-<style scoped lang="scss">
-
-</style>

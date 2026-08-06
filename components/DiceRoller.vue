@@ -107,12 +107,14 @@ const dieFlagLabels = (die: DieResult): string[] => {
 <template>
   <div class="dice-roller">
     <section class="dice-roller__row" aria-label="Dice roller">
+      <slot name="leading" />
+
       <VaMenu :options="profileMenuOptions" @selected="selectProfile">
         <template #anchor>
           <VaButton
             class="dice-roller__profile-button"
             preset="secondary"
-            :color="profileId === 'none' ? '#7a8491' : 'primary-dark'"
+            :color="profileId === 'none' ? 'tertiary' : 'primary-dark'"
             icon="settings"
             :aria-label="`Dice profile: ${diceProfileOptions.find(option => option.id === profileId)?.label}`"
           />
@@ -121,7 +123,7 @@ const dieFlagLabels = (die: DieResult): string[] => {
 
       <VaDropdown v-model="historyOpen" class="dice-roller__history-menu" placement="bottom-start">
         <template #anchor>
-          <VaButton class="dice-roller__history-button" preset="secondary" color="#7a8491" icon="history" aria-label="Roll history" :disabled="!history.length" />
+          <VaButton class="dice-roller__history-button" preset="secondary" color="tertiary" icon="history" aria-label="Roll history" :disabled="!history.length" />
         </template>
         <VaDropdownContent class="dice-roller__history-content">
           <va-scroll-container vertical class="dice-roller__history-scroll">
@@ -185,6 +187,8 @@ const dieFlagLabels = (die: DieResult): string[] => {
           <span v-else class="dice-roller__detail-empty">Roll the dice to see details.</span>
         </VaDropdownContent>
       </VaDropdown>
+
+      <slot name="trailing" />
     </section>
 
     <VaAlert v-if="error" color="danger" outline>

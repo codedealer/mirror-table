@@ -60,6 +60,11 @@ const toggleHotkeyModal = () => {
 };
 
 const layersStore = useLayersStore();
+const diceRollerVisible = useState('dice-roller-visible', () => false);
+
+const toggleDiceRoller = () => {
+  diceRollerVisible.value = !diceRollerVisible.value;
+};
 
 onKeyStroke(true, (e) => {
   if (e.target && isEditableElement(e.target)) {
@@ -95,10 +100,12 @@ onKeyStroke(true, (e) => {
     openExplorer();
   } else if (e.code === 'KeyL') {
     openLayers();
-  } else if (e.code === 'KeyD') {
+  } else if (e.code === 'KeyU') {
     openSessions();
   } else if (e.code === 'KeyH') {
     layersStore.toggleHiddenElements();
+  } else if (e.code === 'KeyD') {
+    toggleDiceRoller();
   }
 });
 hotkeyStore.registerHotkey({
@@ -138,7 +145,7 @@ hotkeyStore.registerHotkey({
 });
 hotkeyStore.registerHotkey({
   id: 'open-sessions',
-  key: 'D',
+  key: 'U',
   description: 'Toggle session panels',
   modifiers: {},
   namespace: 'Global',
@@ -163,6 +170,13 @@ hotkeyStore.registerHotkey({
   modifiers: {},
   description: 'Toggle hidden elements',
   namespace: 'Canvas',
+});
+hotkeyStore.registerHotkey({
+  id: 'toggle-dice-roller',
+  key: 'D',
+  modifiers: {},
+  description: 'Toggle dice roller',
+  namespace: 'Global',
 });
 </script>
 
@@ -243,6 +257,17 @@ hotkeyStore.registerHotkey({
     </va-sidebar-item>
 
     <va-spacer />
+
+    <va-sidebar-item :active="diceRollerVisible" active-color="#fa45ab20" hover-color="primary" @click="toggleDiceRoller">
+      <va-sidebar-item-content>
+        <div class="toolbar-button">
+          <va-icon name="casino" size="large" color="primary" />
+
+          <span class="toolbar-button__content">Roller</span>
+        </div>
+        <va-sidebar-item-title>Roller</va-sidebar-item-title>
+      </va-sidebar-item-content>
+    </va-sidebar-item>
 
     <va-sidebar-item @click="toggleHotkeyModal">
       <va-sidebar-item-content>
