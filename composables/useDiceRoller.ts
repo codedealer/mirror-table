@@ -2,7 +2,7 @@ import type { RollEvaluationResult, SystemProfile } from '~/models/Dice';
 import { isDiceParseError, isDiceProfileRequiredError } from '~/models/Dice';
 import { evaluateDiceExpression } from '~/utils/dice-evaluator';
 import { Dnd5eProfile, NimbleProfile } from '~/utils/dice-lowering';
-import { cryptoRNG } from '~/utils/dice-rng';
+import { cryptoRNG, randomOrgRNG } from '~/utils/dice-rng';
 
 export type DiceProfileId = 'none' | 'nimble5e' | 'dnd5e';
 
@@ -18,7 +18,8 @@ export const diceProfileOptions: DiceProfileOption[] = [
   { id: 'dnd5e', label: 'D&D 5e', profile: Dnd5eProfile },
 ];
 
-// Roller UI state for the /dev prototype: parses + lowers + evaluates via cryptoRNG (see PLAN.md §9).
+const diceRNG = import.meta.dev ? cryptoRNG : randomOrgRNG;
+
 export const useDiceRoller = () => {
   const expression = ref('');
   const profileId = ref<DiceProfileId>('none');
@@ -40,7 +41,7 @@ export const useDiceRoller = () => {
     error.value = undefined;
 
     try {
-      const evaluated = await evaluateDiceExpression(expression.value, cryptoRNG, activeProfile.value);
+      const evaluated = await evaluateDiceExpression(expression.value, diceRNG, activeProfile.value);
       result.value = evaluated;
       addToHistory(evaluated);
     } catch (err) {

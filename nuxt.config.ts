@@ -43,6 +43,7 @@ export default defineNuxtConfig({
     fbServiceAccount: process.env.FB_SERVICE_ACCOUNT,
     clientSecret: process.env.CLIENT_SECRET,
     googleAuthRedirectUri: process.env.GOOGLE_AUTH_REDIRECT_URI,
+    randomApiKey: process.env.RANDOM_API_KEY,
     public: {
       fbApiKey: process.env.FB_API_KEY,
       fbAuthDomain: process.env.FB_AUTH_DOMAIN,
