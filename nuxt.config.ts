@@ -72,7 +72,7 @@ export default defineNuxtConfig({
           dark: {
             primary: '#FA45AB',
             secondary: '#2DE8FA',
-            tertiary: '#FAE65F',
+            tertiary: '#7a8491',
             'primary-dark': '#AD1F70',
             'secondary-dark': '#28A2AD',
             'danger-dark': '#6f160e',
