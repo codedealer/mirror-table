@@ -14,6 +14,8 @@ const {
   showNext,
 } = useDiceRoller();
 
+const historyOpen = ref(false);
+
 const profileMenuOptions = computed(() => diceProfileOptions.map(option => ({
   text: option.label,
   value: option.id,
@@ -29,13 +31,14 @@ const selectProfile = (option: { value: string }) => {
   profileId.value = option.value as typeof profileId.value;
 };
 
-const selectHistoryEntry = (option: { value: number }) => {
-  const entry = history.value[option.value];
+const selectHistoryEntry = (index: number) => {
+  const entry = history.value[index];
   if (!entry)
     return;
   result.value = entry;
   expression.value = entry.expression;
   error.value = undefined;
+  historyOpen.value = false;
 };
 
 const physicalKeyMap: Record<string, string> = Object.fromEntries(
@@ -116,11 +119,16 @@ const dieFlagLabels = (die: DieResult): string[] => {
         </template>
       </VaMenu>
 
-      <VaMenu :disabled="!history.length" :options="historyMenuOptions" @selected="selectHistoryEntry">
+      <VaDropdown v-model="historyOpen" class="dice-roller__history-menu" placement="bottom-start">
         <template #anchor>
-          <VaButton class="dice-roller__history-button" preset="secondary" color="#7a8491" icon="history" aria-label="Roll history" />
+          <VaButton class="dice-roller__history-button" preset="secondary" color="#7a8491" icon="history" aria-label="Roll history" :disabled="!history.length" />
         </template>
-      </VaMenu>
+        <VaDropdownContent class="dice-roller__history-content">
+          <va-scroll-container vertical class="dice-roller__history-scroll">
+            <VaMenuList :options="historyMenuOptions" value-by="value" @selected="selectHistoryEntry" />
+          </va-scroll-container>
+        </VaDropdownContent>
+      </VaDropdown>
 
       <VaInput
         v-model="expression"
@@ -214,6 +222,18 @@ const dieFlagLabels = (die: DieResult): string[] => {
 
 .dice-roller__result-menu {
   flex-shrink: 0;
+}
+
+.dice-roller__history-menu {
+  flex-shrink: 0;
+}
+
+.dice-roller__history-content {
+  padding: 0;
+}
+
+.dice-roller__history-scroll {
+  max-height: min(24rem, calc(100vh - 8rem));
 }
 
 .dice-roller__result-button {
