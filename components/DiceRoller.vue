@@ -38,6 +38,53 @@ const selectHistoryEntry = (option: { value: number }) => {
   error.value = undefined;
 };
 
+const physicalKeyMap: Record<string, string> = Object.fromEntries(
+  Array.from({ length: 26 }, (_, index) => {
+    const letter = String.fromCharCode(65 + index);
+    return [`Key${letter}`, letter.toLowerCase()];
+  }),
+);
+
+let pendingPhysicalKey: { code: string; shiftKey: boolean } | undefined;
+
+const rememberPhysicalKey = (event: KeyboardEvent) => {
+  if (!(event.target instanceof HTMLInputElement))
+    return;
+
+  pendingPhysicalKey = { code: event.code, shiftKey: event.shiftKey };
+};
+
+const remapBeforeInput = (event: InputEvent) => {
+  const input = event.target;
+  const physicalKey = pendingPhysicalKey;
+  pendingPhysicalKey = undefined;
+
+  if (!(input instanceof HTMLInputElement))
+    return;
+
+  if (event.inputType !== 'insertText' || event.isComposing || event.data == null || [...event.data].length !== 1 || physicalKey == null)
+    return;
+
+  const replacement = physicalKeyMap[physicalKey.code];
+  if (replacement == null)
+    return;
+
+  event.preventDefault();
+
+  const mapped = physicalKey.shiftKey ? replacement.toUpperCase() : replacement;
+  input.setRangeText(
+    mapped,
+    input.selectionStart ?? input.value.length,
+    input.selectionEnd ?? input.value.length,
+    'end',
+  );
+  input.dispatchEvent(new InputEvent('input', {
+    bubbles: true,
+    inputType: 'insertText',
+    data: mapped,
+  }));
+};
+
 const dieFlagLabels = (die: DieResult): string[] => {
   const labels: string[] = [];
   if (die.flags.dropped)
@@ -80,6 +127,8 @@ const dieFlagLabels = (die: DieResult): string[] => {
         class="dice-roller__input"
         placeholder="4d6kh3 + 2"
         aria-label="Dice expression"
+        @keydown="rememberPhysicalKey"
+        @beforeinput="remapBeforeInput"
         @keyup.enter="roll"
         @keyup.up="showPrevious"
         @keyup.down="showNext"
