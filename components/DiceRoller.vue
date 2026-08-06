@@ -14,7 +14,23 @@ const {
   showNext,
 } = useDiceRoller();
 
+const inputRef = ref<{ $el?: HTMLElement } | null>(null);
 const historyOpen = ref(false);
+
+const selectExpression = async () => {
+  await nextTick();
+  inputRef.value?.$el?.querySelector('input')?.select();
+};
+
+const rollAndSelectExpression = async () => {
+  if (await roll())
+    await selectExpression();
+};
+
+const showNextOrClearExpression = () => {
+  if (!showNext())
+    expression.value = '';
+};
 
 const profileMenuOptions = computed(() => diceProfileOptions.map(option => ({
   text: option.label,
@@ -133,15 +149,16 @@ const dieFlagLabels = (die: DieResult): string[] => {
       </VaDropdown>
 
       <VaInput
+        ref="inputRef"
         v-model="expression"
         class="dice-roller__input"
         placeholder="4d6kh3 + 2"
         aria-label="Dice expression"
         @keydown="rememberPhysicalKey"
         @beforeinput="remapBeforeInput"
-        @keyup.enter="roll"
+        @keyup.enter="rollAndSelectExpression"
         @keyup.up="showPrevious"
-        @keyup.down="showNext"
+        @keyup.down="showNextOrClearExpression"
       />
 
       <VaButton
@@ -150,7 +167,7 @@ const dieFlagLabels = (die: DieResult): string[] => {
         :loading="rolling"
         :disabled="!expression.trim()"
         aria-label="Roll dice"
-        @click="roll"
+        @click="rollAndSelectExpression"
       />
 
       <VaDivider vertical style="align-self:normal; margin-block:5px" />
@@ -209,8 +226,7 @@ const dieFlagLabels = (die: DieResult): string[] => {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  min-height: 3.75rem;
-  padding: 0.4rem 0.5rem;
+  padding: 0 0.25rem;
   border-top: 3px solid var(--va-primary);
   background: var(--va-background-element);
   box-shadow: 0 0.35rem 1rem rgb(0 0 0 / 12%);

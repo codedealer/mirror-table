@@ -33,9 +33,9 @@ export const useDiceRoller = () => {
     return diceProfileOptions.find(option => option.id === profileId.value)?.profile;
   });
 
-  const roll = async () => {
+  const roll = async (): Promise<boolean> => {
     if (!expression.value.trim() || rolling.value)
-      return;
+      return false;
 
     rolling.value = true;
     error.value = undefined;
@@ -44,6 +44,7 @@ export const useDiceRoller = () => {
       const evaluated = await evaluateDiceExpression(expression.value, diceRNG, activeProfile.value);
       result.value = evaluated;
       addToHistory(evaluated);
+      return true;
     } catch (err) {
       if (isDiceParseError(err)) {
         error.value = `Could not parse "${err.expression}": ${err.message}`;
@@ -52,27 +53,30 @@ export const useDiceRoller = () => {
       } else {
         error.value = err instanceof Error ? err.message : 'Unexpected error while rolling';
       }
+      return false;
     } finally {
       rolling.value = false;
     }
   };
 
-  const showPrevious = () => {
+  const showPrevious = (): boolean => {
     const previousResult = previous();
     if (!previousResult)
-      return;
+      return false;
     result.value = previousResult;
     expression.value = previousResult.expression;
     error.value = undefined;
+    return true;
   };
 
-  const showNext = () => {
+  const showNext = (): boolean => {
     const nextResult = next();
     if (!nextResult)
-      return;
+      return false;
     result.value = nextResult;
     expression.value = nextResult.expression;
     error.value = undefined;
+    return true;
   };
 
   return {

@@ -2,10 +2,9 @@ import type { RollEvaluationResult } from '~/models/Dice';
 
 const MAX_HISTORY = 50;
 
-// Local, non-persisted roll history for the /dev prototype (see PLAN.md §8).
 export const useDiceRollHistory = () => {
   const history = ref<RollEvaluationResult[]>([]);
-  // -1 means "not currently navigating history" (i.e. viewing the live/latest roll).
+  // -1 means "not currently navigating history" (i.e. viewing the live input).
   const cursor = ref(-1);
 
   const add = (result: RollEvaluationResult) => {
@@ -13,7 +12,7 @@ export const useDiceRollHistory = () => {
     if (history.value.length > MAX_HISTORY) {
       history.value.length = MAX_HISTORY;
     }
-    cursor.value = -1;
+    cursor.value = 0;
   };
 
   // Cycles to an older result (Up arrow).

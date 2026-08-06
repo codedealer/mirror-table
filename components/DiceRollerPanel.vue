@@ -40,7 +40,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    v-if="diceRollerVisible"
+    v-show="diceRollerVisible"
     ref="panel"
     class="dice-roller-panel"
     :class="{ 'dice-roller-panel--dragging': isDragging }"
@@ -64,7 +64,7 @@ onBeforeUnmount(() => {
 .dice-roller-panel {
   position: fixed;
   z-index: var(--window-top-tier-z-index);
-  width: min(27rem, calc(100vw - 1rem));
+  width: auto;
   padding: 0.25rem;
   border: 1px solid var(--va-primary);
   border-radius: 4px;
