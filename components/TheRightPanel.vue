@@ -4,6 +4,7 @@ import DriveDirectoryTree from '~/components/DriveDirectoryTree.vue';
 
 const userStore = useUserStore();
 const rightPanelStore = useRightPanelStore();
+const hotkeyStore = useHotkeyStore();
 const { sideBarMinimized } = storeToRefs(rightPanelStore);
 
 onKeyStroke(true, (e) => {
@@ -18,6 +19,15 @@ onKeyStroke(true, (e) => {
   if (e.code === 'KeyR') {
     sideBarMinimized.value = !sideBarMinimized.value;
   }
+});
+onMounted(() => {
+  hotkeyStore.registerHotkey({
+    id: 'toggle-user-panel',
+    key: 'R',
+    description: 'Toggle user panel',
+    modifiers: {},
+    namespace: 'User panel',
+  });
 });
 </script>
 
