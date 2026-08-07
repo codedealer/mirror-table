@@ -39,6 +39,10 @@ useHeTreeChildrenSync({
   tree: treeRef,
 });
 
+const setRootFolder = () => {
+  driveTreeStore.setVisibleRootFolder(props.node);
+};
+
 // ── Fold toggle ─────────────────────────────────────────────────────────────
 const toggleFold = async () => {
   if (props.stat.open) {
@@ -47,18 +51,16 @@ const toggleFold = async () => {
     props.stat.open = false;
     return;
   }
-  if (props.stat.level >= TREE_MAX_DEPTH)
-    return; // use double-click to change root instead
+  if (props.stat.level >= TREE_MAX_DEPTH) {
+    setRootFolder();
+    return;
+  }
   if (!props.node.loaded) {
     await driveTreeStore.loadChildren(props.node);
   }
   driveTreeStore.setFolderOpen(props.node.id, true);
   // eslint-disable-next-line vue/no-mutating-props -- @he-tree/vue stat is designed to be mutated
   props.stat.open = true;
-};
-
-const setRootFolder = () => {
-  driveTreeStore.setVisibleRootFolder(props.node);
 };
 
 const onClickOrDoubleClick = clickOrDoubleClick(toggleFold, setRootFolder);
