@@ -82,6 +82,7 @@ onClickOutside(sidebar, () => {
   }
 }, {
   ignore: [
+    '.toolbar',
     '.va-dropdown__content',
     '.va-modal',
   ],
