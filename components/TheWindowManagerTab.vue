@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ModalWindow } from '~/models/types';
+import { ModalWindowStatus } from '~/models/types';
 
 const props = defineProps<{
   window: ModalWindow;
@@ -31,13 +32,13 @@ const windowStore = useWindowStore();
         <va-button
           preset="plain"
           size="medium"
+          :class="{ 'pin-inactive': !window.pinned }"
           @click="window.pinned ? windowStore.unpin(window) : windowStore.pin(window)"
         >
           <va-icon
             name="push_pin"
             size="medium"
             :color="window.pinned ? 'primary' : 'text-primary'"
-            :rotation="window.pinned ? 0 : 45"
           />
         </va-button>
       </va-badge>
@@ -79,5 +80,8 @@ const windowStore = useWindowStore();
 </template>
 
 <style scoped lang="scss">
-
+.pin-inactive {
+  transform: rotate(45deg);
+  opacity: 0.6;
+}
 </style>

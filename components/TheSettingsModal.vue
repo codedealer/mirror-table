@@ -41,14 +41,11 @@ const selectionGroupOptions = Object.entries(SelectionGroupNames) as [string, st
           <va-button
             preset="plain"
             :color="dynamicPanelStore.isPinned(panel.type) ? 'primary' : 'secondary'"
+            :class="{ 'pin-inactive': !dynamicPanelStore.isPinned(panel.type) }"
             :title="dynamicPanelStore.isPinned(panel.type) ? 'Unpin panel' : 'Pin panel'"
             @click="dynamicPanelStore.togglePin(panel.type)"
           >
-            <va-icon
-              name="push_pin"
-              :class="{ 'pin-inactive': !dynamicPanelStore.isPinned(panel.type) }"
-              size="medium"
-            />
+            <va-icon name="push_pin" size="medium" />
           </va-button>
         </div>
 

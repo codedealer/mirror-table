@@ -102,11 +102,12 @@ onClickOutside(sidebar, () => {
         v-if="canPin"
         preset="plain"
         :color="isPinned ? 'primary' : 'secondary'"
+        :class="{ 'pin-inactive': !isPinned }"
         class="dynamic-panel__pin"
         :title="isPinned ? 'Unpin panel (auto-close on click outside)' : 'Pin panel (stay open)'"
         @click="togglePin"
       >
-        <va-icon :name="isPinned ? 'push_pin' : 'push_pin'" :class="{ 'pin-inactive': !isPinned }" size="medium" />
+        <va-icon name="push_pin" size="medium" />
       </va-button>
       <div v-else class="dynamic-panel__spacer" />
       <va-button
@@ -139,7 +140,7 @@ onClickOutside(sidebar, () => {
 }
 
 .dynamic-panel__pin {
-  .pin-inactive {
+  &.pin-inactive {
     transform: rotate(45deg);
     opacity: 0.6;
   }
