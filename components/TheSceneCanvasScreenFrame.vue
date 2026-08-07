@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import type Konva from 'konva';
 import type { TableSessionPresence } from '~/models/types';
+import { DynamicPanelModelTypes } from '~/models/types';
 
 const props = defineProps<{
   sessionPresence: TableSessionPresence;
 }>();
 const strokeWidth = 2;
+const dynamicPanelWidth = 256;
+const panelOpacity = 0.35;
+const tableStore = useTableStore();
 
 const showScreenFrame = computed(() => {
   if (
@@ -46,6 +50,38 @@ const frameConfig = computed<Konva.RectConfig>(() => {
   };
 });
 
+const panelFrameConfigs = computed<Konva.RectConfig[]>(() => {
+  const frameWidth = containerConfig.value.width ?? 0;
+  const frameHeight = containerConfig.value.height ?? 0;
+  const width = Math.min(dynamicPanelWidth, frameWidth);
+  const color = props.sessionPresence.color || 'red';
+  const configs: Konva.RectConfig[] = [];
+
+  if (tableStore.table?.panels[DynamicPanelModelTypes.LEFT]) {
+    configs.push({
+      x: 0,
+      y: 0,
+      width,
+      height: frameHeight,
+      fill: color,
+      opacity: panelOpacity,
+    });
+  }
+
+  if (tableStore.table?.panels[DynamicPanelModelTypes.RIGHT]) {
+    configs.push({
+      x: frameWidth - width,
+      y: 0,
+      width,
+      height: frameHeight,
+      fill: color,
+      opacity: panelOpacity,
+    });
+  }
+
+  return configs;
+});
+
 const labelConfig = computed<Konva.TextConfig>(() => {
   return {
     x: 5,
@@ -63,6 +99,11 @@ const labelConfig = computed<Konva.TextConfig>(() => {
     :config="containerConfig"
   >
     <v-rect :config="frameConfig" />
+    <v-rect
+      v-for="(config, index) in panelFrameConfigs"
+      :key="index"
+      :config="config"
+    />
     <v-text :config="labelConfig" />
   </v-group>
 </template>
