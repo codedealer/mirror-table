@@ -16,6 +16,45 @@ const {
 
 const inputRef = ref<{ $el?: HTMLElement } | null>(null);
 const historyOpen = ref(false);
+const syntaxHelpOpen = ref(false);
+
+const syntaxGroups = [
+  {
+    title: 'General',
+    entries: [
+      { syntax: 'NdX', description: 'Roll N dice with X sides.', example: '3d6 + 5' },
+      { syntax: 'khN / kN', description: 'Keep the highest N dice.', example: '4d6kh3' },
+      { syntax: 'klN', description: 'Keep the lowest N dice.', example: '2d20kl1' },
+      { syntax: 'dlN / dhN', description: 'Drop the lowest or highest N dice.', example: '4d6dl1' },
+      { syntax: '!', description: 'Explode dice on their maximum face.', example: '3d6!' },
+      { syntax: '!N / !>=N', description: 'Explode when a die meets a threshold.', example: '1d10!>=8' },
+      { syntax: '!p / ![N]', description: 'Explode only the primary or numbered die.', example: '3d6!p' },
+      { syntax: '!!', description: 'Compound an explosion into the same die.', example: '1d6!!' },
+      { syntax: 'rN / r<=N', description: 'Reroll while the condition is met.', example: '1d20r1' },
+      { syntax: 'roN', description: 'Reroll once when the condition is met.', example: '1d20ro1' },
+      { syntax: '{ ... }', description: 'Combine pools with individual rules.', example: '{1d6!, 2d6} + 2' },
+      { syntax: '( ... )', description: 'Group arithmetic using normal precedence.', example: '(1d6 + 2) * 3' },
+      { syntax: 'std: / raw:', description: 'Use standard rolling inside a profile.', example: 'std: 1d20' },
+    ],
+  },
+  {
+    title: 'D&D 5e',
+    entries: [
+      { syntax: 'NdXaM', description: 'Advantage: roll M extra dice and drop the lowest M.', example: '1d20a' },
+      { syntax: 'NdXdM', description: 'Disadvantage: roll M extra dice and drop the highest M.', example: '1d20d' },
+    ],
+  },
+  {
+    title: 'Nimble',
+    entries: [
+      { syntax: 'nd NdX', description: 'Nimble damage: the primary die explodes.', example: 'nd 2d6' },
+      { syntax: 'nd NdXaM', description: 'Nimble damage with advantage on the primary die.', example: 'nd 2d6a' },
+      { syntax: 'nd NdXdM', description: 'Nimble damage with disadvantage on the primary die.', example: 'nd 2d6d' },
+      { syntax: 'nd NdX + M', description: 'Nimble damage with a flat modifier.', example: 'nd 2d6 + 3' },
+      { syntax: '+^N / bN', description: 'Bump each face value, capped at the die maximum.', example: '1d6+^1' },
+    ],
+  },
+];
 
 const selectExpression = async () => {
   await nextTick();
@@ -148,6 +187,15 @@ const dieFlagLabels = (die: DieResult): string[] => {
         </VaDropdownContent>
       </VaDropdown>
 
+      <VaButton
+        class="dice-roller__help-button"
+        preset="secondary"
+        color="tertiary"
+        icon="help_outline"
+        aria-label="Dice syntax help"
+        @click="syntaxHelpOpen = true"
+      />
+
       <VaInput
         ref="inputRef"
         v-model="expression"
@@ -208,6 +256,27 @@ const dieFlagLabels = (die: DieResult): string[] => {
       <slot name="trailing" />
     </section>
 
+    <VaModal
+      v-model="syntaxHelpOpen"
+      class="top-tier-modal"
+      title="Dice syntax"
+      size="large"
+      close-button
+      hide-default-actions
+    >
+      <va-scroll-container vertical class="dice-roller__syntax-scroll">
+        <section v-for="group in syntaxGroups" :key="group.title" class="dice-roller__syntax-group">
+          <h2>{{ group.title }}</h2>
+          <dl>
+            <div v-for="entry in group.entries" :key="entry.syntax" class="dice-roller__syntax-entry">
+              <dt><code>{{ entry.syntax }}</code></dt>
+              <dd>{{ entry.description }} <code>{{ entry.example }}</code></dd>
+            </div>
+          </dl>
+        </section>
+      </va-scroll-container>
+    </VaModal>
+
     <VaAlert v-if="error" color="danger" outline>
       {{ error }}
     </VaAlert>
@@ -234,7 +303,8 @@ const dieFlagLabels = (die: DieResult): string[] => {
 
 .dice-roller__profile-button,
 .dice-roller__roll-button,
-.dice-roller__history-button {
+.dice-roller__history-button,
+.dice-roller__help-button {
   width: 2.25rem;
   height: 2.25rem;
   flex-shrink: 0;
@@ -254,6 +324,58 @@ const dieFlagLabels = (die: DieResult): string[] => {
 
 .dice-roller__history-scroll {
   max-height: min(24rem, calc(100vh - 8rem));
+}
+
+.dice-roller__syntax-scroll {
+  max-height: min(70vh, 42rem);
+  padding-right: 0.5rem;
+}
+
+.dice-roller__syntax-group + .dice-roller__syntax-group {
+  margin-top: 1.5rem;
+}
+
+.dice-roller__syntax-group h2 {
+  margin: 0 0 0.5rem;
+  color: var(--va-primary);
+  font-size: 1.1rem;
+}
+
+.dice-roller__syntax-group dl {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.dice-roller__syntax-entry {
+  display: grid;
+  grid-template-columns: minmax(6rem, 8rem) 1fr;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.dice-roller__syntax-entry dt,
+.dice-roller__syntax-entry dd {
+  margin: 0;
+}
+
+.dice-roller__syntax-entry dt code {
+  color: var(--va-primary);
+  font-weight: 700;
+}
+
+.dice-roller__syntax-entry dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+}
+
+.dice-roller__syntax-entry dd code {
+  opacity: 0.75;
+}
+
+.dice-roller .va-modal-entry {
+  display: contents;
 }
 
 .dice-roller__result-button {
@@ -338,6 +460,11 @@ const dieFlagLabels = (die: DieResult): string[] => {
 
   .dice-roller__total {
     font-size: 1.35rem;
+  }
+
+  .dice-roller__syntax-entry {
+    grid-template-columns: 1fr;
+    gap: 0.125rem;
   }
 }
 </style>
