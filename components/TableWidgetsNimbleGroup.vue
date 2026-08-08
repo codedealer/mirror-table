@@ -356,5 +356,8 @@ const removeActor = (actorId: string) => {
   margin-top: 0.5rem;
   padding: 0.35rem 0.6rem;
   font-size: 11px;
+  .window-container-markdown-renderer > div > * {
+    margin-bottom: 0.25rem;
+  }
 }
 </style>
