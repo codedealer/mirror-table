@@ -191,9 +191,12 @@ export const isAssetProperties = (obj: unknown): obj is AssetProperties => {
 export const WidgetTemplates = {
   MARKDOWN: 'markdown',
   CANDELA_PLAYER: 'candela-player',
+  NIMBLE_GROUP: 'nimble-group',
 } as const;
 
 export type WidgetTemplate = typeof WidgetTemplates[keyof typeof WidgetTemplates];
+
+export type NimbleNumber = number | '';
 
 export interface WidgetProperties extends AppProperties {
   type: 'widget';
@@ -550,6 +553,64 @@ export interface WidgetCandelaPlayer extends Widget {
   content: string;
   privateContent: string;
 }
+
+export interface WidgetNimbleGroup extends Widget {
+  template: 'nimble-group';
+  actors: WidgetNimbleGroupActor[];
+}
+
+interface WidgetNimbleGroupActorBase {
+  id: string;
+  name: string;
+  role: string;
+  avatar: PreviewProperties | null;
+  conditions: string[];
+  content: string;
+  privateContent: string;
+  enabled: boolean;
+  rank: number;
+}
+
+export interface WidgetNimbleGroupActorPlayer extends WidgetNimbleGroupActorBase {
+  type: 'player';
+  player: {
+    stats: {
+      wil: NimbleNumber;
+      str: NimbleNumber;
+      dex: NimbleNumber;
+      int: NimbleNumber;
+    };
+    armor: NimbleNumber;
+    hitPoints: {
+      current: NimbleNumber;
+      max: NimbleNumber;
+      temp: NimbleNumber;
+    };
+    wounds: {
+      current: NimbleNumber;
+      max: NimbleNumber;
+    };
+    speed: string;
+  };
+}
+
+export interface WidgetNimbleGroupActorNpc extends WidgetNimbleGroupActorBase {
+  type: 'npc';
+  npc: {
+    stats: {
+      wil: NimbleNumber;
+      str: NimbleNumber;
+      dex: NimbleNumber;
+      int: NimbleNumber;
+    };
+    armor: '' | 'medium' | 'heavy';
+    speed: string;
+    hitPool: number[];
+    subtype: 'minion' | 'flunky' | 'regular' | 'legendary';
+  };
+}
+
+export type WidgetNimbleGroupActor = WidgetNimbleGroupActorPlayer | WidgetNimbleGroupActorNpc;
 
 /**
  * Data for a table card that appears on a dashboard. Each user has a copy.

@@ -13,6 +13,11 @@ export const generateTemplates = (): SelectOption[] => {
       value: WidgetTemplates.CANDELA_PLAYER,
       description: 'Embed a Candela Obscura player card',
     },
+    {
+      text: 'Nimble: Group',
+      value: WidgetTemplates.NIMBLE_GROUP,
+      description: 'Embed a Nimble encounter group',
+    },
   ];
 };
 

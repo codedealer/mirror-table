@@ -1,11 +1,14 @@
-import type { NestedPartial, Widget } from '~/models/types';
+import type { NestedPartial, Widget, WidgetNimbleGroup, WidgetNimbleGroupActor } from '~/models/types';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
-import { collection, deleteDoc, doc, getDoc, orderBy, query, setDoc, updateDoc, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDoc, orderBy, query, runTransaction, setDoc, updateDoc, where } from 'firebase/firestore';
+import { normalizeNimbleActorRanks, normalizeNimbleConditions } from '~/models/NimbleGroup';
+import { TableModes } from '~/models/types';
 
 export const useWidgetStore = defineStore('widget', () => {
   const { $db } = useNuxtApp();
   const userStore = useUserStore();
   const tableStore = useTableStore();
+  const canEdit = computed(() => tableStore.mode === TableModes.OWN);
 
   const widgetsRef = computed(() => {
     if (!userStore.user || !tableStore.table) {
@@ -177,6 +180,61 @@ export const useWidgetStore = defineStore('widget', () => {
     return true;
   };
 
+  const updateNimbleActors = async (id: string, change: (actors: WidgetNimbleGroupActor[]) => WidgetNimbleGroupActor[]) => {
+    if (!userStore.user || !canEdit.value) {
+      return false;
+    }
+
+    const docRef = doc(collection($db, 'users', userStore.user.uid, 'widgets'), id);
+    try {
+      await runTransaction($db, async (transaction) => {
+        const snapshot = await transaction.get(docRef);
+        if (!snapshot.exists()) {
+          throw new Error('Nimble widget not found');
+        }
+
+        const widget = snapshot.data() as WidgetNimbleGroup;
+        transaction.update(docRef, { actors: normalizeNimbleActorRanks(change(widget.actors)) });
+      });
+      return true;
+    } catch (e) {
+      console.error(e);
+      useNotificationStore().error(extractErrorMessage(e));
+      return false;
+    }
+  };
+
+  const addNimbleActor = (id: string, actor: WidgetNimbleGroupActor) => updateNimbleActors(id, actors => [...actors, actor]);
+  const updateNimbleActor = (id: string, actorId: string, payload: Partial<WidgetNimbleGroupActor>) => updateNimbleActors(id, actors => actors.map(actor => actor.id === actorId ? { ...actor, ...payload } as WidgetNimbleGroupActor : actor));
+  const removeNimbleActor = (id: string, actorId: string) => updateNimbleActors(id, actors => actors.filter(actor => actor.id !== actorId));
+  const reorderNimbleActors = (id: string, actorIds: string[]) => updateNimbleActors(id, (actors) => {
+    const actorsById = new Map(actors.map(actor => [actor.id, actor]));
+    const reordered = actorIds.flatMap((actorId) => {
+      const actor = actorsById.get(actorId);
+      actorsById.delete(actorId);
+      return actor ? [actor] : [];
+    });
+    return [...reordered, ...actorsById.values()];
+  });
+  const toggleNimbleActor = (id: string, actorId: string) => updateNimbleActors(id, actors => actors.map(actor => actor.id === actorId ? { ...actor, enabled: !actor.enabled } : actor));
+  const addNimbleCondition = (id: string, actorId: string, condition: string) => updateNimbleActors(id, actors => actors.map((actor) => {
+    if (actor.id !== actorId) {
+      return actor;
+    }
+    const normalized = normalizeNimbleConditions([condition])[0];
+    if (!normalized) {
+      return actor;
+    }
+    return { ...actor, conditions: normalizeNimbleConditions([normalized, ...actor.conditions]) };
+  }));
+  const removeNimbleCondition = (id: string, actorId: string, condition: string) => updateNimbleActors(id, actors => actors.map((actor) => {
+    if (actor.id !== actorId) {
+      return actor;
+    }
+    const normalized = condition.trim();
+    return { ...actor, conditions: actor.conditions.filter(item => item !== normalized) };
+  }));
+
   return {
     widgets,
     widgetMap,
@@ -185,6 +243,13 @@ export const useWidgetStore = defineStore('widget', () => {
     createWidgetWithId,
     updateWidget,
     removeWidget,
+    addNimbleActor,
+    updateNimbleActor,
+    removeNimbleActor,
+    reorderNimbleActors,
+    toggleNimbleActor,
+    addNimbleCondition,
+    removeNimbleCondition,
   };
 });
 

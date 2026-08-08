@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DynamicPanelModelType, WidgetTemplate } from '~/models/types';
-import { TableWidgetsCandelaPlayer, TableWidgetsMarkdownWidget, TableWidgetsUnavailableWidget } from '#components';
+import { TableWidgetsCandelaPlayer, TableWidgetsMarkdownWidget, TableWidgetsNimbleGroup, TableWidgetsUnavailableWidget } from '#components';
 import { TableModes, WidgetTemplates } from '~/models/types';
 
 const props = defineProps<{
@@ -18,6 +18,7 @@ const toggleState = (value: boolean) => {
 const widgetComponents: Record<WidgetTemplate, unknown> = {
   [WidgetTemplates.MARKDOWN]: TableWidgetsMarkdownWidget,
   [WidgetTemplates.CANDELA_PLAYER]: TableWidgetsCandelaPlayer,
+  [WidgetTemplates.NIMBLE_GROUP]: TableWidgetsNimbleGroup,
 };
 
 const widgetStore = useWidgetStore();
