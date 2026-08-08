@@ -16,8 +16,8 @@ const { file, error, isLoading } = usePreviewImage(toRef(() => props.preview), {
     :file="file"
     :error="error"
     :file-is-loading="isLoading"
-    width="48"
-    height="48"
+    width="64"
+    height="64"
     fit="cover"
     :title="title"
   />

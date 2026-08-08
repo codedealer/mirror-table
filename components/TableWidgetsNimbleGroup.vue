@@ -101,7 +101,7 @@ const removeActor = (actorId: string) => {
               :class="isOwner ? `nimble-row__npc-name--${actor.npc.subtype}` : undefined"
               :title="isOwner ? actor.npc.subtype : undefined"
             >
-              {{ actor.name }}<span v-if="isOwner" class="nimble-row__npc-subtype">({{ actor.npc.subtype }})</span>
+              {{ actor.name }}
             </strong>
             <strong v-else>{{ actor.name }}</strong>
             <small v-if="actor.role">{{ actor.role }}</small>
@@ -159,8 +159,8 @@ const removeActor = (actorId: string) => {
               </template>
             </va-popover>
             <va-button preset="plain" icon="edit" :aria-label="`Edit ${actor.name}`" title="Edit actor" @click="editActor(actor.id)" />
-            <va-button preset="plain" icon="close" :aria-label="`Remove ${actor.name}`" title="Remove actor" @click="removeActor(actor.id)" />
             <va-button preset="plain" size="small" :icon="actor.enabled ? 'visibility' : 'visibility_off'" :aria-label="`Toggle ${actor.name}`" :title="actor.enabled ? `Hide ${actor.name}` : `Show ${actor.name}`" @click="widgetStore.toggleNimbleActor(widget.id, actor.id)" />
+            <va-button preset="plain" icon="close" :aria-label="`Remove ${actor.name}`" title="Remove actor" @click="removeActor(actor.id)" />
           </div>
         </div>
         <div v-if="isOwner && isWidgetNimbleGroupActorNpc(actor)" class="nimble-row__stats">
@@ -355,5 +355,6 @@ const removeActor = (actorId: string) => {
   border-left: 3px solid var(--va-warning);
   margin-top: 0.5rem;
   padding: 0.35rem 0.6rem;
+  font-size: 11px;
 }
 </style>
