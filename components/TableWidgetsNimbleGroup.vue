@@ -206,11 +206,21 @@ const removeActor = (actorId: string) => {
   </va-card>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .nimble-row {
   border-top: 1px solid var(--va-background-border);
   padding: 0.45rem 0;
   position: relative;
+
+  .window-container-markdown-renderer > div > * {
+    margin-bottom: 0.25rem;
+  }
+
+  .window-container-markdown-renderer {
+    ul {
+      margin-left: 1rem;
+    }
+  }
 }
 .nimble-row:first-of-type {
   border-top: 0;
@@ -356,8 +366,5 @@ const removeActor = (actorId: string) => {
   margin-top: 0.5rem;
   padding: 0.35rem 0.6rem;
   font-size: 11px;
-  .window-container-markdown-renderer > div > * {
-    margin-bottom: 0.25rem;
-  }
 }
 </style>
