@@ -5,6 +5,11 @@ const prototypes = [
     label: 'Dice roller',
     description: 'Input and notation experiments.',
   },
+  {
+    id: 'nimble-group',
+    label: 'Nimble group',
+    description: 'Exercise the Nimble group widget with local mock actors.',
+  },
 ] as const;
 
 type PrototypeId = typeof prototypes[number]['id'];
@@ -45,7 +50,7 @@ const selectPrototype = (prototype: PrototypeId) => {
         @click="selectPrototype(prototype.id)"
       >
         <VaSidebarItemContent>
-          <VaIcon :name="prototype.id === 'dice-roller' ? 'casino' : 'tune'" color="primary" />
+          <VaIcon :name="prototype.id === 'dice-roller' ? 'casino' : 'groups'" color="primary" />
           <VaSidebarItemTitle>{{ prototype.label }}</VaSidebarItemTitle>
         </VaSidebarItemContent>
       </VaSidebarItem>
@@ -66,6 +71,16 @@ const selectPrototype = (prototype: PrototypeId) => {
         <VaCardTitle>Dice roller</VaCardTitle>
         <VaCardContent>
           <DiceRoller />
+        </VaCardContent>
+      </VaCard>
+
+      <VaCard
+        v-else-if="activePrototype === 'nimble-group'"
+        class="prototype-view__content"
+      >
+        <VaCardTitle>Nimble group</VaCardTitle>
+        <VaCardContent>
+          <DevNimbleGroupLab />
         </VaCardContent>
       </VaCard>
     </div>
