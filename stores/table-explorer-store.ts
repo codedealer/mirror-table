@@ -48,6 +48,7 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
 
   const categories = ref<Record<string, Category>>({});
   const scenes = ref<Record<string, Scene>>({});
+  const openCategoryIds = ref(new Set<string>());
 
   const rootNode = ref<TreeNode | undefined>();
 
@@ -60,6 +61,18 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
     if (node.children) {
       node.children.forEach(child => setNodeLoading(child, loading));
     }
+  };
+
+  const setCategoryOpen = (categoryId: string, open: boolean) => {
+    const nextOpenCategoryIds = new Set(openCategoryIds.value);
+
+    if (open) {
+      nextOpenCategoryIds.add(categoryId);
+    } else {
+      nextOpenCategoryIds.delete(categoryId);
+    }
+
+    openCategoryIds.value = nextOpenCategoryIds;
   };
 
   const tryExecuteQuery = async <T extends Scene | Category>(query: Query<T>) => {
@@ -187,7 +200,7 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
   };
 
   const saveCategory = async (title: string, parent: TreeNode, id?: string) => {
-    if (!tableStore.table || !parent.children) {
+    if (!tableStore.table) {
       return;
     }
 
@@ -251,14 +264,9 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
       return;
     }
 
-    // update the tree
-    const node = ExplorerTreeNodeFactory(newCategory);
-
-    const index = parent.children.findIndex(child => !child.isFolder);
-    if (index === -1) {
-      parent.children.push(node);
-    } else {
-      parent.children.splice(index, 0, node);
+    // Refresh and unfold the parent folder so newly-created children are visible.
+    if (await loadChildren(parent)) {
+      setCategoryOpen(parent.id, true);
     }
   };
 
@@ -396,9 +404,9 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
 
       item.value.title = newScene.title;
     } else {
-      const node = ExplorerTreeNodeFactory(newScene);
-
-      parent.children?.push(node);
+      if (await loadChildren(parent)) {
+        setCategoryOpen(parent.id, true);
+      }
     }
 
     return sceneRef.id;
@@ -469,9 +477,11 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
     isReady,
     categories,
     scenes,
+    openCategoryIds,
     rootNode,
     nodes,
     setNodeLoading,
+    setCategoryOpen,
     loadChildren,
     toggleCategory,
     loadCategory,

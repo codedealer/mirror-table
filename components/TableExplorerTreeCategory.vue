@@ -11,6 +11,7 @@ const props = defineProps<{
 
 const tableExplorerStore = useTableExplorerStore();
 const sceneStore = useSceneStore();
+const { openCategoryIds } = storeToRefs(tableExplorerStore);
 
 const treeRef = inject<Ref<HeTreePublicInstance<TreeNode> | null>>(explorerTreeRefKey, ref(null));
 
@@ -42,14 +43,44 @@ useHeTreeChildrenSync({
   tree: treeRef,
 });
 
+const shouldBeOpen = computed(() => {
+  return openCategoryIds.value.has(props.node.id);
+});
+
+watch([
+  () => props.node.loaded,
+  () => props.node.loading,
+  () => props.stat.open,
+  shouldBeOpen,
+], async ([loaded, loading, statOpen, nextShouldBeOpen]) => {
+  if (!nextShouldBeOpen || statOpen || loading) {
+    return;
+  }
+
+  if (!loaded) {
+    const success = await tableExplorerStore.toggleCategory(props.node);
+    if (!success) {
+      return;
+    }
+  }
+
+  // eslint-disable-next-line vue/no-mutating-props -- @he-tree/vue stat is designed to be mutated
+  props.stat.open = true;
+}, {
+  flush: 'post',
+  immediate: true,
+});
+
 const handleToggle = async () => {
   if (props.stat.open) {
+    tableExplorerStore.setCategoryOpen(props.node.id, false);
     // eslint-disable-next-line vue/no-mutating-props -- @he-tree/vue stat is designed to be mutated
     props.stat.open = false;
     return;
   }
   const result = await tableExplorerStore.toggleCategory(props.node);
   if (result) {
+    tableExplorerStore.setCategoryOpen(props.node.id, true);
     // eslint-disable-next-line vue/no-mutating-props -- @he-tree/vue stat is designed to be mutated
     props.stat.open = true;
   }
