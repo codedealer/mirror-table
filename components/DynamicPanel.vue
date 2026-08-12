@@ -94,6 +94,7 @@ onClickOutside(sidebar, () => {
     ref="sidebar"
     :minimized="!models[name]"
     minimized-width="0"
+    width="18rem"
     :animated="name"
     :class="classes"
     class="dynamic-panel"

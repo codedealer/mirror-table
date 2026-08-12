@@ -91,18 +91,20 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActor, index: number, curren
       </VaButton>
     </div>
 
-    <TableWidgetsNimbleGroupContent
-      :actors="group.actors.filter(actor => isOwner || actor.enabled)"
-      :is-owner="isOwner"
-      @add-condition="(actorId, condition) => addCondition(group.actors.find(actor => actor.id === actorId)!, condition)"
-      @add-npc-hit-point="actorId => addHitPool(group.actors.find(actor => actor.id === actorId)!)"
-      @edit-actor="editActor"
-      @remove-actor="removeActor"
-      @remove-condition="(actorId, condition) => removeCondition(group.actors.find(actor => actor.id === actorId)!, condition)"
-      @toggle-actor="actorId => toggleActor(group.actors.find(actor => actor.id === actorId)!)"
-      @update-npc-hit-points="updateNpcHitPoints"
-      @update-player-hit-points="updatePlayerHitPoints"
-    />
+    <div class="nimble-lab__group-holder">
+      <TableWidgetsNimbleGroupContent
+        :actors="group.actors.filter(actor => isOwner || actor.enabled)"
+        :is-owner="isOwner"
+        @add-condition="(actorId, condition) => addCondition(group.actors.find(actor => actor.id === actorId)!, condition)"
+        @add-npc-hit-point="actorId => addHitPool(group.actors.find(actor => actor.id === actorId)!)"
+        @edit-actor="editActor"
+        @remove-actor="removeActor"
+        @remove-condition="(actorId, condition) => removeCondition(group.actors.find(actor => actor.id === actorId)!, condition)"
+        @toggle-actor="actorId => toggleActor(group.actors.find(actor => actor.id === actorId)!)"
+        @update-npc-hit-points="updateNpcHitPoints"
+        @update-player-hit-points="updatePlayerHitPoints"
+      />
+    </div>
   </div>
 </template>
 
@@ -110,7 +112,12 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActor, index: number, curren
 .nimble-lab {
   box-sizing: border-box;
   max-width: 42rem;
-  width: 256px;
+  background: var(--va-background-element);
+  padding: 1rem;
+}
+
+.nimble-lab__group-holder {
+  width: 262px;
 }
 
 .nimble-lab__toolbar,
@@ -170,19 +177,6 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActor, index: number, curren
   color: inherit;
   cursor: pointer;
   padding: 0;
-}
-
-.nimble-lab__name--minion {
-  color: var(--va-danger);
-}
-
-.nimble-lab__name--legendary {
-  color: #a66a00;
-}
-
-.nimble-lab__conditions {
-  flex-wrap: wrap;
-  margin: 0.5rem 0 0 1.5rem;
 }
 
 .nimble-lab__conditions :deep(.va-input-wrapper) {

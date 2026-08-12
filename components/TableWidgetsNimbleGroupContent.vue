@@ -150,6 +150,14 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
   border-top: 1px solid var(--va-background-border);
   padding: 0.45rem 0;
   position: relative;
+
+  /* make markdown content more compact */
+  .window-container-markdown-renderer > div > * {
+    margin-bottom: 0.25rem;
+  }
+  .window-container-markdown-renderer > div > ul {
+    margin-left: 1rem;
+  }
 }
 .nimble-row:first-of-type {
   border-top: 0;
