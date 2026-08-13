@@ -28,6 +28,14 @@ onMounted(() => {
 const { onNodeTransformEnd, onKonvaEvent } = useCanvasTransformEvents();
 const { onContextMenu } = useCanvasRightClick();
 
+const onPointerDown = (e: Konva.KonvaEventObject<PointerEvent>) => {
+  if (e.target === canvasStageStore.stage && document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
+
+  onKonvaEvent(e);
+};
+
 const imageTransformerConfig = ref<Konva.TransformerConfig>({
   flipEnabled: false,
   enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
@@ -108,7 +116,7 @@ hotkeyStore.registerHotkey({
     ref="stage"
     :config="canvasStageStore.stageConfig"
     @contextmenu="onContextMenu"
-    @pointerdown="onKonvaEvent"
+    @pointerdown="onPointerDown"
     @pointerup="onKonvaEvent"
     @pointermove="onKonvaEvent"
     @dragend="onNodeTransformEnd"
