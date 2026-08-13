@@ -29,7 +29,6 @@ const privateContent = ref('');
 const avatar = ref<PreviewProperties | null>(null);
 const player = ref(WidgetNimbleGroupActorPlayerFactory().player);
 const npc = ref(WidgetNimbleGroupActorNpcFactory().npc);
-npc.value.hitPool = [0];
 const imageFileId = ref('');
 const { file: imageFile, isLoading: imageLoading, error: imageError } = useDriveFile(imageFileId, {
   strategy: DataRetrievalStrategies.RECENT,
@@ -49,8 +48,6 @@ watch(actor, (value) => {
     player.value = structuredClone(toRaw(value.player));
   } else {
     npc.value = structuredClone(toRaw(value.npc));
-    if (!npc.value.hitPool.length)
-      npc.value.hitPool.push(0);
   }
 }, { immediate: true });
 

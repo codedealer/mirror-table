@@ -605,7 +605,7 @@ export interface WidgetNimbleGroupActorNpc extends WidgetNimbleGroupActorBase {
     };
     armor: '' | 'medium' | 'heavy';
     speed: string;
-    hitPool: number[];
+    hitPool: NimbleNumber[];
     subtype: 'minion' | 'flunky' | 'regular' | 'legendary';
   };
 }

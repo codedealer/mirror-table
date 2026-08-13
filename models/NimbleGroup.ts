@@ -32,10 +32,10 @@ export const WidgetNimbleGroupActorPlayerFactory = (id = '', rank = 0): WidgetNi
   ...emptyShared(id, rank),
   type: 'player',
   player: {
-    stats: { wil: 0, str: 0, dex: 0, int: 0 },
-    armor: 0,
-    hitPoints: { current: 0, max: 0, temp: 0 },
-    wounds: { current: 0, max: 0 },
+    stats: { wil: '', str: '', dex: '', int: '' },
+    armor: '',
+    hitPoints: { current: '', max: '', temp: '' },
+    wounds: { current: '', max: '' },
     speed: '',
   },
 });
@@ -44,10 +44,10 @@ export const WidgetNimbleGroupActorNpcFactory = (id = '', rank = 0): WidgetNimbl
   ...emptyShared(id, rank),
   type: 'npc',
   npc: {
-    stats: { wil: 0, str: 0, dex: 0, int: 0 },
+    stats: { wil: '', str: '', dex: '', int: '' },
     armor: '',
     speed: '',
-    hitPool: [0],
+    hitPool: [],
     subtype: 'regular',
   },
 });
@@ -130,7 +130,8 @@ export const isWidgetNimbleGroupActorNpc = (value: unknown): value is WidgetNimb
     && typeof npc.speed === 'string'
     && ['', 'medium', 'heavy'].includes(npc.armor as string)
     && ['minion', 'flunky', 'regular', 'legendary'].includes(npc.subtype as string)
-    && Array.isArray(npc.hitPool);
+    && Array.isArray(npc.hitPool)
+    && npc.hitPool.every(isNimbleNumber);
 };
 
 export const isWidgetNimbleGroupActor = (value: unknown): value is WidgetNimbleGroupActor => {
@@ -158,7 +159,7 @@ export const normalizeNimbleConditions = (conditions: string[]): string[] => {
 export const isNimbleValueSet = (value: unknown): boolean => value !== '' && value !== null && value !== undefined;
 
 export const hasCompleteNimbleResource = (current: unknown, max: unknown): boolean => {
-  return isNimbleValueSet(current) && isNimbleValueSet(max) && Number(max) > 0;
+  return isNimbleValueSet(current) || isNimbleValueSet(max);
 };
 
 export const sortNimbleActors = (actors: WidgetNimbleGroupActor[]): WidgetNimbleGroupActor[] => {

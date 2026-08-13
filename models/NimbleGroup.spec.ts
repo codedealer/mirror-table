@@ -16,8 +16,8 @@ import {
 describe('nimble group helpers', () => {
   it('creates safe player and NPC defaults', () => {
     expect(WidgetNimbleGroupActorPlayerFactory().enabled).toBe(false);
-    expect(WidgetNimbleGroupActorPlayerFactory().player.hitPoints).toEqual({ current: 0, max: 0, temp: 0 });
-    expect(WidgetNimbleGroupActorNpcFactory().npc.hitPool).toEqual([0]);
+    expect(WidgetNimbleGroupActorPlayerFactory().player.hitPoints).toEqual({ current: '', max: '', temp: '' });
+    expect(WidgetNimbleGroupActorNpcFactory().npc.hitPool).toEqual([]);
   });
 
   it('validates NPC discriminants', () => {
@@ -107,10 +107,12 @@ describe('nimble group helpers', () => {
     expect(editedActor.conditions).toEqual(['Stunned', 'Poisoned']);
   });
 
-  it('omits incomplete resources while allowing zero current values', () => {
-    expect(hasCompleteNimbleResource(5, 0)).toBe(false);
+  it('shows resources when either value is set, including zero', () => {
+    expect(hasCompleteNimbleResource(5, 0)).toBe(true);
+    expect(hasCompleteNimbleResource(5, '')).toBe(true);
     expect(hasCompleteNimbleResource(0, 5)).toBe(true);
-    expect(hasCompleteNimbleResource('', 5)).toBe(false);
+    expect(hasCompleteNimbleResource('', 0)).toBe(true);
+    expect(hasCompleteNimbleResource('', '')).toBe(false);
   });
 
   it('treats numeric zero as a set value', () => {
