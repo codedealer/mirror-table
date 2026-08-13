@@ -88,8 +88,8 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
             <div v-else class="nimble-row__player-stats">
               <va-popover v-if="hasCompleteNimbleResource(actor.player.hitPoints.current, actor.player.hitPoints.max)" v-model="hitPointPopoverOpen[actor.id]" trigger="click" :close-on-content-click="false" placement="bottom-start" content-class="nimble-row__hitpoint-popover">
                 <button type="button" class="nimble-row__hitpoint-value" title="Edit hit points" @click="openHitPointPopover(actor.id, Number(actor.player.hitPoints.current), Number(actor.player.hitPoints.max))">
-                  <va-icon name="favorite" aria-hidden="true" />{{ actor.player.hitPoints.current }}/{{ actor.player.hitPoints.max }}<template v-if="actor.player.hitPoints.temp">
-                    +{{ actor.player.hitPoints.temp }}
+                  <va-icon name="favorite" color="primary-dark" aria-hidden="true" />{{ actor.player.hitPoints.current }}/{{ actor.player.hitPoints.max }}<template v-if="actor.player.hitPoints.temp">
+                    <span class="nimble-row__hitpoint-temp">+{{ actor.player.hitPoints.temp }}</span>
                   </template>
                 </button>
                 <template #body>
@@ -100,6 +100,7 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
               </va-popover>
               <span v-if="isNimbleValueSet(actor.player.armor)" title="Armor"><va-icon name="shield" aria-hidden="true" />{{ actor.player.armor }}</span>
               <span v-if="isNimbleValueSet(actor.player.speed)" title="Speed"><va-icon name="directions_run" aria-hidden="true" />{{ actor.player.speed }}</span>
+              <span v-if="hasCompleteNimbleResource(actor.player.wounds.current, actor.player.wounds.max)" title="Wounds"><va-icon name="healing" color="danger-dark" aria-hidden="true" />{{ actor.player.wounds.current }}/{{ actor.player.wounds.max }}</span>
             </div>
           </div>
           <div v-if="props.isOwner" class="nimble-row__controls">
@@ -128,11 +129,8 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
             </va-popover>
           </div>
         </div>
-        <div v-else-if="!isWidgetNimbleGroupActorNpc(actor)" class="nimble-row__stats">
-          <span v-if="hasCompleteNimbleResource(actor.player.wounds.current, actor.player.wounds.max)">Wounds {{ actor.player.wounds.current }}/{{ actor.player.wounds.max }}</span>
-        </div>
         <div v-if="actor.conditions.length" class="nimble-row__conditions">
-          <va-button v-for="condition in actor.conditions" :key="condition" size="small" round color="warning" :disabled="!props.isOwner" :aria-label="`${props.isOwner ? 'Remove' : 'Condition'} ${condition} ${props.isOwner ? `from ${actor.name}` : ''}`" @click="emit('removeCondition', actor.id, condition)">
+          <va-button v-for="condition in actor.conditions" :key="condition" class="nimble-row__condition" size="small" round color="warning" :disabled="!props.isOwner" :aria-label="`${props.isOwner ? 'Remove' : 'Condition'} ${condition} ${props.isOwner ? `from ${actor.name}` : ''}`" @click="emit('removeCondition', actor.id, condition)">
             {{ condition }}
           </va-button>
         </div>
@@ -261,6 +259,9 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
   gap: 0.1rem;
   white-space: nowrap;
 }
+.nimble-row__hitpoint-temp {
+  color: var(--va-warning);
+}
 .nimble-row__hitpoint-input {
   width: 4.5rem;
 }
@@ -281,6 +282,10 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
 }
 .nimble-row__conditions > .va-button {
   flex: 0 0 auto;
+}
+.nimble-row__condition:disabled {
+  color: var(--va-background-primary) !important;
+  opacity: 1;
 }
 .nimble-row__condition-popover {
   align-items: center;
