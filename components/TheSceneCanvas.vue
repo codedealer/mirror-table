@@ -312,6 +312,29 @@ const repositionStage = () => {
   });
 };
 
+const setZoomAtViewportCenter = (value: number) => {
+  if (!canvasContainer.value) {
+    canvasStageStore.setZoom(value);
+    return;
+  }
+
+  const currentZoom = canvasStageStore.zoom;
+  const scrollLeft = canvasContainer.value.scrollLeft;
+  const scrollTop = canvasContainer.value.scrollTop;
+  const dx = scrollLeft - canvasStageStore.fieldPadding;
+  const dy = scrollTop - canvasStageStore.fieldPadding;
+  const stageConfig = canvasStageStore.stageConfig;
+  const anchor = {
+    x: (canvasContainer.value.clientWidth / 2 + scrollLeft - dx - stageConfig.x) / currentZoom,
+    y: (canvasContainer.value.clientHeight / 2 + scrollTop - dy - stageConfig.y) / currentZoom,
+  };
+
+  canvasStageStore.setZoom(value);
+
+  canvasContainer.value.scrollLeft = scrollLeft + (canvasStageStore.zoom - currentZoom) * anchor.x;
+  canvasContainer.value.scrollTop = scrollTop + (canvasStageStore.zoom - currentZoom) * anchor.y;
+};
+
 /**
  * Handle dragenter event on canvas
  */
@@ -478,33 +501,36 @@ if (import.meta.client) {
 </script>
 
 <template>
-  <div ref="canvasContainer" class="canvas-container scroll-enabled">
-    <component
-      :is="canvasToolStore.activeTool.component"
-      v-if="canvasToolStore.activeTool"
-    />
+  <div class="canvas-container-wrapper">
+    <div ref="canvasContainer" class="canvas-container scroll-enabled">
+      <component
+        :is="canvasToolStore.activeTool.component"
+        v-if="canvasToolStore.activeTool"
+      />
 
-    <div v-if="isDropOverlayVisible" class="canvas-container__drop-overlay">
-      <div class="canvas-container__drop-title">
-        {{ dropOverlayTitle }}
+      <div v-if="isDropOverlayVisible" class="canvas-container__drop-overlay">
+        <div class="canvas-container__drop-title">
+          {{ dropOverlayTitle }}
+        </div>
+        <div v-if="dropOverlaySubtitle" class="canvas-container__drop-subtitle">
+          {{ dropOverlaySubtitle }}
+        </div>
       </div>
-      <div v-if="dropOverlaySubtitle" class="canvas-container__drop-subtitle">
-        {{ dropOverlaySubtitle }}
+
+      <div
+        ref="canvasField"
+        :style="fieldDimensions"
+        class="canvas-container__field scroll-enabled" :class="[
+          {
+            'canvas-container__field--drop-active': isDropOverlayVisible,
+            'canvas-container__field--uploading': isExternalImageImporting,
+          },
+        ]"
+      >
+        <TheSceneCanvasStage />
       </div>
     </div>
-
-    <div
-      ref="canvasField"
-      :style="fieldDimensions"
-      class="canvas-container__field scroll-enabled" :class="[
-        {
-          'canvas-container__field--drop-active': isDropOverlayVisible,
-          'canvas-container__field--uploading': isExternalImageImporting,
-        },
-      ]"
-    >
-      <TheSceneCanvasStage />
-    </div>
+    <TheSceneCanvasZoomControl @zoom="setZoomAtViewportCenter" />
   </div>
 </template>
 

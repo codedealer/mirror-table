@@ -2,6 +2,10 @@ import type Konva from 'konva';
 import type { ElementContainerConfig, KonvaComponent } from '~/models/types';
 import type { WithIdPlaceholders } from '~/utils/replaceIdPlaceholder';
 
+export const CANVAS_ZOOM_MIN = 0.5;
+export const CANVAS_ZOOM_MAX = 2;
+export const CANVAS_ZOOM_STEP = 0.1;
+
 export const useCanvasStageStore = defineStore('canvas-stage', () => {
   const _stageNode = ref<KonvaComponent<Konva.Node> | null>(null);
   const stage = computed(() => _stageNode.value?.getStage());
@@ -32,18 +36,33 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
   const fieldWidth = ref(3000);
   const fieldHeight = ref(3000);
   const fieldPadding = ref(500);
+  const zoom = ref(1);
 
   const stageConfig = computed(() => {
     return {
       ..._stage.value,
       x: _offset.value.x - _scroll.value.x,
       y: _offset.value.y - _scroll.value.y,
+      scaleX: zoom.value,
+      scaleY: zoom.value,
     };
   });
 
   const applyConfig = (config: Partial<Konva.StageConfig>) => {
-    Object.assign(_stage.value, config);
+    const { scaleX: _scaleX, scaleY: _scaleY, ...logicalConfig } = config;
+    Object.assign(_stage.value, logicalConfig);
   };
+
+  const setZoom = (value: number) => {
+    const normalizedValue = Number.isFinite(value) ? value : 1;
+    const nextZoom = Math.min(CANVAS_ZOOM_MAX, Math.max(CANVAS_ZOOM_MIN, normalizedValue));
+
+    zoom.value = nextZoom;
+  };
+
+  const zoomIn = () => setZoom(zoom.value + CANVAS_ZOOM_STEP);
+  const zoomOut = () => setZoom(zoom.value - CANVAS_ZOOM_STEP);
+  const resetZoom = () => setZoom(1);
 
   const fitToStage = <T extends ElementContainerConfig>(container: WithIdPlaceholders<T> | T): T => {
     if (
@@ -60,8 +79,12 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
 
     const labelPadding = 100;
 
-    const realStageWidth = stageConfig.value.width * stageConfig.value.scaleX! - fieldPadding.value * 2;
-    const realStageHeight = stageConfig.value.height * stageConfig.value.scaleY! - fieldPadding.value * 2;
+    const realStageWidth = stageConfig.value.width - fieldPadding.value * 2;
+    const realStageHeight = stageConfig.value.height - fieldPadding.value * 2;
+
+    if (realStageWidth <= 0 || realStageHeight <= 0) {
+      return container as T;
+    }
 
     const stageCenter = {
       x: -stageConfig.value.x + fieldPadding.value + realStageWidth / 2,
@@ -172,8 +195,13 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     fieldWidth,
     fieldHeight,
     fieldPadding,
+    zoom,
     stageConfig,
     applyConfig,
+    setZoom,
+    zoomIn,
+    zoomOut,
+    resetZoom,
     fitToStage,
     browserCoordsToStageCoords,
   };

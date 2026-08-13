@@ -18,6 +18,7 @@
 
 .main-grid__content {
   grid-area: main-grid__content;
+  min-width: 0;
 }
 
 .main-grid__left {
