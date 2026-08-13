@@ -123,7 +123,9 @@ onClickOutside(sidebar, () => {
     </div>
     <va-scroll-container vertical>
       <div class="dynamic-panel__content">
-        <component :is="content" :type="name" />
+        <KeepAlive>
+          <component :is="content" :type="name" />
+        </KeepAlive>
       </div>
     </va-scroll-container>
   </va-sidebar>
