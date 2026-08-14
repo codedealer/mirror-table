@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  applyNimbleDamage,
   hasCompleteNimbleResource,
   isNimbleNumber,
   isNimbleValueSet,
@@ -16,7 +17,7 @@ import {
 describe('nimble group helpers', () => {
   it('creates safe player and NPC defaults', () => {
     expect(WidgetNimbleGroupActorPlayerFactory().enabled).toBe(false);
-    expect(WidgetNimbleGroupActorPlayerFactory().player.hitPoints).toEqual({ current: '', max: '', temp: '' });
+    expect(WidgetNimbleGroupActorPlayerFactory().player.hitPool).toEqual([{ current: '', max: '', temp: '' }]);
     expect(WidgetNimbleGroupActorNpcFactory().npc.hitPool).toEqual([]);
   });
 
@@ -86,7 +87,7 @@ describe('nimble group helpers', () => {
     const npc = WidgetNimbleGroupActorNpcFactory();
     player.player.stats = { wil: '', str: '', dex: '', int: '' };
     player.player.armor = '';
-    player.player.hitPoints = { current: '', max: '', temp: '' };
+    player.player.hitPool = [{ current: '', max: '', temp: '' }];
     player.player.wounds = { current: '', max: '' };
     npc.npc.stats = { wil: '', str: '', dex: '', int: '' };
 
@@ -115,6 +116,35 @@ describe('nimble group helpers', () => {
     expect(hasCompleteNimbleResource('', '')).toBe(false);
   });
 
+  it('applies damage to temporary hit points before current hit points', () => {
+    expect(applyNimbleDamage({ current: 10, max: 10, temp: 3 }, 5)).toEqual({ current: 8, max: 10, temp: 0 });
+    expect(applyNimbleDamage({ current: 10, max: 10, temp: 3 }, 2)).toEqual({ current: 10, max: 10, temp: 1 });
+    expect(applyNimbleDamage({ current: 10, max: 10, temp: '' }, 5)).toEqual({ current: 5, max: 10, temp: '' });
+  });
+
+  it('leaves hit points unchanged for zero, negative, and empty damage input', () => {
+    const hitPoints = { current: 10, max: '', temp: 3 };
+
+    expect(applyNimbleDamage(hitPoints, 0)).toEqual(hitPoints);
+    expect(applyNimbleDamage(hitPoints, -2)).toEqual(hitPoints);
+    expect(applyNimbleDamage(hitPoints, Number(''))).toEqual(hitPoints);
+  });
+
+  it('preserves empty current and max values while consuming temporary hit points', () => {
+    expect(applyNimbleDamage({ current: '', max: '', temp: 3 }, 2)).toEqual({ current: '', max: '', temp: 1 });
+    expect(applyNimbleDamage({ current: '', max: '', temp: 3 }, 5)).toEqual({ current: '', max: '', temp: 0 });
+  });
+
+  it('applies the same damage order to player and NPC hitpoint entries', () => {
+    const player = WidgetNimbleGroupActorPlayerFactory('player');
+    const npc = WidgetNimbleGroupActorNpcFactory('npc');
+    player.player.hitPool[0] = { current: 10, max: 12, temp: 4 };
+    npc.npc.hitPool = [{ current: 10, max: 12, temp: 4 }];
+
+    expect(applyNimbleDamage(player.player.hitPool[0], 6)).toEqual({ current: 8, max: 12, temp: 0 });
+    expect(applyNimbleDamage(npc.npc.hitPool[0], 6)).toEqual({ current: 8, max: 12, temp: 0 });
+  });
+
   it('treats numeric zero as a set value', () => {
     expect(isNimbleValueSet(0)).toBe(true);
     expect(isNimbleValueSet('')).toBe(false);
@@ -124,12 +154,12 @@ describe('nimble group helpers', () => {
 
   it('normalizes ranks without merging NPC hit pools', () => {
     const npc = WidgetNimbleGroupActorNpcFactory('npc', 9);
-    npc.npc.hitPool = [4, 7];
+    npc.npc.hitPool = [{ current: 4, max: '', temp: '' }, { current: 7, max: '', temp: '' }];
     const player = WidgetNimbleGroupActorPlayerFactory('player', 2);
     const normalized = normalizeNimbleActorRanks([npc, player]);
     expect(normalized.map(actor => actor.rank)).toEqual([0, 1]);
     const normalizedNpc = normalized.find(actor => actor.type === 'npc');
-    expect(normalizedNpc?.type === 'npc' && normalizedNpc.npc.hitPool).toEqual([4, 7]);
+    expect(normalizedNpc?.type === 'npc' && normalizedNpc.npc.hitPool).toEqual([{ current: 4, max: '', temp: '' }, { current: 7, max: '', temp: '' }]);
   });
 
   it('preserves the requested order while normalizing ranks', () => {

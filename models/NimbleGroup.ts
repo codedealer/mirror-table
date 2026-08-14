@@ -1,4 +1,5 @@
 import type {
+  NimbleHitPoints,
   WidgetNimbleGroup,
   WidgetNimbleGroupActor,
   WidgetNimbleGroupActorNpc,
@@ -34,7 +35,7 @@ export const WidgetNimbleGroupActorPlayerFactory = (id = '', rank = 0): WidgetNi
   player: {
     stats: { wil: '', str: '', dex: '', int: '' },
     armor: '',
-    hitPoints: { current: '', max: '', temp: '' },
+    hitPool: [{ current: '', max: '', temp: '' }],
     wounds: { current: '', max: '' },
     speed: '',
   },
@@ -107,7 +108,9 @@ export const isWidgetNimbleGroupActorPlayer = (value: unknown): value is WidgetN
   const player = value.player;
   return hasNimbleNumbers(player.stats, ['wil', 'str', 'dex', 'int'])
     && isNimbleNumber(player.armor)
-    && hasNimbleNumbers(player.hitPoints, ['current', 'max', 'temp'])
+    && Array.isArray(player.hitPool)
+    && player.hitPool.length === 1
+    && player.hitPool.every(hitPoints => hasNimbleNumbers(hitPoints, ['current', 'max', 'temp']))
     && hasNimbleNumbers(player.wounds, ['current', 'max'])
     && typeof player.speed === 'string';
 };
@@ -131,7 +134,7 @@ export const isWidgetNimbleGroupActorNpc = (value: unknown): value is WidgetNimb
     && ['', 'medium', 'heavy'].includes(npc.armor as string)
     && ['minion', 'flunky', 'regular', 'legendary'].includes(npc.subtype as string)
     && Array.isArray(npc.hitPool)
-    && npc.hitPool.every(isNimbleNumber);
+    && npc.hitPool.every(hitPoints => hasNimbleNumbers(hitPoints, ['current', 'max', 'temp']));
 };
 
 export const isWidgetNimbleGroupActor = (value: unknown): value is WidgetNimbleGroupActor => {
@@ -160,6 +163,19 @@ export const isNimbleValueSet = (value: unknown): boolean => value !== '' && val
 
 export const hasCompleteNimbleResource = (current: unknown, max: unknown): boolean => {
   return isNimbleValueSet(current) || isNimbleValueSet(max);
+};
+
+export const applyNimbleDamage = (hitPoints: NimbleHitPoints, damage: number): NimbleHitPoints => {
+  const damageToApply = Math.max(0, damage);
+  const temporaryHitPoints = typeof hitPoints.temp === 'number' && hitPoints.temp > 0 ? hitPoints.temp : 0;
+  const temporaryDamage = Math.min(temporaryHitPoints, damageToApply);
+  const remainingDamage = damageToApply - temporaryDamage;
+
+  return {
+    ...hitPoints,
+    current: hitPoints.current === '' ? '' : hitPoints.current - remainingDamage,
+    temp: typeof hitPoints.temp === 'number' ? temporaryHitPoints - temporaryDamage : hitPoints.temp,
+  };
 };
 
 export const sortNimbleActors = (actors: WidgetNimbleGroupActor[]): WidgetNimbleGroupActor[] => {

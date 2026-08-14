@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { NimbleNumber, WidgetNimbleGroupActor, WidgetNimbleGroupActorNpc, WidgetNimbleGroupActorPlayer } from '~/models/types';
-import { hasCompleteNimbleResource, isNimbleValueSet, isWidgetNimbleGroupActorNpc } from '~/models/NimbleGroup';
+import type { NimbleHitPoints, NimbleNumber, WidgetNimbleGroupActor, WidgetNimbleGroupActorNpc, WidgetNimbleGroupActorPlayer } from '~/models/types';
+import { applyNimbleDamage, hasCompleteNimbleResource, isNimbleValueSet, isWidgetNimbleGroupActorNpc } from '~/models/NimbleGroup';
 
 const props = defineProps<{
   actors: WidgetNimbleGroupActor[];
@@ -14,14 +14,13 @@ const emit = defineEmits<{
   removeActor: [actorId: string];
   removeCondition: [actorId: string, condition: string];
   toggleActor: [actorId: string];
-  updateNpcHitPoints: [actor: WidgetNimbleGroupActorNpc, index: number, current: NimbleNumber];
-  updatePlayerHitPoints: [actor: WidgetNimbleGroupActorPlayer, current: NimbleNumber, max: NimbleNumber];
+  updateHitPoints: [actor: WidgetNimbleGroupActorNpc | WidgetNimbleGroupActorPlayer, index: number, hitPoints: NimbleHitPoints];
   updatePlayerWounds: [actor: WidgetNimbleGroupActorPlayer, current: NimbleNumber, max: NimbleNumber];
 }>();
 
 const conditionDraft = ref<Record<string, string>>({});
 const conditionPopoverOpen = ref<Record<string, boolean>>({});
-const hitPointDraft = ref<Record<string, { current: string; max: string; damage: string }>>({});
+const hitPointDraft = ref<Record<string, { current: string; max: string; temp: string; damage: string }>>({});
 const hitPointPopoverOpen = ref<Record<string, boolean>>({});
 
 const addCondition = (actorId: string) => {
@@ -35,8 +34,8 @@ const addCondition = (actorId: string) => {
   }
 };
 
-const openHitPointPopover = (key: string, current: NimbleNumber, max?: NimbleNumber) => {
-  hitPointDraft.value[key] = { current: String(current), max: max === undefined ? '' : String(max), damage: '' };
+const openHitPointPopover = (key: string, hitPoints: NimbleHitPoints) => {
+  hitPointDraft.value[key] = { current: String(hitPoints.current), max: String(hitPoints.max), temp: String(hitPoints.temp), damage: '' };
   nextTick(() => {
     setTimeout(() => {
       const input = [...document.querySelectorAll<HTMLInputElement>('.nimble-row__hitpoint-damage-input input')]
@@ -47,19 +46,24 @@ const openHitPointPopover = (key: string, current: NimbleNumber, max?: NimbleNum
   });
 };
 
-const updatePlayerHitPoints = (actor: WidgetNimbleGroupActorPlayer) => {
+const updateHitPoints = (actor: WidgetNimbleGroupActorNpc | WidgetNimbleGroupActorPlayer, index: number) => {
   if (!props.isOwner)
     return;
-  const draft = hitPointDraft.value[actor.id];
+  const key = `${actor.id}-${index}`;
+  const draft = hitPointDraft.value[key];
   const damage = Number(draft?.damage || 0);
-  const current = draft?.current === '' ? '' : Number(draft?.current || 0) - damage;
-  const max = draft?.max === '' ? '' : Number(draft?.max || 0);
+  const hitPoints = applyNimbleDamage({
+    current: draft?.current === '' ? '' : Number(draft?.current || 0),
+    max: draft?.max === '' ? '' : Number(draft?.max || 0),
+    temp: draft?.temp === '' ? '' : Number(draft?.temp || 0),
+  }, damage);
   if (draft) {
-    draft.current = String(current);
+    draft.current = String(hitPoints.current);
+    draft.temp = String(hitPoints.temp);
     draft.damage = '';
   }
-  emit('updatePlayerHitPoints', actor, current, max);
-  hitPointPopoverOpen.value[actor.id] = false;
+  emit('updateHitPoints', actor, index, hitPoints);
+  hitPointPopoverOpen.value[key] = false;
 };
 
 const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
@@ -70,26 +74,6 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
   const current = draft?.current === '' ? '' : Number(draft?.current || 0);
   const max = draft?.max === '' ? '' : Number(draft?.max || 0);
   emit('updatePlayerWounds', actor, current, max);
-  hitPointPopoverOpen.value[key] = false;
-};
-
-const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => {
-  if (!props.isOwner)
-    return;
-  const key = `${actor.id}-${index}`;
-  const draft = hitPointDraft.value[key];
-  if (draft?.current === '') {
-    emit('updateNpcHitPoints', actor, index, '');
-    hitPointPopoverOpen.value[key] = false;
-    return;
-  }
-  const damage = Number(draft?.damage || 0);
-  const current = Number(draft?.current || 0) - damage;
-  if (draft) {
-    draft.current = String(current);
-    draft.damage = '';
-  }
-  emit('updateNpcHitPoints', actor, index, current);
   hitPointPopoverOpen.value[key] = false;
 };
 </script>
@@ -114,27 +98,24 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
               <span v-if="isNimbleValueSet(actor.npc.speed)" title="Speed"><va-icon name="directions_run" aria-hidden="true" />{{ actor.npc.speed }}</span>
             </div>
             <div v-else class="nimble-row__player-stats">
-              <va-popover v-if="hasCompleteNimbleResource(actor.player.hitPoints.current, actor.player.hitPoints.max)" v-model="hitPointPopoverOpen[actor.id]" trigger="click" :close-on-content-click="false" placement="bottom-start" content-class="nimble-row__hitpoint-popover">
-                <button type="button" class="nimble-row__hitpoint-value" title="Edit hit points" @click="openHitPointPopover(actor.id, actor.player.hitPoints.current, actor.player.hitPoints.max)">
-                  <va-icon name="favorite" color="primary-dark" aria-hidden="true" />{{ actor.player.hitPoints.current }}<template v-if="isNimbleValueSet(actor.player.hitPoints.max)">
-                    /{{ actor.player.hitPoints.max }}
-                  </template><template v-if="actor.player.hitPoints.temp">
-                    <span class="nimble-row__hitpoint-temp">+{{ actor.player.hitPoints.temp }}</span>
-                  </template>
+              <va-popover v-if="hasCompleteNimbleResource(actor.player.hitPool[0].current, actor.player.hitPool[0].max)" v-model="hitPointPopoverOpen[actor.id]" trigger="click" :close-on-content-click="false" placement="bottom-start" content-class="nimble-row__hitpoint-popover">
+                <button type="button" class="nimble-row__hitpoint-value" title="Edit hit points" @click="openHitPointPopover(`${actor.id}-0`, actor.player.hitPool[0])">
+                  <!-- eslint-disable-next-line vue/singleline-html-element-content-newline -->
+                  <va-icon name="favorite" color="primary-dark" aria-hidden="true" />{{ actor.player.hitPool[0].current }}<template v-if="isNimbleValueSet(actor.player.hitPool[0].max)">/{{ actor.player.hitPool[0].max }}</template><template v-if="actor.player.hitPool[0].temp"><span class="nimble-row__hitpoint-temp">+{{ actor.player.hitPool[0].temp }}</span></template>
                 </button>
                 <template #body>
-                  <va-input v-model="hitPointDraft[actor.id].current" class="nimble-row__hitpoint-input" type="number" label="Current" hide-details @keydown.enter.prevent.stop="updatePlayerHitPoints(actor)" />
-                  <va-input v-model="hitPointDraft[actor.id].max" class="nimble-row__hitpoint-input" type="number" label="Max" hide-details @keydown.enter.prevent.stop="updatePlayerHitPoints(actor)" />
-                  <va-input v-model="hitPointDraft[actor.id].damage" class="nimble-row__hitpoint-input nimble-row__hitpoint-damage-input" type="number" label="Damage" hide-details @keydown.enter.prevent.stop="updatePlayerHitPoints(actor)" />
+                  <va-input v-model="hitPointDraft[`${actor.id}-0`].current" class="nimble-row__hitpoint-input" type="number" label="Current" hide-details @keydown.enter.prevent.stop="updateHitPoints(actor, 0)" />
+                  <va-input v-model="hitPointDraft[`${actor.id}-0`].max" class="nimble-row__hitpoint-input" type="number" label="Max" hide-details @keydown.enter.prevent.stop="updateHitPoints(actor, 0)" />
+                  <va-input v-model="hitPointDraft[`${actor.id}-0`].temp" class="nimble-row__hitpoint-input" type="number" label="Temp" hide-details @keydown.enter.prevent.stop="updateHitPoints(actor, 0)" />
+                  <va-input v-model="hitPointDraft[`${actor.id}-0`].damage" class="nimble-row__hitpoint-input nimble-row__hitpoint-damage-input" type="number" label="Damage" hide-details @keydown.enter.prevent.stop="updateHitPoints(actor, 0)" />
                 </template>
               </va-popover>
               <span v-if="isNimbleValueSet(actor.player.armor)" title="Armor"><va-icon name="shield" aria-hidden="true" />{{ actor.player.armor }}</span>
               <span v-if="isNimbleValueSet(actor.player.speed)" title="Speed"><va-icon name="directions_run" aria-hidden="true" />{{ actor.player.speed }}</span>
               <va-popover v-if="hasCompleteNimbleResource(actor.player.wounds.current, actor.player.wounds.max)" v-model="hitPointPopoverOpen[`wounds-${actor.id}`]" trigger="click" :close-on-content-click="false" placement="bottom-start" content-class="nimble-row__hitpoint-popover">
-                <button type="button" class="nimble-row__hitpoint-value" title="Edit wounds" @click="openHitPointPopover(`wounds-${actor.id}`, actor.player.wounds.current, actor.player.wounds.max)">
-                  <va-icon name="healing" color="danger-dark" aria-hidden="true" />{{ actor.player.wounds.current }}<template v-if="isNimbleValueSet(actor.player.wounds.max)">
-                    /{{ actor.player.wounds.max }}
-                  </template>
+                <button type="button" class="nimble-row__hitpoint-value" title="Edit wounds" @click="openHitPointPopover(`wounds-${actor.id}`, { ...actor.player.wounds, temp: '' })">
+                  <!-- eslint-disable-next-line vue/singleline-html-element-content-newline -->
+                  <va-icon name="healing" color="danger-dark" aria-hidden="true" />{{ actor.player.wounds.current }}<template v-if="isNimbleValueSet(actor.player.wounds.max)">/{{ actor.player.wounds.max }}</template>
                 </button>
                 <template #body>
                   <va-input v-model="hitPointDraft[`wounds-${actor.id}`].current" class="nimble-row__hitpoint-input" type="number" label="Current" hide-details @keydown.enter.prevent.stop="updatePlayerWounds(actor)" />
@@ -161,11 +142,12 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
           </button>
           <div v-if="actor.npc.hitPool.length" class="nimble-row__hitpool">
             <template v-for="(hitPoints, index) in actor.npc.hitPool" :key="index">
-              <va-popover v-if="isNimbleValueSet(hitPoints)" v-model="hitPointPopoverOpen[`${actor.id}-${index}`]" trigger="click" :close-on-content-click="false" placement="bottom-start" content-class="nimble-row__hitpoint-popover">
+              <va-popover v-if="isNimbleValueSet(hitPoints.current)" v-model="hitPointPopoverOpen[`${actor.id}-${index}`]" trigger="click" :close-on-content-click="false" placement="bottom-start" content-class="nimble-row__hitpoint-popover">
                 <button type="button" class="nimble-row__hitpoint-value" title="Edit hit points" @click="openHitPointPopover(`${actor.id}-${index}`, hitPoints)">
-                  HP {{ hitPoints }}
+                  <!-- eslint-disable-next-line vue/singleline-html-element-content-newline -->
+                  <va-icon name="favorite" color="primary-dark" aria-hidden="true" />{{ hitPoints.current }}<template v-if="isNimbleValueSet(hitPoints.max)">/{{ hitPoints.max }}</template><template v-if="hitPoints.temp"><span class="nimble-row__hitpoint-temp">+{{ hitPoints.temp }}</span></template>
                 </button><template #body>
-                  <va-input v-model="hitPointDraft[`${actor.id}-${index}`].current" class="nimble-row__hitpoint-input" type="number" label="Hitpoints" hide-details @keydown.enter.prevent.stop="updateNpcHitPoints(actor, index)" /><va-input v-model="hitPointDraft[`${actor.id}-${index}`].damage" class="nimble-row__hitpoint-input nimble-row__hitpoint-damage-input" type="number" label="Damage" hide-details @keydown.enter.prevent.stop="updateNpcHitPoints(actor, index)" />
+                  <va-input v-model="hitPointDraft[`${actor.id}-${index}`].current" class="nimble-row__hitpoint-input" type="number" label="Current" hide-details @keydown.enter.prevent.stop="updateHitPoints(actor, index)" /><va-input v-model="hitPointDraft[`${actor.id}-${index}`].max" class="nimble-row__hitpoint-input" type="number" label="Max" hide-details @keydown.enter.prevent.stop="updateHitPoints(actor, index)" /><va-input v-model="hitPointDraft[`${actor.id}-${index}`].temp" class="nimble-row__hitpoint-input" type="number" label="Temp" hide-details @keydown.enter.prevent.stop="updateHitPoints(actor, index)" /><va-input v-model="hitPointDraft[`${actor.id}-${index}`].damage" class="nimble-row__hitpoint-input nimble-row__hitpoint-damage-input" type="number" label="Damage" hide-details @keydown.enter.prevent.stop="updateHitPoints(actor, index)" />
                 </template>
               </va-popover>
             </template>
@@ -237,7 +219,7 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
   display: flex;
   flex-wrap: wrap;
   font-size: 0.75rem;
-  gap: 0.45rem;
+  gap: 2px;
 }
 .nimble-row__player-stats span {
   align-items: center;
@@ -276,7 +258,7 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
 .nimble-row__hitpool {
   display: flex;
   flex: 1;
-  gap: 0.2rem;
+  gap: 2px;
   min-width: 0;
   overflow-x: auto;
   scrollbar-width: thin;
@@ -287,7 +269,7 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
   border: 0;
   color: inherit;
   cursor: pointer;
-  padding: 0.1rem 0.25rem;
+  padding: 0.1rem 0;
 }
 .nimble-row__hitpool-add {
   color: var(--va-primary);

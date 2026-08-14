@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { NimbleNumber, WidgetNimbleGroup, WidgetNimbleGroupActor, WidgetNimbleGroupActorNpc, WidgetNimbleGroupActorPlayer } from '~/models/types';
+import type { NimbleHitPoints, NimbleNumber, WidgetNimbleGroup, WidgetNimbleGroupActor, WidgetNimbleGroupActorNpc, WidgetNimbleGroupActorPlayer } from '~/models/types';
 import { WidgetNimbleGroupActorNpcFactory, WidgetNimbleGroupActorPlayerFactory, WidgetNimbleGroupFactory } from '~/models/NimbleGroup';
 
 const isOwner = ref(true);
@@ -12,7 +12,7 @@ function createMockGroup(): WidgetNimbleGroup {
   player.enabled = true;
   player.conditions = ['Inspired'];
   player.content = 'Keep the pressure on.';
-  player.player.hitPoints = { current: 18, max: 24, temp: 2 };
+  player.player.hitPool = [{ current: 18, max: 24, temp: 2 }];
   player.player.wounds = { current: 0, max: 3 };
   player.player.armor = 2;
   player.player.speed = '5';
@@ -24,14 +24,14 @@ function createMockGroup(): WidgetNimbleGroup {
   npc.npc.subtype = 'legendary';
   npc.npc.armor = 'heavy';
   npc.npc.speed = '4';
-  npc.npc.hitPool = [8, 6];
+  npc.npc.hitPool = [{ current: 8, max: '', temp: 0 }, { current: 6, max: '', temp: '' }];
   npc.conditions = ['Guarding'];
 
   const hidden = WidgetNimbleGroupActorNpcFactory('scout', 2);
   hidden.name = 'Cinder Scout';
   hidden.role = 'Minion';
   hidden.npc.subtype = 'minion';
-  hidden.npc.hitPool = [3];
+  hidden.npc.hitPool = [{ current: 3, max: '', temp: '' }];
 
   return { ...WidgetNimbleGroupFactory('dev-nimble-group'), id: 'dev-nimble-group', enabled: true, actors: [player, npc, hidden] };
 }
@@ -55,21 +55,21 @@ const removeCondition = (actor: WidgetNimbleGroupActor, condition: string) => {
 
 const addHitPool = (actor: WidgetNimbleGroupActor) => {
   if (actor.type === 'npc')
-    actor.npc.hitPool.push(0);
+    actor.npc.hitPool.push({ current: 0, max: '', temp: '' });
 };
 
 const editActor = () => {};
 
-const updatePlayerHitPoints = (actor: WidgetNimbleGroupActorPlayer, current: NimbleNumber, max: NimbleNumber) => {
-  actor.player.hitPoints = { ...actor.player.hitPoints, current, max };
+const updateHitPoints = (actor: WidgetNimbleGroupActorNpc | WidgetNimbleGroupActorPlayer, index: number, hitPoints: NimbleHitPoints) => {
+  if (actor.type === 'player') {
+    actor.player.hitPool = [hitPoints];
+    return;
+  }
+  actor.npc.hitPool[index] = hitPoints;
 };
 
 const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer, current: NimbleNumber, max: NimbleNumber) => {
-  actor.player.wounds = { ...actor.player.wounds, current, max };
-};
-
-const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number, current: NimbleNumber) => {
-  actor.npc.hitPool[index] = current;
+  actor.player.wounds = { current, max };
 };
 </script>
 
@@ -103,8 +103,7 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number, cur
         @remove-actor="removeActor"
         @remove-condition="(actorId, condition) => removeCondition(group.actors.find(actor => actor.id === actorId)!, condition)"
         @toggle-actor="actorId => toggleActor(group.actors.find(actor => actor.id === actorId)!)"
-        @update-npc-hit-points="updateNpcHitPoints"
-        @update-player-hit-points="updatePlayerHitPoints"
+        @update-hit-points="updateHitPoints"
         @update-player-wounds="updatePlayerWounds"
       />
     </div>

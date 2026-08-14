@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DynamicPanelModelType, NimbleNumber, WidgetNimbleGroup, WidgetNimbleGroupActorNpc, WidgetNimbleGroupActorPlayer } from '~/models/types';
+import type { DynamicPanelModelType, NimbleHitPoints, NimbleNumber, WidgetNimbleGroup, WidgetNimbleGroupActorNpc, WidgetNimbleGroupActorPlayer } from '~/models/types';
 import { isWidgetNimbleGroupActor, sortNimbleActors } from '~/models/NimbleGroup';
 
 const props = defineProps<{ panel: DynamicPanelModelType; widget: WidgetNimbleGroup }>();
@@ -14,29 +14,28 @@ const addCondition = (actorId: string, condition: string) => {
     void widgetStore.addNimbleCondition(props.widget.id, actorId, condition);
 };
 
-const updatePlayerHitPoints = (actor: WidgetNimbleGroupActorPlayer, current: NimbleNumber, max: NimbleNumber) => {
-  if (isOwner.value)
-    void widgetStore.updateNimbleActor(props.widget.id, actor.id, { player: { ...actor.player, hitPoints: { ...actor.player.hitPoints, current, max } } });
+const updateHitPoints = (actor: WidgetNimbleGroupActorNpc | WidgetNimbleGroupActorPlayer, index: number, hitPoints: NimbleHitPoints) => {
+  if (!isOwner.value)
+    return;
+  if (actor.type === 'player') {
+    void widgetStore.updateNimbleActor(props.widget.id, actor.id, { player: { ...actor.player, hitPool: [hitPoints] } });
+    return;
+  }
+  const hitPool = hitPoints.current === ''
+    ? actor.npc.hitPool.filter((_, hitPointIndex) => hitPointIndex !== index)
+    : actor.npc.hitPool.map((item, hitPointIndex) => hitPointIndex === index ? hitPoints : item);
+  void widgetStore.updateNimbleActor(props.widget.id, actor.id, { npc: { ...actor.npc, hitPool } });
 };
 
 const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer, current: NimbleNumber, max: NimbleNumber) => {
   if (isOwner.value)
-    void widgetStore.updateNimbleActor(props.widget.id, actor.id, { player: { ...actor.player, wounds: { ...actor.player.wounds, current, max } } });
-};
-
-const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number, current: NimbleNumber) => {
-  if (isOwner.value) {
-    const hitPool = current === ''
-      ? actor.npc.hitPool.filter((_, hitPointIndex) => hitPointIndex !== index)
-      : actor.npc.hitPool.map((hitPoints, hitPointIndex) => hitPointIndex === index ? current : hitPoints);
-    void widgetStore.updateNimbleActor(props.widget.id, actor.id, { npc: { ...actor.npc, hitPool } });
-  }
+    void widgetStore.updateNimbleActor(props.widget.id, actor.id, { player: { ...actor.player, wounds: { current, max } } });
 };
 
 const addNpcHitPoint = (actorId: string) => {
   const actor = actors.value.find(item => item.id === actorId);
   if (isOwner.value && actor?.type === 'npc')
-    void widgetStore.updateNimbleActor(props.widget.id, actor.id, { npc: { ...actor.npc, hitPool: [...actor.npc.hitPool, 0] } });
+    void widgetStore.updateNimbleActor(props.widget.id, actor.id, { npc: { ...actor.npc, hitPool: [...actor.npc.hitPool, { current: 0, max: '', temp: '' }] } });
 };
 
 const editActor = (actorId: string) => {
@@ -75,8 +74,7 @@ const toggleActor = (actorId: string) => {
     @remove-actor="removeActor"
     @remove-condition="removeCondition"
     @toggle-actor="toggleActor"
-    @update-npc-hit-points="updateNpcHitPoints"
-    @update-player-hit-points="updatePlayerHitPoints"
+    @update-hit-points="updateHitPoints"
     @update-player-wounds="updatePlayerWounds"
   >
     <template #controls>

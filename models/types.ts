@@ -559,6 +559,12 @@ export interface WidgetNimbleGroup extends Widget {
   actors: WidgetNimbleGroupActor[];
 }
 
+export interface NimbleHitPoints {
+  current: NimbleNumber;
+  max: NimbleNumber;
+  temp: NimbleNumber;
+}
+
 interface WidgetNimbleGroupActorBase {
   id: string;
   name: string;
@@ -581,11 +587,7 @@ export interface WidgetNimbleGroupActorPlayer extends WidgetNimbleGroupActorBase
       int: NimbleNumber;
     };
     armor: NimbleNumber;
-    hitPoints: {
-      current: NimbleNumber;
-      max: NimbleNumber;
-      temp: NimbleNumber;
-    };
+    hitPool: NimbleHitPoints[];
     wounds: {
       current: NimbleNumber;
       max: NimbleNumber;
@@ -605,7 +607,7 @@ export interface WidgetNimbleGroupActorNpc extends WidgetNimbleGroupActorBase {
     };
     armor: '' | 'medium' | 'heavy';
     speed: string;
-    hitPool: NimbleNumber[];
+    hitPool: NimbleHitPoints[];
     subtype: 'minion' | 'flunky' | 'regular' | 'legendary';
   };
 }

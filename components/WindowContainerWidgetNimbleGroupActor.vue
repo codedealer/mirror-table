@@ -20,7 +20,9 @@ const widgetRef = computed(() => userStore.user
   ? doc(collection($db, 'users', userStore.user.uid, 'widgets'), props.widgetId).withConverter(firestoreDataConverter<WidgetNimbleGroup>())
   : undefined);
 const widget = useFirestore(widgetRef);
-const actor = computed(() => widget.value?.actors.find(item => item.id === props.actorId));
+const actor = computed(() => widget.value && props.actorId
+  ? widget.value.actors.find(item => item.id === props.actorId)
+  : undefined);
 const type = ref<'player' | 'npc'>(actor.value?.type ?? 'player');
 const name = ref('');
 const role = ref('');
@@ -52,7 +54,7 @@ watch(actor, (value) => {
 }, { immediate: true });
 
 const addNpcHitPool = () => {
-  npc.value.hitPool.push(0);
+  npc.value.hitPool.push({ current: 0, max: '', temp: '' });
 };
 
 const removeNpcHitPool = (index: number) => {
@@ -125,9 +127,9 @@ const save = async () => {
     <fieldset :disabled="canEdit === false">
       <template v-if="type === 'player'">
         <div class="nimble-actor-editor__field-grid nimble-actor-editor__field-grid--three">
-          <va-input v-model.number="player.hitPoints.current" class="nimble-actor-editor__numeric-input" type="number" label="Current HP" />
-          <va-input v-model.number="player.hitPoints.max" class="nimble-actor-editor__numeric-input" type="number" label="Max HP" />
-          <va-input v-model.number="player.hitPoints.temp" class="nimble-actor-editor__numeric-input" type="number" label="Temp HP" />
+          <va-input v-model.number="player.hitPool[0].current" class="nimble-actor-editor__numeric-input" type="number" label="Current HP" />
+          <va-input v-model.number="player.hitPool[0].max" class="nimble-actor-editor__numeric-input" type="number" label="Max HP" />
+          <va-input v-model.number="player.hitPool[0].temp" class="nimble-actor-editor__numeric-input" type="number" label="Temp HP" />
         </div>
         <div class="nimble-actor-editor__field-grid nimble-actor-editor__field-grid--three">
           <va-input v-model.number="player.wounds.current" class="nimble-actor-editor__numeric-input" type="number" label="Current wounds" />
@@ -147,9 +149,10 @@ const save = async () => {
           <va-select v-model="npc.armor" label="Armor" :options="['', 'medium', 'heavy']" />
         </div>
         <div class="nimble-actor-editor__hit-pool">
+          <strong>Hitpoint Pool</strong>
           <div v-for="(hitPoints, index) in npc.hitPool" :key="index" class="nimble-actor-editor__hit-pool-entry">
             <va-input
-              v-model.number="npc.hitPool[index]"
+              v-model.number="hitPoints.current"
               class="nimble-actor-editor__hit-pool-input"
               type="number"
               :label="`HP ${index + 1}`"
@@ -157,6 +160,8 @@ const save = async () => {
               max="999"
               :disabled="canEdit === false"
             />
+            <va-input v-model.number="hitPoints.max" class="nimble-actor-editor__hit-pool-input" type="number" label="Max" min="0" max="999" :disabled="canEdit === false" />
+            <va-input v-model.number="hitPoints.temp" class="nimble-actor-editor__hit-pool-input" type="number" label="Temp" min="0" max="999" :disabled="canEdit === false" />
             <va-button
               v-if="npc.hitPool.length > 1"
               preset="plain"
@@ -215,20 +220,19 @@ const save = async () => {
 }
 
 .nimble-actor-editor__hit-pool {
-  display: flex;
+  display: grid;
   gap: 0.25rem;
-  align-items: end;
-  flex-wrap: wrap;
 }
 
 .nimble-actor-editor__hit-pool-entry {
-  display: flex;
-  gap: 0.125rem;
   align-items: end;
+  display: grid;
+  gap: 0.125rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
 }
 
 .nimble-actor-editor__hit-pool-input {
-  width: 4.5rem;
+  min-width: 0;
 }
 
 .nimble-actor-editor__field-grid--two {
