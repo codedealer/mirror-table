@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { WidgetNimbleGroup, WidgetNimbleGroupActor } from '~/models/types';
+import type { NimbleNumber, WidgetNimbleGroup, WidgetNimbleGroupActor, WidgetNimbleGroupActorNpc, WidgetNimbleGroupActorPlayer } from '~/models/types';
 import { WidgetNimbleGroupActorNpcFactory, WidgetNimbleGroupActorPlayerFactory, WidgetNimbleGroupFactory } from '~/models/NimbleGroup';
 
 const isOwner = ref(true);
@@ -60,14 +60,16 @@ const addHitPool = (actor: WidgetNimbleGroupActor) => {
 
 const editActor = () => {};
 
-const updatePlayerHitPoints = (actor: WidgetNimbleGroupActor, current: number, max: number) => {
-  if (actor.type === 'player')
-    actor.player.hitPoints = { ...actor.player.hitPoints, current, max };
+const updatePlayerHitPoints = (actor: WidgetNimbleGroupActorPlayer, current: NimbleNumber, max: NimbleNumber) => {
+  actor.player.hitPoints = { ...actor.player.hitPoints, current, max };
 };
 
-const updateNpcHitPoints = (actor: WidgetNimbleGroupActor, index: number, current: number) => {
-  if (actor.type === 'npc')
-    actor.npc.hitPool[index] = current;
+const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer, current: NimbleNumber, max: NimbleNumber) => {
+  actor.player.wounds = { ...actor.player.wounds, current, max };
+};
+
+const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number, current: NimbleNumber) => {
+  actor.npc.hitPool[index] = current;
 };
 </script>
 
@@ -103,6 +105,7 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActor, index: number, curren
         @toggle-actor="actorId => toggleActor(group.actors.find(actor => actor.id === actorId)!)"
         @update-npc-hit-points="updateNpcHitPoints"
         @update-player-hit-points="updatePlayerHitPoints"
+        @update-player-wounds="updatePlayerWounds"
       />
     </div>
   </div>

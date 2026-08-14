@@ -54,6 +54,10 @@ const updatePlayerHitPoints = (actor: WidgetNimbleGroupActorPlayer) => {
   const damage = Number(draft?.damage || 0);
   const current = draft?.current === '' ? '' : Number(draft?.current || 0) - damage;
   const max = draft?.max === '' ? '' : Number(draft?.max || 0);
+  if (draft) {
+    draft.current = String(current);
+    draft.damage = '';
+  }
   emit('updatePlayerHitPoints', actor, current, max);
   hitPointPopoverOpen.value[actor.id] = false;
 };
@@ -63,8 +67,7 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
     return;
   const key = `wounds-${actor.id}`;
   const draft = hitPointDraft.value[key];
-  const damage = Number(draft?.damage || 0);
-  const current = draft?.current === '' ? '' : Number(draft?.current || 0) - damage;
+  const current = draft?.current === '' ? '' : Number(draft?.current || 0);
   const max = draft?.max === '' ? '' : Number(draft?.max || 0);
   emit('updatePlayerWounds', actor, current, max);
   hitPointPopoverOpen.value[key] = false;
@@ -81,7 +84,12 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
     return;
   }
   const damage = Number(draft?.damage || 0);
-  emit('updateNpcHitPoints', actor, index, Number(draft?.current || 0) - damage);
+  const current = Number(draft?.current || 0) - damage;
+  if (draft) {
+    draft.current = String(current);
+    draft.damage = '';
+  }
+  emit('updateNpcHitPoints', actor, index, current);
   hitPointPopoverOpen.value[key] = false;
 };
 </script>
@@ -131,7 +139,6 @@ const updateNpcHitPoints = (actor: WidgetNimbleGroupActorNpc, index: number) => 
                 <template #body>
                   <va-input v-model="hitPointDraft[`wounds-${actor.id}`].current" class="nimble-row__hitpoint-input" type="number" label="Current" hide-details @keydown.enter.prevent.stop="updatePlayerWounds(actor)" />
                   <va-input v-model="hitPointDraft[`wounds-${actor.id}`].max" class="nimble-row__hitpoint-input" type="number" label="Max" hide-details @keydown.enter.prevent.stop="updatePlayerWounds(actor)" />
-                  <va-input v-model="hitPointDraft[`wounds-${actor.id}`].damage" class="nimble-row__hitpoint-input nimble-row__hitpoint-damage-input" type="number" label="Damage" hide-details @keydown.enter.prevent.stop="updatePlayerWounds(actor)" />
                 </template>
               </va-popover>
             </div>
