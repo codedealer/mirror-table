@@ -77,8 +77,16 @@ const toggleActor = (actorId: string) => {
     @update-hit-points="updateHitPoints"
     @update-player-wounds="updatePlayerWounds"
   >
-    <template #controls>
-      <TableWidgetsControls :panel="panel" :widget="widget" />
+    <template #controls="{ widgetContentCollapsed, toggleWidgetContent }">
+      <TableWidgetsControls :panel="panel" :widget="widget">
+        <va-button
+          preset="plain"
+          :icon="widgetContentCollapsed ? 'unfold_more' : 'unfold_less'"
+          :aria-label="widgetContentCollapsed ? 'Expand all actor content' : 'Collapse all actor content'"
+          :title="widgetContentCollapsed ? 'Expand all actor content' : 'Collapse all actor content'"
+          @click="toggleWidgetContent"
+        />
+      </TableWidgetsControls>
     </template>
   </TableWidgetsNimbleGroupContent>
 </template>

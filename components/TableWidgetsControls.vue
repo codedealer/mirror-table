@@ -126,6 +126,7 @@ const remove = () => {
           color="primary"
           @click="edit"
         />
+        <slot />
         <va-button
           icon="close"
           preset="plain"

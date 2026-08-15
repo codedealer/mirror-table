@@ -24,3 +24,23 @@ describe('nimble hitpoint popover wiring', () => {
     expect(devLabSource).toContain('actor.player.wounds = { current, max };');
   });
 });
+
+describe('nimble privacy and stat presentation', () => {
+  it('hides passed controls when the shared controls guard is false', () => {
+    const controlsSource = readFileSync(new URL('./TableWidgetsControls.vue', import.meta.url), 'utf8');
+
+    expect(controlsSource).toContain('<div v-if="showControls" class="ghost-container">');
+    expect(controlsSource).toContain('<slot />');
+    expect(controlsSource).not.toContain('<slot v-if="showControls" />');
+  });
+
+  it('hides NPC stats from viewers and uses semantic stat colors', () => {
+    expect(componentSource).toContain('<div v-if="props.isOwner && isWidgetNimbleGroupActorNpc(actor)" class="nimble-row__player-stats">');
+    expect(componentSource).toContain('<span class="text-secondary">Wil</span> <span class="text-primary">{{ actor.npc.stats.wil }}</span>');
+    expect(componentSource).toContain('<span class="text-secondary">Wil</span> <span class="text-primary">{{ actor.player.stats.wil }}</span>');
+    expect(componentSource).not.toContain('<strong>Wil</strong>');
+    expect(componentSource).not.toContain('<strong>Str</strong>');
+    expect(componentSource).not.toContain('<strong>Dex</strong>');
+    expect(componentSource).not.toContain('<strong>Int</strong>');
+  });
+});
