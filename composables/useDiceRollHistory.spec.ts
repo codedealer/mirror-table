@@ -1,4 +1,4 @@
-import type { RollEvaluationResult } from '~/models/Dice';
+import type { LiteralNode, RollEvaluationResult } from '~/models/Dice';
 import { describe, expect, it, vi } from 'vitest';
 import { useDiceRollHistory } from './useDiceRollHistory';
 
@@ -6,6 +6,8 @@ const createResult = (expression: string): RollEvaluationResult => ({
   expression,
   total: 1,
   breakdown: [],
+  ast: { type: 'LITERAL', value: 1 } satisfies LiteralNode,
+  capped: false,
 });
 
 describe('useDiceRollHistory', () => {

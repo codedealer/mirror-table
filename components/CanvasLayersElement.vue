@@ -7,6 +7,12 @@ import type {
   SceneElementScreen,
 } from '~/models/types';
 import CanvasLayersElementAsset from '~/components/CanvasLayersElementAsset.vue';
+import {
+  isSceneElementCanvasObject,
+  isSceneElementCanvasObjectAsset,
+  isSceneElementCanvasObjectText,
+  isSceneElementScreen,
+} from '~/models/types';
 
 defineProps<{
   item: LayerItem<SceneElement>;

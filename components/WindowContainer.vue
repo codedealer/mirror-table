@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { ModalWindow } from '~/models/types';
 import { useDraggable } from '@vueuse/core';
 import WindowContainerWidget from '~/components/WindowContainerWidget.vue';
+import { type ModalWindow, ModalWindowStatus } from '~/models/types';
 
 const props = defineProps<{
   window: ModalWindow;

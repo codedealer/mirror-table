@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DriveFile } from '~/models/types';
 import { onKeyStroke, useDebounceFn } from '@vueuse/core';
+import { stripFileExtension } from '~/utils';
 
 const driveStore = useDriveStore();
 const driveSearchStore = useDriveSearchStore();

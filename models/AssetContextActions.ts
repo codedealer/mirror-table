@@ -11,7 +11,9 @@ export const AssetContextActionsFactory = (file: DriveAsset, node?: TreeNode) =>
       id: 'send-to-scene',
       label: 'Send to Scene',
       icon: { name: 'token', color: 'primary' },
-      action: () => sceneStore.addAsset(file),
+      action: async () => {
+        await sceneStore.addAsset(file);
+      },
       disabled: !file.capabilities?.canDownload || !file.appProperties.preview,
       pinned: true,
       alwaysVisible: false,

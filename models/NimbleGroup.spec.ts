@@ -1,3 +1,4 @@
+import type { NimbleHitPoints } from '~/models/types';
 import { describe, expect, it } from 'vitest';
 import {
   applyNimbleDamage,
@@ -123,7 +124,7 @@ describe('nimble group helpers', () => {
   });
 
   it('leaves hit points unchanged for zero, negative, and empty damage input', () => {
-    const hitPoints = { current: 10, max: '', temp: 3 };
+    const hitPoints: NimbleHitPoints = { current: 10, max: '', temp: 3 };
 
     expect(applyNimbleDamage(hitPoints, 0)).toEqual(hitPoints);
     expect(applyNimbleDamage(hitPoints, -2)).toEqual(hitPoints);

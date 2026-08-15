@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { CanvasLayersElement, CanvasLayersGroup } from '#components';
+import { type LayerGroup, type LayerItem, type SceneElement, type SelectionGroup, SelectionGroupIcons, SelectionGroupNames, SelectionGroups } from '~/models/types';
 
 const layersStore = useLayersStore();
+const asLayerGroup = (layer: LayerItem<SceneElement | LayerGroup>) => layer as LayerItem<LayerGroup>;
+const asSceneElement = (layer: LayerItem<SceneElement | LayerGroup>) => layer as LayerItem<SceneElement>;
 </script>
 
 <template>
@@ -17,7 +20,7 @@ const layersStore = useLayersStore();
           :color="layersStore.activeGroups[group] ? 'primary' : 'primary-dark'"
           :disabled="Number(group) === SelectionGroups.SCREEN"
           :title="`Toggle ${SelectionGroupNames[group]} layer`"
-          @click="layersStore.toggleGroup(group)"
+          @click="layersStore.toggleGroup(Number(group) as SelectionGroup)"
         />
       </va-button-group>
 
@@ -35,9 +38,13 @@ const layersStore = useLayersStore();
 
     <va-list class="layers-list">
       <template v-for="layer in layersStore.layers" :key="layer.id">
-        <component
-          :is="layer.type === 'group' ? CanvasLayersGroup : CanvasLayersElement "
-          :item="layer"
+        <CanvasLayersGroup
+          v-if="layer.type === 'group'"
+          :item="asLayerGroup(layer)"
+        />
+        <CanvasLayersElement
+          v-else
+          :item="asSceneElement(layer)"
         />
       </template>
     </va-list>

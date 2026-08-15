@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DriveWidget, ModalWindow, WidgetNimbleGroup } from '~/models/types';
+import type { DriveWidget, ModalWindow, WidgetNimbleGroup, WidgetProperties } from '~/models/types';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 import { collection, doc } from 'firebase/firestore';
 import { sortNimbleActors, WidgetNimbleGroupFactory } from '~/models/NimbleGroup';
@@ -45,7 +45,7 @@ const createOrUpdateWidget = async () => {
       if (!created)
         throw new Error('Failed to create widget');
       const driveFileStore = useDriveFileStore();
-      await driveFileStore.saveFile(props.file.id, { ...props.file.appProperties, firestoreId: created.id }, props.file.name);
+      await driveFileStore.saveFile(props.file.id, { ...props.file.appProperties, firestoreId: created.id } as WidgetProperties, props.file.name);
     } else {
       await widgetStore.updateWidget<WidgetNimbleGroup>(widget.value.id, { enabled: widget.value.enabled });
     }

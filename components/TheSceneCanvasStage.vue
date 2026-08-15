@@ -4,7 +4,7 @@ import type { KonvaComponent } from '~/models/types';
 import { onKeyStroke } from '@vueuse/core';
 import TheSceneCanvasScreenFrame from '~/components/TheSceneCanvasScreenFrame.vue';
 import { useCanvasTransformEvents } from '~/composables/useCanvasTransformEvents';
-import { TableModes } from '~/models/types';
+import { isSceneElementCanvasObjectAsset, isSceneElementCanvasObjectText, SelectionGroups, TableModes } from '~/models/types';
 
 const stage = ref<KonvaComponent<Konva.Node> | null>(null);
 const imageTransformer = ref<KonvaComponent<Konva.Transformer> | null>(null);

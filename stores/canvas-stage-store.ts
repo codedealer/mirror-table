@@ -92,12 +92,14 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     };
 
     // Get the existing scale (from stored asset transforms)
-    const existingScaleX = container.scaleX ?? 1;
-    const existingScaleY = container.scaleY ?? 1;
+    const existingScaleX = typeof container.scaleX === 'number' ? container.scaleX : 1;
+    const existingScaleY = typeof container.scaleY === 'number' ? container.scaleY : 1;
+    const containerWidth = typeof container.width === 'number' ? container.width : 0;
+    const containerHeight = typeof container.height === 'number' ? container.height : 0;
 
     // Calculate the visual size with existing scale
-    const visualWidth = container.width * existingScaleX;
-    const visualHeight = container.height * existingScaleY;
+    const visualWidth = containerWidth * existingScaleX;
+    const visualHeight = containerHeight * existingScaleY;
 
     // Calculate fit scale based on visual size
     // scale it down if it's too big
@@ -112,8 +114,8 @@ export const useCanvasStageStore = defineStore('canvas-stage', () => {
     const finalScaleY = existingScaleY * fitScale;
 
     // Calculate position based on final visual size
-    const finalVisualWidth = container.width * finalScaleX;
-    const finalVisualHeight = container.height * finalScaleY;
+    const finalVisualWidth = containerWidth * finalScaleX;
+    const finalVisualHeight = containerHeight * finalScaleY;
 
     const scaledContainer = {
       ...container,

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ContextAction, DriveAsset, DriveImage, LayerItem, SceneElementScreen } from '~/models/types';
+import { extractErrorMessage } from '~/utils/extractErrorMessage';
 
 const props = defineProps<{
   item: LayerItem<SceneElementScreen>;

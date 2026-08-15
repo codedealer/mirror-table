@@ -25,36 +25,42 @@ describe('canvas stage zoom', () => {
     const { useCanvasStageStore } = await import('~/stores/canvas-stage-store');
     const store = useCanvasStageStore();
 
-    expect(store.zoom.value).toBe(1);
+    expect((store.zoom as unknown as { value: number }).value).toBe(1);
 
     store.setZoom(0);
-    expect(store.zoom.value).toBe(0.5);
+    expect((store.zoom as unknown as { value: number }).value).toBe(0.5);
 
     store.setZoom(3);
-    expect(store.zoom.value).toBe(2);
+    expect((store.zoom as unknown as { value: number }).value).toBe(2);
 
     store.setZoom(Number.NaN);
-    expect(store.zoom.value).toBe(1);
+    expect((store.zoom as unknown as { value: number }).value).toBe(1);
   });
 
   it('increments, decrements, and resets without changing logical field dimensions', async () => {
     const { useCanvasStageStore } = await import('~/stores/canvas-stage-store');
     const store = useCanvasStageStore();
-    const initialDimensions = [store.fieldWidth.value, store.fieldHeight.value];
+    const initialDimensions = [
+      (store.fieldWidth as unknown as { value: number }).value,
+      (store.fieldHeight as unknown as { value: number }).value,
+    ];
 
     store.zoomIn();
-    expect(store.zoom.value).toBeCloseTo(1.1);
+    expect((store.zoom as unknown as { value: number }).value).toBeCloseTo(1.1);
 
     store.zoomOut();
-    expect(store.zoom.value).toBeCloseTo(1);
+    expect((store.zoom as unknown as { value: number }).value).toBeCloseTo(1);
 
     store.setZoom(2);
     store.zoomIn();
-    expect(store.zoom.value).toBe(2);
+    expect((store.zoom as unknown as { value: number }).value).toBe(2);
 
     store.resetZoom();
-    expect(store.zoom.value).toBe(1);
-    expect([store.fieldWidth.value, store.fieldHeight.value]).toEqual(initialDimensions);
+    expect((store.zoom as unknown as { value: number }).value).toBe(1);
+    expect([
+      (store.fieldWidth as unknown as { value: number }).value,
+      (store.fieldHeight as unknown as { value: number }).value,
+    ]).toEqual(initialDimensions);
   });
 
   it('does not change the logical stage offset when zoom changes', async () => {
@@ -67,8 +73,8 @@ describe('canvas stage zoom', () => {
 
     store.setZoom(2);
 
-    expect(store.stageConfig.value.x).toBe(90);
-    expect(store.stageConfig.value.y).toBe(180);
+    expect((store.stageConfig as unknown as { value: { x: number; y: number } }).value.x).toBe(90);
+    expect((store.stageConfig as unknown as { value: { x: number; y: number } }).value.y).toBe(180);
     expect(offset.value).toEqual({ x: 100, y: 200 });
     expect(scroll.value).toEqual({ x: 10, y: 20 });
   });
@@ -77,7 +83,7 @@ describe('canvas stage zoom', () => {
     const { useCanvasStageStore } = await import('~/stores/canvas-stage-store');
     const store = useCanvasStageStore();
     store.applyConfig({ width: 2000, height: 2000 });
-    const container = { width: 3000, height: 2000, scaleX: 1, scaleY: 1, x: 0, y: 0 };
+    const container = { id: 'test', name: 'element-container' as const, rotation: 0, width: 3000, height: 2000, scaleX: 1, scaleY: 1, x: 0, y: 0 };
 
     store.setZoom(0.5);
     const fitAtHalfZoom = store.fitToStage(container);
@@ -91,7 +97,7 @@ describe('canvas stage zoom', () => {
     const { useCanvasStageStore } = await import('~/stores/canvas-stage-store');
     const store = useCanvasStageStore();
     store.applyConfig({ width: 500, height: 500 });
-    const container = { width: 300, height: 300, scaleX: 1, scaleY: 1, x: 0, y: 0 };
+    const container = { id: 'test', name: 'element-container' as const, rotation: 0, width: 300, height: 300, scaleX: 1, scaleY: 1, x: 0, y: 0 };
 
     expect(store.fitToStage(container)).toEqual(container);
   });

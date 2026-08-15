@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { navigateTo } from '#app';
+import { signOut } from '~/composables/useFirebaseAuth';
+
 const route = useRoute();
 const showDevLab = computed(() => import.meta.dev && route.path === '/dashboard');
 </script>

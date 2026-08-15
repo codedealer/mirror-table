@@ -284,6 +284,7 @@ export const moveFile = async (fileId: string, oldParentId: string, newParentId:
     addParents: newParentId,
     removeParents: oldParentId,
     fields: 'id, parents',
+    resource: {},
   });
 };
 

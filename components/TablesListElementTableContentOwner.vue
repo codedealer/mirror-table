@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { TableCard } from '~/models/types';
 
-const props = defineProps<{ table: TableCard }>();
+defineProps<{ table: TableCard }>();
 
 const notificationStore = useNotificationStore();
 const tableStore = useTableStore();
@@ -13,7 +13,7 @@ const _removeTable = async () => {
     return;
   }
 
-  await tableStore.remove(props.table.id);
+  await tableStore.remove();
   notificationStore.success('Table deleted');
 };
 </script>
