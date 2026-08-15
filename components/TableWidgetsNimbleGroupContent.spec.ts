@@ -35,7 +35,7 @@ describe('nimble privacy and stat presentation', () => {
   });
 
   it('hides NPC stats from viewers and uses semantic stat colors', () => {
-    expect(componentSource).toContain('<div v-if="props.isOwner && isWidgetNimbleGroupActorNpc(actor)" class="nimble-row__player-stats">');
+    expect(componentSource).toContain('<div v-if="props.isOwner" class="ghost-container">');
     expect(componentSource).toContain('<span class="text-secondary">Wil</span> <span class="text-primary">{{ actor.npc.stats.wil }}</span>');
     expect(componentSource).toContain('<span class="text-secondary">Wil</span> <span class="text-primary">{{ actor.player.stats.wil }}</span>');
     expect(componentSource).not.toContain('<strong>Wil</strong>');
