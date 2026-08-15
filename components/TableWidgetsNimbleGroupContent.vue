@@ -194,13 +194,13 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
           v-if="actor.content"
           class="nimble-row__content"
           :class="{ 'nimble-row__content--collapsed': isActorContentCollapsed(actor.id) }"
-          role="button"
-          tabindex="0"
-          aria-label="Actor content"
+          :role="isActorContentCollapsed(actor.id) ? 'button' : undefined"
+          :tabindex="isActorContentCollapsed(actor.id) ? 0 : undefined"
+          :aria-label="isActorContentCollapsed(actor.id) ? 'Expand actor content' : undefined"
           :aria-expanded="!isActorContentCollapsed(actor.id)"
-          @click="toggleActorContent(actor.id)"
-          @keydown.enter.prevent="toggleActorContent(actor.id)"
-          @keydown.space.prevent="toggleActorContent(actor.id)"
+          @click="isActorContentCollapsed(actor.id) && toggleActorContent(actor.id)"
+          @keydown.enter.prevent="isActorContentCollapsed(actor.id) && toggleActorContent(actor.id)"
+          @keydown.space.prevent="isActorContentCollapsed(actor.id) && toggleActorContent(actor.id)"
         >
           <MarkdownRenderer :source="actor.content" />
         </div>
@@ -208,13 +208,13 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
           v-if="props.isOwner && actor.privateContent"
           class="nimble-row__content nimble-row__private-content"
           :class="{ 'nimble-row__content--collapsed': isActorContentCollapsed(actor.id) }"
-          role="button"
-          tabindex="0"
-          aria-label="Private actor content"
+          :role="isActorContentCollapsed(actor.id) ? 'button' : undefined"
+          :tabindex="isActorContentCollapsed(actor.id) ? 0 : undefined"
+          :aria-label="isActorContentCollapsed(actor.id) ? 'Expand private actor content' : undefined"
           :aria-expanded="!isActorContentCollapsed(actor.id)"
-          @click="toggleActorContent(actor.id)"
-          @keydown.enter.prevent="toggleActorContent(actor.id)"
-          @keydown.space.prevent="toggleActorContent(actor.id)"
+          @click="isActorContentCollapsed(actor.id) && toggleActorContent(actor.id)"
+          @keydown.enter.prevent="isActorContentCollapsed(actor.id) && toggleActorContent(actor.id)"
+          @keydown.space.prevent="isActorContentCollapsed(actor.id) && toggleActorContent(actor.id)"
         >
           <MarkdownRenderer :source="actor.privateContent" />
         </div>
@@ -263,13 +263,13 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
 }
 .nimble-row__content {
   border-left: 3px solid var(--va-background-border);
-  cursor: pointer;
   margin-top: 0.5rem;
   outline: none;
   padding: 0 0.6rem;
   position: relative;
 }
 .nimble-row__content--collapsed {
+  cursor: pointer;
   max-height: 1.75rem;
   overflow: hidden;
 }
