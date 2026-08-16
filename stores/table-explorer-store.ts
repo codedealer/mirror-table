@@ -75,6 +75,21 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
     openCategoryIds.value = nextOpenCategoryIds;
   };
 
+  const reconcileNodes = (currentNodes: TreeNode[] | undefined, nextNodes: TreeNode[]) => {
+    const currentById = new Map((currentNodes ?? []).map(node => [node.id, node]));
+
+    return nextNodes.map((nextNode) => {
+      const currentNode = currentById.get(nextNode.id);
+
+      if (!currentNode) {
+        return nextNode;
+      }
+
+      Object.assign(currentNode, nextNode);
+      return currentNode;
+    });
+  };
+
   const tryExecuteQuery = async <T extends Scene | Category>(query: Query<T>) => {
     try {
       const snapshot = await getDocs(query);
@@ -126,7 +141,7 @@ export const useTableExplorerStore = defineStore('table-explorer', () => {
       ...childScenes.map(scene => ExplorerTreeNodeFactory(scene)),
     ];
 
-    node.children = newNodes;
+    node.children = reconcileNodes(node.children, newNodes);
     node.loaded = true;
 
     setNodeLoading(node, false);
