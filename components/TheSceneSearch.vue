@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { Scene } from '~/models/types';
+import type { SceneVisit } from '~/stores/scene-search-store';
 import { onKeyStroke, useDebounceFn } from '@vueuse/core';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import ItemSelector from '~/components/ItemSelector.vue';
 
-const selectedScene = ref<Scene>();
+const selectedScene = ref<SceneVisit>();
 const search = ref('');
 const loading = ref(false);
 
@@ -12,16 +13,16 @@ const { $db } = useNuxtApp();
 const tableStore = useTableStore();
 const sceneSearchStore = useSceneSearchStore();
 
-const { searchModalState: state, recentSelected } = storeToRefs(sceneSearchStore);
+const { searchModalState: state, recentVisited } = storeToRefs(sceneSearchStore);
 
-const result = ref<Scene[]>([]);
+const result = ref<SceneVisit[]>([]);
 
 const displayResults = computed(() => {
   if (search.value.length > 0) {
     return result.value;
   }
 
-  return recentSelected.value;
+  return recentVisited.value;
 });
 
 const searchFn = useDebounceFn(async (value: string) => {
@@ -76,7 +77,6 @@ watch(search, searchFn);
 watchEffect(() => {
   if (selectedScene.value) {
     sceneSearchStore.resolve(selectedScene.value);
-    sceneSearchStore.addRecentSelected(selectedScene.value);
     reset();
     state.value = false;
   }
@@ -131,7 +131,7 @@ hotkeyStore.registerHotkey({
           autofocus
         >
           <template #header>
-            <div v-if="!search && recentSelected.length > 0" class="mb-05 text-secondary">
+            <div v-if="!search && recentVisited.length > 0" class="mb-05 text-secondary">
               Recent scenes
             </div>
             <div v-else-if="search.length > 0 && result.length > 0" class="mb-05 text-secondary">
@@ -142,7 +142,7 @@ hotkeyStore.registerHotkey({
           <template #default="{ option: scene }">
             <va-list-item-section>
               <va-list-item-label caption>
-                {{ scene.title }}
+                {{ scene.title ?? scene.id }}
               </va-list-item-label>
             </va-list-item-section>
 

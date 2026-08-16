@@ -5,7 +5,7 @@ const searchScene = async () => {
   try {
     const scene = await sceneSearchStore.promptToSearch();
 
-    if (isScene(scene) && tableStore.sessionId) {
+    if (tableStore.sessionId) {
       await tableStore.setActiveScene(tableStore.sessionId, scene);
     }
   } catch (e) {

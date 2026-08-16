@@ -1,39 +1,43 @@
-import type { Scene } from '~/models/types';
+import type { BaseScene } from '~/models/types';
+
+export type SceneVisit = BaseScene & {
+  title?: string;
+};
 
 export const useSceneSearchStore = defineStore('scene-search', () => {
   const searchModalState = ref(false);
-  const recentSelected = ref<Scene[]>([]);
-  let searchModalResolveHook = (_scene: Scene) => {};
+  const recentVisited = ref<SceneVisit[]>([]);
+  let searchModalResolveHook = (_scene: BaseScene) => {};
   let searchModalRejectHook = (_error: unknown) => {};
 
   const promptToSearch = () => {
     searchModalState.value = true;
 
-    return new Promise((resolve, reject) => {
+    return new Promise<BaseScene>((resolve, reject) => {
       searchModalResolveHook = resolve;
       searchModalRejectHook = reject;
     });
   };
 
-  const recentSelectedLimit = 10;
-  const addRecentSelected = (scene: Scene) => {
-    const index = recentSelected.value.findIndex(item => item.id === scene.id);
+  const recentVisitedLimit = 10;
+  const recordVisit = (scene: BaseScene) => {
+    const index = recentVisited.value.findIndex(item => item.id === scene.id);
     if (index !== -1) {
-      recentSelected.value.splice(index, 1);
+      recentVisited.value.splice(index, 1);
     }
-    recentSelected.value.unshift(scene);
-    if (recentSelected.value.length > recentSelectedLimit) {
-      recentSelected.value.splice(recentSelectedLimit);
+    recentVisited.value.unshift(scene);
+    if (recentVisited.value.length > recentVisitedLimit) {
+      recentVisited.value.splice(recentVisitedLimit);
     }
   };
 
   return {
     searchModalState,
-    recentSelected,
-    resolve: (value: Scene) => { searchModalResolveHook(value); },
+    recentVisited,
+    resolve: (value: BaseScene) => { searchModalResolveHook(value); },
     reject: (value?: unknown) => { searchModalRejectHook(value); },
     promptToSearch,
-    addRecentSelected,
+    recordVisit,
   };
 });
 

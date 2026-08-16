@@ -108,21 +108,43 @@ export const useTableStore = defineStore('table', () => {
 
     const sIds = Array.isArray(sessionIds) ? sessionIds : [sessionIds];
     const session: TableSession = {};
+    const activeSessionId = sessionOverride.value ?? sessionId.value;
+    let activeSessionChanged = false;
 
     sIds.forEach((id) => {
       if (!(id in table.value!.session)) {
         throw new Error(`Session ${id} does not exist`);
       }
 
-      const presence = structuredClone(toRaw(table.value!.session[id]));
+      const currentPresence = table.value!.session[id];
+      const sceneChanged = currentPresence.sceneId !== scene.id
+        || currentPresence.path.length !== scene.path.length
+        || currentPresence.path.some((segment, index) => segment !== scene.path[index]);
+
+      if (!sceneChanged) {
+        return;
+      }
+
+      const presence = structuredClone(toRaw(currentPresence));
       presence.sceneId = scene.id;
       presence.path = scene.path;
 
       session[id] = presence;
+      if (id === activeSessionId) {
+        activeSessionChanged = true;
+      }
     });
+
+    if (Object.keys(session).length === 0) {
+      return;
+    }
 
     try {
       await updateSessionPresence(table.value.id, session);
+
+      if (activeSessionChanged) {
+        useSceneSearchStore().recordVisit(scene);
+      }
     } catch (e) {
       console.error(e);
       const notificationStore = useNotificationStore();
