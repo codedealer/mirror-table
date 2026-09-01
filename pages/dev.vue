@@ -36,6 +36,15 @@ const activePrototype = computed<PrototypeId>(() => {
 const selectPrototype = (prototype: PrototypeId) => {
   navigateTo({ path: '/dev', query: { prototype } });
 };
+
+// Keep the playground entirely local: no auth store, Firebase, or production settings.
+const localDiceMacros = ref<import('~/models/Dice').DiceRollerMacro[]>([]);
+const localDiceMacroAdapter = {
+  load: () => localDiceMacros.value,
+  save: (macros: import('~/models/Dice').DiceRollerMacro[]) => {
+    localDiceMacros.value = macros;
+  },
+};
 </script>
 
 <template>
@@ -70,7 +79,7 @@ const selectPrototype = (prototype: PrototypeId) => {
       >
         <VaCardTitle>Dice roller</VaCardTitle>
         <VaCardContent>
-          <DiceRoller />
+          <DiceRoller :macro-adapter="localDiceMacroAdapter" />
         </VaCardContent>
       </VaCard>
 

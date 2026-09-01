@@ -21,8 +21,8 @@ describe('useDiceRollHistory', () => {
     add(second);
 
     expect(cursor.value).toBe(0);
-    expect(previous()).toBe(first);
-    expect(next()).toBe(second);
+    expect(previous()?.result).toBe(first);
+    expect(next()?.result).toBe(second);
     expect(next()).toBeUndefined();
     expect(cursor.value).toBe(-1);
   });

@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import type { DieResult } from '~/models/Dice';
-import { diceProfileOptions } from '~/composables/useDiceRoller';
+import type { DiceProfileId, DiceRollerMacro, DieResult } from '~/models/Dice';
+import { diceProfileOptions, useDiceRoller } from '~/composables/useDiceRoller';
+import { canonicalDiceExpression, type DiceRollerMacroAdapter, useDiceRollerMacros } from '~/composables/useDiceRollerMacros';
+import { MAX_SAVED_DICE_MACROS } from '~/models/Dice';
+
+const props = defineProps<{ macroAdapter?: DiceRollerMacroAdapter }>();
 
 const {
   expression,
@@ -13,6 +17,57 @@ const {
   showPrevious,
   showNext,
 } = useDiceRoller();
+
+const userStore = !import.meta.dev && !props.macroAdapter
+  ? useUserStore()
+  : undefined;
+const macroAdapter = props.macroAdapter ?? (
+  userStore
+    ? {
+        load: () => {
+          if (!userStore.user || !userStore.profile) {
+            return {
+              status: 'unavailable' as const,
+              message: 'Saved macros are unavailable until your profile is ready. Please sign in and try again.',
+            };
+          }
+          return userStore.profile.settings.diceRoller?.savedMacros ?? [];
+        },
+        save: (macros: DiceRollerMacro[]) => userStore.updateDiceRollerSavedMacros(macros),
+      }
+    : undefined
+);
+const { macros, error: macroError, saving: macroSaving, save: saveMacro, remove: removeMacro, rename: renameMacro, use: useMacro, reload: reloadMacros, validate: validateMacro, clearError: clearMacroError } = useDiceRollerMacros(macroAdapter);
+
+// Component-level alerts would break the floating-panel layout, so failures are
+// surfaced as auto-dismissing toasts through the shared notification store.
+const notificationStore = useNotificationStore();
+
+watch(macroError, (message) => {
+  if (!message)
+    return;
+  notificationStore.error(message);
+  // Clear composable state so the same failure can fire a fresh toast later.
+  clearMacroError();
+});
+
+// Roll errors are cleared at the start of every roll and by history navigation,
+// so each failed attempt transitions undefined -> message and fires exactly one toast.
+watch(error, (message) => {
+  if (message)
+    notificationStore.error(message);
+});
+
+// The profile snapshot can arrive after the roller mounts, and can be replaced or cleared
+// during auth transitions. Reloading on identity changes prevents cross-user leakage.
+if (userStore) {
+  // Watch authentication identity and profile readiness, not the profile snapshot itself.
+  // Firestore emits a fresh object after updateDoc; treating that as a transition would
+  // reload macros and invalidate a save that is still awaiting its successful write.
+  watch(() => [userStore.user?.uid, userStore.profile != null], () => {
+    void reloadMacros();
+  });
+}
 
 const inputRef = ref<{ $el?: HTMLElement } | null>(null);
 const historyOpen = ref(false);
@@ -77,10 +132,14 @@ const profileMenuOptions = computed(() => diceProfileOptions.map(option => ({
   rightIcon: profileId.value === option.id ? 'check' : undefined,
 })));
 
-const historyMenuOptions = computed(() => history.value.map((entry, index) => ({
-  text: `${entry.expression} = ${entry.total}`,
-  value: index,
-})));
+const historyAvailable = computed(() => macros.value.length > 0 || history.value.length > 0);
+const saveValidationError = computed(() => validateMacro(expression.value, profileId.value));
+const saveDisabled = computed(() => Boolean(saveValidationError.value) || macros.value.length >= MAX_SAVED_DICE_MACROS || macroSaving.value);
+const saveHint = computed(() => {
+  if (macros.value.length >= MAX_SAVED_DICE_MACROS)
+    return `${MAX_SAVED_DICE_MACROS} saved macros maximum`;
+  return saveValidationError.value ?? 'Save current expression';
+});
 
 const selectProfile = (option: { value: string }) => {
   profileId.value = option.value as typeof profileId.value;
@@ -90,10 +149,55 @@ const selectHistoryEntry = (index: number) => {
   const entry = history.value[index];
   if (!entry)
     return;
-  result.value = entry;
-  expression.value = entry.expression;
+  result.value = entry.result;
+  expression.value = entry.result.expression;
+  profileId.value = entry.profileId;
   error.value = undefined;
   historyOpen.value = false;
+};
+
+const selectMacro = async (id: string) => {
+  const macro = useMacro(id);
+  if (!macro)
+    return;
+  expression.value = macro.expression;
+  profileId.value = macro.profileId;
+  result.value = undefined;
+  error.value = undefined;
+  historyOpen.value = false;
+  await selectExpression();
+};
+
+const isSavedExpression = (candidate: string, candidateProfileId: DiceProfileId) => macros.value.some(macro => canonicalDiceExpression(macro.expression) === canonicalDiceExpression(candidate) && macro.profileId === candidateProfileId);
+
+const currentMacro = computed(() => macros.value.find(macro => canonicalDiceExpression(macro.expression) === canonicalDiceExpression(expression.value) && macro.profileId === profileId.value));
+const saveCurrentMacro = () => {
+  void saveMacro(expression.value, profileId.value);
+};
+const toggleCurrentMacro = () => {
+  if (currentMacro.value)
+    void removeMacro(currentMacro.value.id);
+  else
+    void saveMacro(expression.value, profileId.value);
+};
+const saveHistoryMacro = (index: number) => {
+  const entry = history.value[index];
+  if (!entry)
+    return;
+  const existing = macros.value.find(macro => canonicalDiceExpression(macro.expression) === canonicalDiceExpression(entry.result.expression) && macro.profileId === entry.profileId);
+  if (existing)
+    void removeMacro(existing.id);
+  else
+    void saveMacro(entry.result.expression, entry.profileId);
+};
+const deleteMacro = (id: string) => {
+  void removeMacro(id);
+};
+const renameMacroPrompt = (macro: DiceRollerMacro) => {
+  // eslint-disable-next-line no-alert
+  const label = window.prompt('Macro label', macro.label ?? macro.expression);
+  if (label !== null)
+    void renameMacro(macro.id, label);
 };
 
 const physicalKeyMap: Record<string, string> = Object.fromEntries(
@@ -178,14 +282,60 @@ const dieFlagLabels = (die: DieResult): string[] => {
 
       <VaDropdown v-model="historyOpen" class="dice-roller__history-menu" placement="bottom-start">
         <template #anchor>
-          <VaButton class="dice-roller__history-button" preset="secondary" color="tertiary" icon="history" aria-label="Roll history" :disabled="!history.length" />
+          <VaButton class="dice-roller__history-button" preset="secondary" color="tertiary" icon="history" aria-label="Roll history" :disabled="!historyAvailable" />
         </template>
         <VaDropdownContent class="dice-roller__history-content">
           <va-scroll-container vertical class="dice-roller__history-scroll">
-            <VaMenuList :options="historyMenuOptions" value-by="value" @selected="selectHistoryEntry" />
+            <section class="dice-roller__section" aria-label="Saved macros">
+              <div class="dice-roller__section-header">
+                <span class="dice-roller__section-title">Saved macros <span class="dice-roller__section-count">{{ macros.length }}/{{ MAX_SAVED_DICE_MACROS }}</span></span>
+                <VaButton size="small" preset="secondary" :disabled="saveDisabled" :title="saveHint" aria-label="Save current expression" @click="saveCurrentMacro">
+                  Save current expression
+                </VaButton>
+              </div>
+              <span v-if="saveValidationError && expression.trim()" class="dice-roller__save-hint" role="status">{{ saveValidationError }}</span>
+              <span v-if="macros.length === 0" class="dice-roller__empty">No saved macros yet</span>
+              <div v-else class="dice-roller__macro-list">
+                <div v-for="macro in macros" :key="macro.id" class="dice-roller__macro-row">
+                  <button type="button" class="dice-roller__macro-load" @click="selectMacro(macro.id)">
+                    <span>{{ macro.label || macro.expression }}</span>
+                    <code v-if="macro.label">{{ macro.expression }}</code>
+                    <small v-if="macro.profileId !== 'none'">{{ diceProfileOptions.find(option => option.id === macro.profileId)?.label }}</small>
+                  </button>
+                  <VaButton preset="plain" icon="edit" aria-label="Rename macro" @click="renameMacroPrompt(macro)" />
+                  <VaButton preset="plain" icon="delete" aria-label="Delete macro" @click="deleteMacro(macro.id)" />
+                </div>
+              </div>
+            </section>
+            <VaDivider class="dice-roller__divider" />
+            <section class="dice-roller__section" aria-label="Recent rolls">
+              <span class="dice-roller__section-header">
+                <span class="dice-roller__section-title">Recent rolls</span>
+              </span>
+              <span v-if="history.length === 0" class="dice-roller__empty">No recent rolls yet</span>
+              <div v-else class="dice-roller__macro-list">
+                <div v-for="(entry, index) in history" :key="`${entry.result.expression}-${index}`" class="dice-roller__macro-row">
+                  <button type="button" class="dice-roller__macro-load" @click="selectHistoryEntry(index)">
+                    {{ entry.result.expression }} = {{ entry.result.total }}
+                  </button>
+                  <VaButton preset="plain" :icon="isSavedExpression(entry.result.expression, entry.profileId) ? 'bookmark' : 'bookmark_border'" :aria-label="isSavedExpression(entry.result.expression, entry.profileId) ? 'Remove saved expression' : 'Save expression'" @click.stop="saveHistoryMacro(index)" />
+                </div>
+              </div>
+            </section>
           </va-scroll-container>
         </VaDropdownContent>
       </VaDropdown>
+
+      <VaButton
+        class="dice-roller__save-button"
+        preset="secondary"
+        color="tertiary"
+        :icon="currentMacro ? 'bookmark' : 'bookmark_border'"
+        :aria-label="currentMacro ? 'Remove saved expression' : 'Save expression'"
+        :disabled="!currentMacro && saveDisabled"
+        :title="currentMacro ? 'Remove saved expression' : saveHint"
+        @click="toggleCurrentMacro"
+      />
 
       <VaButton
         class="dice-roller__help-button"
@@ -276,10 +426,6 @@ const dieFlagLabels = (die: DieResult): string[] => {
         </section>
       </va-scroll-container>
     </VaModal>
-
-    <VaAlert v-if="error" color="danger" outline>
-      {{ error }}
-    </VaAlert>
   </div>
 </template>
 
@@ -302,6 +448,7 @@ const dieFlagLabels = (die: DieResult): string[] => {
 }
 
 .dice-roller__profile-button,
+.dice-roller__save-button,
 .dice-roller__roll-button,
 .dice-roller__history-button,
 .dice-roller__help-button {
@@ -323,7 +470,103 @@ const dieFlagLabels = (die: DieResult): string[] => {
 }
 
 .dice-roller__history-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 18rem;
   max-height: min(24rem, calc(100vh - 8rem));
+  padding: 0.5rem;
+}
+
+.dice-roller__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dice-roller__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dice-roller__section-title {
+  color: var(--va-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dice-roller__section-count {
+  opacity: 0.85;
+  letter-spacing: normal;
+}
+
+.dice-roller__save-hint {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  overflow-wrap: anywhere;
+}
+
+.dice-roller__macro-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.dice-roller__macro-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.dice-roller__macro-row:hover {
+  background: var(--va-background-border);
+}
+
+.dice-roller__macro-row > .va-button {
+  flex-shrink: 0;
+}
+
+.dice-roller__macro-load {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.dice-roller__macro-load:focus-visible {
+  background: var(--va-background-border);
+  outline: none;
+}
+
+.dice-roller__macro-load code,
+.dice-roller__macro-load small {
+  opacity: 0.7;
+  font-size: 0.8rem;
+}
+
+.dice-roller__empty {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  text-align: center;
+  opacity: 0.7;
+  font-size: 0.8rem;
+}
+
+.dice-roller__divider {
+  margin-block: 0.15rem;
 }
 
 .dice-roller__syntax-scroll {

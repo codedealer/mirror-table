@@ -1,4 +1,5 @@
 import type { User } from 'firebase/auth';
+import type { DiceRollerMacro } from '~/models/Dice';
 import type { DynamicPanelContentType, Profile, SelectionGroup } from '~/models/types';
 import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { acceptHMRUpdate, defineStore, skipHydrate } from 'pinia';
@@ -26,9 +27,12 @@ export const useUserStore = defineStore('user', () => {
   const isAuthenticated = computed(() => !!profile.value);
 
   let unsubFromProfileUpdates = () => {};
+  // Incremented for every auth event so callbacks from an earlier event cannot
+  // become valid again when the same UID signs back in (A → B → A).
+  let authGeneration = 0;
   // subscribe to profile updates
-  const subscribeToProfileUpdates = (user: User) => {
-    const profileRef = doc($db, 'users', user.uid).withConverter(
+  const subscribeToProfileUpdates = (profileUser: User, generation: number) => {
+    const profileRef = doc($db, 'users', profileUser.uid).withConverter(
       firestoreDataConverter<Profile>(),
     );
     unsubFromProfileUpdates();
@@ -41,6 +45,10 @@ export const useUserStore = defineStore('user', () => {
       profileRef,
       { includeMetadataChanges: true },
       (snap) => {
+        // A queued snapshot from the previous subscription must never restore the
+        // previous user's profile after an auth transition.
+        if (generation !== authGeneration || user.value?.uid !== profileUser.uid)
+          return;
         if (snap.exists()) {
           profile.value = snap.data();
           return;
@@ -61,12 +69,26 @@ export const useUserStore = defineStore('user', () => {
   // watch only on the client side
 
   $auth && $auth.onAuthStateChanged(async (authUser) => {
+    const generation = ++authGeneration;
+    const identityChanged = user.value?.uid !== authUser?.uid;
+    // In a direct A → B transition Firebase changes auth identity before the B
+    // profile snapshot arrives. Invalidate A immediately so consumers cannot
+    // treat A's settings or token as B's ready identity during that window.
+    if (identityChanged) {
+      profile.value = null;
+      idToken.value = null;
+    }
     user.value = authUser;
     if (user.value) {
-      subscribeToProfileUpdates(user.value);
+      const authUid = user.value.uid;
+      subscribeToProfileUpdates(user.value, generation);
 
       try {
-        idToken.value = await user.value.getIdToken();
+        const token = await user.value.getIdToken();
+        // Avoid an older, slower token request overwriting the current user,
+        // including when the original UID signs back in later.
+        if (generation === authGeneration && user.value?.uid === authUid)
+          idToken.value = token;
       } catch (e) {
         console.error(e);
       }
@@ -127,6 +149,19 @@ export const useUserStore = defineStore('user', () => {
     await updateDoc(profileRef, update);
   };
 
+  const updateDiceRollerSavedMacros = async (macros: DiceRollerMacro[]) => {
+    // A missing profile is an auth/loading state, not an empty profile. Rejecting
+    // makes the macro composable keep its optimistic state from being reported as
+    // persisted (and prevents a later reload from erasing a save).
+    if (!user.value || !profile.value) {
+      throw new Error('Saved macros are unavailable until your profile is ready. Please sign in and try again.');
+    }
+    const profileRef = doc($db, 'users', user.value.uid).withConverter(
+      firestoreDataConverter<Profile>(),
+    );
+    await updateDoc(profileRef, { 'settings.diceRoller.savedMacros': macros });
+  };
+
   const updateLayoutPanelPin = async (
     panelType: DynamicPanelContentType,
     pinned: boolean,
@@ -165,6 +200,7 @@ export const useUserStore = defineStore('user', () => {
     isAuthenticated,
     updateProfile,
     updateProfileSettings,
+    updateDiceRollerSavedMacros,
     updateLayoutPanelPin,
     updateLayoutGroupActive,
   };

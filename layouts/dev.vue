@@ -28,6 +28,10 @@ const goToDashboard = () => navigateTo('/dashboard');
 
     <div class="dev-layout__main">
       <slot />
+
+      <ClientOnly>
+        <TheNotifications />
+      </ClientOnly>
     </div>
   </div>
 </template>

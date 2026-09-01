@@ -123,6 +123,23 @@ export interface RollEvaluationResult {
 // Async so a real network-backed RNG (random.org) can be substituted (see ADR 0001).
 export type RandomGenerator = (min: number, max: number) => Promise<number>;
 
+// --- Dice roller saved macros ---
+
+export type DiceProfileId = 'none' | 'nimble5e' | 'dnd5e';
+
+export interface DiceRollerMacro {
+  id: string;
+  expression: string;
+  profileId: DiceProfileId;
+  label?: string;
+  createdAt: number;
+  lastUsedAt?: number;
+}
+
+export const MAX_SAVED_DICE_MACROS = 20;
+export const MAX_DICE_MACRO_EXPRESSION_LENGTH = 256;
+export const MAX_DICE_MACRO_LABEL_LENGTH = 48;
+
 // --- System Profiles ---
 
 export interface SystemProfile {

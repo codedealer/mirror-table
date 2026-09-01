@@ -99,3 +99,5 @@ sw.*
 .vercel
 /service-account.json
 .vscode/settings.json
+
+.scratch/

@@ -1,10 +1,8 @@
-import type { RollEvaluationResult, SystemProfile } from '~/models/Dice';
+import type { DiceProfileId, RollEvaluationResult, SystemProfile } from '~/models/Dice';
 import { isDiceParseError, isDiceProfileRequiredError } from '~/models/Dice';
 import { evaluateDiceExpression } from '~/utils/dice-evaluator';
 import { Dnd5eProfile, NimbleProfile } from '~/utils/dice-lowering';
 import { cryptoRNG, randomOrgRNG } from '~/utils/dice-rng';
-
-export type DiceProfileId = 'none' | 'nimble5e' | 'dnd5e';
 
 export interface DiceProfileOption {
   id: DiceProfileId;
@@ -43,7 +41,7 @@ export const useDiceRoller = () => {
     try {
       const evaluated = await evaluateDiceExpression(expression.value, diceRNG, activeProfile.value);
       result.value = evaluated;
-      addToHistory(evaluated);
+      addToHistory(evaluated, profileId.value);
       return true;
     } catch (err) {
       if (isDiceParseError(err)) {
@@ -63,8 +61,9 @@ export const useDiceRoller = () => {
     const previousResult = previous();
     if (!previousResult)
       return false;
-    result.value = previousResult;
-    expression.value = previousResult.expression;
+    result.value = previousResult.result;
+    expression.value = previousResult.result.expression;
+    profileId.value = previousResult.profileId;
     error.value = undefined;
     return true;
   };
@@ -73,8 +72,9 @@ export const useDiceRoller = () => {
     const nextResult = next();
     if (!nextResult)
       return false;
-    result.value = nextResult;
-    expression.value = nextResult.expression;
+    result.value = nextResult.result;
+    expression.value = nextResult.result.expression;
+    profileId.value = nextResult.profileId;
     error.value = undefined;
     return true;
   };

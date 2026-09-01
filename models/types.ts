@@ -2,6 +2,7 @@ import type { Timestamp } from 'firebase/firestore';
 import type { DBSchema } from 'idb';
 import type Konva from 'konva';
 import type { DefineComponent } from 'vue';
+import type { DiceRollerMacro } from '~/models/Dice';
 
 export type NestedPartial<T> = {
   [K in keyof T]?: T[K] extends object ? NestedPartial<T[K]> : T[K];
@@ -59,6 +60,9 @@ export interface Profile {
   settings: {
     driveFolderId: string;
     searchFolderId: string;
+    diceRoller?: {
+      savedMacros?: DiceRollerMacro[];
+    };
     layout?: {
       sidebar?: ProfileLayoutSidebarSettings;
     };
