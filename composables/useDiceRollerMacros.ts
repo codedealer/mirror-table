@@ -1,4 +1,5 @@
 import type { ASTNode, DiceProfileId, DiceRollerMacro } from '~/models/Dice';
+import type { Profile } from '~/models/types';
 import {
   isDiceParseError,
   MAX_DICE_MACRO_EXPRESSION_LENGTH,
@@ -21,6 +22,33 @@ export interface DiceRollerMacroAdapter {
   load?: () => DiceRollerMacroLoadResult | Promise<DiceRollerMacroLoadResult>;
   save: (macros: DiceRollerMacro[]) => void | Promise<void>;
 }
+
+export interface DiceRollerMacroUserStore {
+  user: { uid: string } | null;
+  profile: Profile | null;
+  updateDiceRollerSavedMacros: (macros: DiceRollerMacro[]) => void | Promise<void>;
+}
+
+/** Select an injected adapter first; otherwise wire persistence to the user store. */
+export const createDiceRollerMacroAdapter = (
+  explicitAdapter: DiceRollerMacroAdapter | undefined,
+  userStore: DiceRollerMacroUserStore | undefined,
+): DiceRollerMacroAdapter | undefined => explicitAdapter ?? (
+  userStore
+    ? {
+        load: () => {
+          if (!userStore.user || !userStore.profile) {
+            return {
+              status: 'unavailable' as const,
+              message: 'Saved macros are unavailable until your profile is ready. Please sign in and try again.',
+            };
+          }
+          return userStore.profile.settings.diceRoller?.savedMacros ?? [];
+        },
+        save: (macros: DiceRollerMacro[]) => userStore.updateDiceRollerSavedMacros(macros),
+      }
+    : undefined
+);
 
 const profiles = {
   none: undefined,
@@ -222,7 +250,7 @@ export const useDiceRollerMacros = (adapter?: DiceRollerMacroAdapter, initial: D
     return macro;
   };
 
-  const reload = async () => {
+  async function reload() {
     const thisGeneration = ++generation;
     for (const operation of pending)
       operation.resolve(false);
@@ -266,7 +294,7 @@ export const useDiceRollerMacros = (adapter?: DiceRollerMacroAdapter, initial: D
         void processQueue();
       }
     }
-  };
+  }
 
   onMounted(() => {
     void reload();

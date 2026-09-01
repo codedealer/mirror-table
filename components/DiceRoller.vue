@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DiceProfileId, DiceRollerMacro, DieResult } from '~/models/Dice';
 import { diceProfileOptions, useDiceRoller } from '~/composables/useDiceRoller';
-import { canonicalDiceExpression, type DiceRollerMacroAdapter, useDiceRollerMacros } from '~/composables/useDiceRollerMacros';
+import { canonicalDiceExpression, createDiceRollerMacroAdapter, type DiceRollerMacroAdapter, useDiceRollerMacros } from '~/composables/useDiceRollerMacros';
 import { MAX_SAVED_DICE_MACROS } from '~/models/Dice';
 
 const props = defineProps<{ macroAdapter?: DiceRollerMacroAdapter }>();
@@ -18,25 +18,10 @@ const {
   showNext,
 } = useDiceRoller();
 
-const userStore = !import.meta.dev && !props.macroAdapter
-  ? useUserStore()
-  : undefined;
-const macroAdapter = props.macroAdapter ?? (
-  userStore
-    ? {
-        load: () => {
-          if (!userStore.user || !userStore.profile) {
-            return {
-              status: 'unavailable' as const,
-              message: 'Saved macros are unavailable until your profile is ready. Please sign in and try again.',
-            };
-          }
-          return userStore.profile.settings.diceRoller?.savedMacros ?? [];
-        },
-        save: (macros: DiceRollerMacro[]) => userStore.updateDiceRollerSavedMacros(macros),
-      }
-    : undefined
-);
+// The playground supplies its own in-memory adapter. Every normal roller, including
+// development builds, uses the authenticated user store for persistence.
+const userStore = props.macroAdapter ? undefined : useUserStore();
+const macroAdapter = createDiceRollerMacroAdapter(props.macroAdapter, userStore);
 const { macros, error: macroError, saving: macroSaving, save: saveMacro, remove: removeMacro, rename: renameMacro, use: useMacro, reload: reloadMacros, validate: validateMacro, clearError: clearMacroError } = useDiceRollerMacros(macroAdapter);
 
 // Component-level alerts would break the floating-panel layout, so failures are
@@ -61,9 +46,10 @@ watch(error, (message) => {
 // The profile snapshot can arrive after the roller mounts, and can be replaced or cleared
 // during auth transitions. Reloading on identity changes prevents cross-user leakage.
 if (userStore) {
-  // Watch authentication identity and profile readiness, not the profile snapshot itself.
-  // Firestore emits a fresh object after updateDoc; treating that as a transition would
-  // reload macros and invalidate a save that is still awaiting its successful write.
+  // Hydrate on authentication identity/readiness changes. Do not watch the saved
+  // array itself: updateDoc produces a new profile snapshot after a successful
+  // write, and reloading from that snapshot can race the optimistic queue and
+  // replace the just-saved state with the previous snapshot.
   watch(() => [userStore.user?.uid, userStore.profile != null], () => {
     void reloadMacros();
   });
@@ -132,7 +118,8 @@ const profileMenuOptions = computed(() => diceProfileOptions.map(option => ({
   rightIcon: profileId.value === option.id ? 'check' : undefined,
 })));
 
-const historyAvailable = computed(() => macros.value.length > 0 || history.value.length > 0);
+// Keep the menu reachable before the first roll so new users can discover saving.
+const historyAvailable = computed(() => true);
 const saveValidationError = computed(() => validateMacro(expression.value, profileId.value));
 const saveDisabled = computed(() => Boolean(saveValidationError.value) || macros.value.length >= MAX_SAVED_DICE_MACROS || macroSaving.value);
 const saveHint = computed(() => {

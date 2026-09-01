@@ -1,12 +1,32 @@
 import type { DiceRollerMacro } from '~/models/Dice';
+import type { Profile } from '~/models/types';
 import { describe, expect, it, vi } from 'vitest';
-import { sanitizeDiceRollerMacros, useDiceRollerMacros, validateDiceMacroExpression } from './useDiceRollerMacros';
+import { createDiceRollerMacroAdapter, sanitizeDiceRollerMacros, useDiceRollerMacros, validateDiceMacroExpression } from './useDiceRollerMacros';
 
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
 describe('dice roller macros', () => {
   vi.stubGlobal('ref', <T>(value: T) => ({ value }));
   vi.stubGlobal('onMounted', () => undefined);
+  it('wires normal rollers to the user store while injected adapters take precedence', async () => {
+    const saved: DiceRollerMacro[][] = [];
+    const userStore = {
+      user: { uid: 'user-1' },
+      profile: { settings: { driveFolderId: '', searchFolderId: '' } } as Profile,
+      updateDiceRollerSavedMacros: (macros: DiceRollerMacro[]) => {
+        saved.push(macros);
+      },
+    };
+    const explicit = { save: vi.fn() };
+    expect(createDiceRollerMacroAdapter(explicit, userStore)).toBe(explicit);
+
+    const adapter = createDiceRollerMacroAdapter(undefined, userStore);
+    const macros: DiceRollerMacro[] = [{ id: 'macro-1', expression: '1d6', profileId: 'none', createdAt: 1 }];
+    await adapter!.save(macros);
+    expect(await adapter!.load!()).toEqual([]);
+    expect(saved).toEqual([macros]);
+  });
+
   it('validates profile-specific intent without rolling', () => {
     expect(validateDiceMacroExpression('1d20a', 'none')).toContain('D&D 5e');
     expect(validateDiceMacroExpression('1d20a', 'dnd5e')).toBeUndefined();
