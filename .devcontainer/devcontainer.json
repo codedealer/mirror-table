@@ -6,6 +6,9 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
+  "runArgs": [
+    "--add-host=llama-swap:host-gateway"
+  ],
   "remoteUser": "node",
   "updateRemoteUserUID": true,
   "containerEnv": {
