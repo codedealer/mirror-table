@@ -101,8 +101,11 @@ local public key is baked into the image at build time).
   destroyed container's key. Host-key checking is never disabled.
 - Each container generates unique SSH host keys on first start; the images
   ship without host keys, so no two workspaces share a host identity.
-- The Nuxt app (port 3000) is not published to the desktop by default. To
-  reach it, add `-p 127.0.0.1::3000` to the `docker run` in
-  `docker-create.sh` and a `portForwards` entry in the emitted JSON.
+- The Nuxt app (container port 3000, see `appPort` in `docker-state.json`)
+  is reachable at **http://localhost:3000** while the workspace is running:
+  the emitted JSON declares a `portForwards` entry that Orca tunnels over the
+  SSH relay (desktop 3000 → container 3000). No Docker port publishing is
+  needed. If your desktop already uses port 3000 for something else, change
+  `appPort` in `docker-state.json` and use that port in the browser.
 - `.devcontainer/` is untouched and remains the VS Code fallback. If you
   change its Dockerfile or post-create.sh, sync `Dockerfile` here manually.

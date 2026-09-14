@@ -20,6 +20,8 @@ project_root="${ORCA_DOCKER_PROJECT_ROOT:-$(state_get projectRoot)}"
 project_root="${project_root:-/home/node/mirror-table}"
 store_volume="${ORCA_DOCKER_PNPM_STORE:-$(state_get pnpmStoreVolume)}"
 store_volume="${store_volume:-orca-mirror-table-pnpm-store}"
+# App port (Nuxt) inside the container, tunneled to the same desktop port.
+app_port="$(state_get appPort)"
 key_rel="$(state_get keyPath)"
 key_rel="${key_rel:-scripts/orca-vm/orca-docker-ssh_key}"
 key="$PWD/$key_rel"
@@ -103,5 +105,5 @@ ssh -i "$key" -p "$port" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o B
   "$(printf 'project_root=%q bash -lc %q' "$project_root" "$remote_check")" >&2
 
 # --- 5. emit the recipe result ---------------------------------------------------
-emit_connection_json "$port" "$name"
+emit_connection_json "$port" "$name" "$app_port"
 log "workspace container $name ready"

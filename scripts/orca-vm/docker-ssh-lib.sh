@@ -54,9 +54,9 @@ wait_sshd() {
 # Print the recipe-result JSON (SSH mode) on stdout.
 #   $1=published port  $2=container name (used as label and resourceId)
 emit_connection_json() {
-  local port="$1" name="$2"
+  local port="$1" name="$2" app_port="${3:-}"
   node -e '
-    const [port, user, key, root, label] = process.argv.slice(1, 6);
+    const [port, user, key, root, label, appPort] = process.argv.slice(1, 7);
     const target = {
       label,
       host: "127.0.0.1",
@@ -65,10 +65,20 @@ emit_connection_json() {
       identityFile: key,
       identitiesOnly: true,
     };
+    // Service ports the workspace needs are SSH-tunneled via the relay:
+    // desktop localhost:<appPort> -> (SSH session) -> 127.0.0.1:<appPort> in the container.
+    if (appPort) {
+      target.portForwards = [{
+        label: "app",
+        localPort: Number(appPort),
+        remoteHost: "127.0.0.1",
+        remotePort: Number(appPort),
+      }];
+    }
     process.stdout.write(JSON.stringify({
       schemaVersion: 1,
       connection: { type: "ssh", projectRoot: root, target },
       userData: { provider: "docker", resourceId: label },
     }, null, 2) + "\n");
-  ' "$port" "$ssh_user" "$key" "$project_root" "$name"
+  ' "$port" "$ssh_user" "$key" "$project_root" "$name" "$app_port"
 }
