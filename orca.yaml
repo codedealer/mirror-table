@@ -1,0 +1,12 @@
+# Orca per-workspace environment recipes.
+#
+# The "Run on" picker reads this file from the primary checkout, so commit it
+# to the default branch (main). See scripts/orca-vm/README.md for the setup
+# flow and design notes.
+environmentRecipes:
+  - id: docker-ssh
+    name: Local Docker (SSH)
+    create: ./scripts/orca-vm/docker-create.sh
+    suspend: ./scripts/orca-vm/docker-suspend.sh
+    resume: ./scripts/orca-vm/docker-resume.sh
+    destroy: ./scripts/orca-vm/docker-destroy.sh

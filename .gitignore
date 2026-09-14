@@ -101,3 +101,10 @@ sw.*
 .vscode/settings.json
 
 .scratch/
+
+# Orca local Docker workspace: desktop-side SSH keypair (private AND public
+# half). Both are machine-local: docker-base-snapshot.sh generates them on
+# first run, and the Dockerfile bakes the local .pub into the image at build
+# time.
+scripts/orca-vm/orca-docker-ssh_key
+scripts/orca-vm/orca-docker-ssh_key.pub

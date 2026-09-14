@@ -1,0 +1,7 @@
+{
+  "imageName": "orca-mirror-table-base:latest",
+  "sshUser": "node",
+  "projectRoot": "/home/node/mirror-table",
+  "pnpmStoreVolume": "orca-mirror-table-pnpm-store",
+  "keyPath": "scripts/orca-vm/orca-docker-ssh_key"
+}
