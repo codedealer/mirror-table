@@ -1,0 +1,89 @@
+name: orca-mirror-table
+
+services:
+  ssh:
+    image: orca-mirror-table-dev:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orca-mirror-table-dev
+    restart: unless-stopped
+    init: true
+    command: ["/usr/sbin/sshd", "-D", "-e", "-f", "/etc/ssh/sshd_config"]
+    stop_grace_period: 20s
+    ports:
+      - "${ORCA_SSH_BIND_IP:?Set ORCA_SSH_BIND_IP in your environment or local config}:${ORCA_SSH_PORT:-6223}:22/tcp"
+    extra_hosts:
+      - "llama-swap:host-gateway"
+    environment:
+      NO_PROXY: localhost,127.0.0.1,llama-swap
+      no_proxy: localhost,127.0.0.1,llama-swap
+    volumes:
+      - type: bind
+        source: ${ORCA_PROJECT_ROOT:?ORCA_PROJECT_ROOT must be set}
+        target: ${ORCA_PROJECT_ROOT:?ORCA_PROJECT_ROOT must be set}
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${ORCA_WORKTREE_ROOT:?ORCA_WORKTREE_ROOT must be set}
+        target: ${ORCA_WORKTREE_ROOT:?ORCA_WORKTREE_ROOT must be set}
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${HOME}/.pi
+        target: /home/node/.pi
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${HOME}/.agents
+        target: /home/node/.agents
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${GH_CONFIG_DIR:?GH_CONFIG_DIR must be set}
+        target: /home/node/.config/gh
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${HOME}/.gitconfig
+        target: /home/node/.gitconfig
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${ORCA_STATE_DIR:?ORCA_STATE_DIR must be set}/authorized_keys
+        target: /home/node/.ssh/authorized_keys
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${ORCA_STATE_DIR:?ORCA_STATE_DIR must be set}/ssh-host-keys
+        target: /etc/ssh/host-keys
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: volume
+        source: pnpm-store
+        target: /home/node/.local/share/pnpm/store
+    tmpfs:
+      - /run/sshd:mode=0755
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          /usr/sbin/sshd -t -f /etc/ssh/sshd_config
+          && test -r /etc/ssh/host-keys/ssh_host_ed25519_key
+          && test -r /home/node/.ssh/authorized_keys
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    labels:
+      com.orca.project: mirror-table
+      com.orca.role: singleton-ssh-target
+
+volumes:
+  pnpm-store:
+    name: ${PNPM_STORE_VOLUME:-orca-mirror-table-pnpm-store}
+    external: true
