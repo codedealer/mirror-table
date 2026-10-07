@@ -31,6 +31,10 @@ published="$(docker port "$container" 22/tcp | head -n1)"
 [[ "$published" == "${ORCA_SSH_BIND_IP}:${ORCA_SSH_PORT}" ]] \
   || fail "unexpected SSH publish '$published' (expected ${ORCA_SSH_BIND_IP}:${ORCA_SSH_PORT})"
 
+cache_mount="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/home/node/.local/share/pnpm/store"}}{{.Type}} {{.Name}} {{.Destination}}{{end}}{{end}}' "$container")"
+[[ "$cache_mount" == "volume ${PNPM_STORE_VOLUME} /home/node/.local/share/pnpm/store" ]] \
+  || fail "pnpm cache mount is not the expected named volume: '$cache_mount'"
+
 # Read the server public key from the running container (trusted Docker
 # runtime), compare it with persistent host state, then pin only that exact key.
 host_pub="$(compose exec -T ssh cat /etc/ssh/host-keys/ssh_host_ed25519_key.pub | tr -d '\r')"
@@ -58,17 +62,28 @@ fi
 
 remote_check="$(printf 'project_root=%q; export project_root; %s' "$PROJECT_ROOT" 'set -eu
    printf "SSH user: "; id
-   printf "Project root: "; git -C "$project_root" rev-parse --show-toplevel
+   cd "$project_root"
+   printf "Project root: "; git rev-parse --show-toplevel
    test -w "$project_root"
    printf "Tools:"
    for tool in git node pnpm pi gh make g++ python3; do command -v "$tool"; done
    printf "Node: "; node --version
    printf "pnpm: "; pnpm --version
+   expected_store_dir=/home/node/.local/share/pnpm/store
+   test "${PNPM_CONFIG_STORE_DIR:-}" = "$expected_store_dir" || { printf "PNPM_CONFIG_STORE_DIR is unset or incorrect: %s\\n" "${PNPM_CONFIG_STORE_DIR:-<unset>}" >&2; exit 1; }
+   configured_store_dir="$(pnpm config get store-dir)"
+   test "$configured_store_dir" = "$expected_store_dir" || { printf "pnpm effective store-dir is incorrect: %s\\n" "$configured_store_dir" >&2; exit 1; }
    store_path="$(pnpm store path)"
    case "$store_path" in
-     /home/node/.local/share/pnpm/store/*) printf "pnpm store: %s\n" "$store_path" ;;
+     "$expected_store_dir"/*) ;;
      *) printf "pnpm store is outside the named cache volume: %s\\n" "$store_path" >&2; exit 1 ;;
    esac
+   mkdir -p "$store_path"
+   cache_probe="$store_path/.orca-cache-probe-$$"
+   : > "$cache_probe"
+   test -f "$cache_probe"
+   rm "$cache_probe"
+   printf "pnpm store dir: %s\\npnpm store path: %s (named volume write probe passed)\\n" "$configured_store_dir" "$store_path"
    printf "Pi: "; pi --version
    gh auth status >/dev/null
    printf "GitHub CLI authentication: available (read-only host config)\n"

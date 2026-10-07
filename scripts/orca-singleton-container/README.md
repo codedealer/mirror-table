@@ -35,12 +35,15 @@ scripts/orca-singleton-container/orca-up.sh
 
 ```bash
 # After setup and build, explicitly replace the container while keeping its bind mounts,
-# persistent host keys, and named pnpm cache:
+# persistent host keys, and named pnpm cache. Recreate after image/config changes,
+# including changes to the pnpm store environment:
 source scripts/orca-singleton-container/common.sh
 compose up -d --no-build --force-recreate ssh
 ```
 
-The main checkout and linked-worktree parent are bind-mounted at their **same absolute paths** on both sides, so Git's shared worktree metadata remains valid. Package downloads use the named `orca-mirror-table-pnpm-store` volume; `PNPM_CONFIG_STORE_DIR` explicitly points pnpm at that mount (pnpm 11 otherwise defaults to a project-local `.pnpm-store`). Worktree `node_modules` and generated state are not shared by that volume. No Docker socket, database, or other project service is mounted or published.
+The main checkout and linked-worktree parent are bind-mounted at their **same absolute paths** on both sides, so Git's shared worktree metadata remains valid. Package downloads use the named `orca-mirror-table-pnpm-store` volume; the image sets pnpm's recognized `PNPM_CONFIG_STORE_DIR` setting to that mount, and `sshd_config` explicitly passes this safe non-secret setting into SSH sessions. The remote startup check changes into the checkout before querying pnpm, confirms the environment and effective setting, verifies the cache volume mount, and performs a write probe under pnpm's reported store path. Worktree `node_modules` and generated state are not shared by that volume. No Docker socket, database, or other project service is mounted or published.
+
+The workspace config sets `minimumReleaseAge: 1440`, so pnpm rejects newly selected package versions published less than 24 hours ago. This is a delay, not a substitute for reviewing dependency updates.
 
 ### Install dependencies before starting the app
 

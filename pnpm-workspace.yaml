@@ -1,3 +1,6 @@
+# Allow dependencies to enter the graph only after being available for 24 hours.
+minimumReleaseAge: 1440
+
 allowBuilds:
   '@firebase/util': true
   '@parcel/watcher': true
