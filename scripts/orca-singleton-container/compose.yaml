@@ -16,6 +16,8 @@ services:
     extra_hosts:
       - "llama-swap:host-gateway"
     environment:
+      ORCA_CLI_COMMAND: orca
+      ORCA_SINGLETON_CONTAINER: "true"
       NO_PROXY: localhost,127.0.0.1,llama-swap
       no_proxy: localhost,127.0.0.1,llama-swap
     volumes:

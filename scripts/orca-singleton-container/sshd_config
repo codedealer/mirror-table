@@ -23,7 +23,7 @@ X11Forwarding no
 PermitTunnel no
 PermitUserEnvironment no
 PermitUserRC no
-SetEnv PNPM_CONFIG_STORE_DIR=/home/node/.local/share/pnpm/store
+SetEnv ORCA_CLI_COMMAND=orca ORCA_SINGLETON_CONTAINER=true PNPM_CONFIG_STORE_DIR=/home/node/.local/share/pnpm/store
 GatewayPorts no
 
 Subsystem sftp internal-sftp

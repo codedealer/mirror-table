@@ -62,6 +62,8 @@ fi
 
 remote_check="$(printf 'project_root=%q; export project_root; %s' "$PROJECT_ROOT" 'set -eu
    printf "SSH user: "; id
+   test "${ORCA_CLI_COMMAND:-}" = orca || { printf "ORCA_CLI_COMMAND is unset or incorrect: %s\\n" "${ORCA_CLI_COMMAND:-<unset>}" >&2; exit 1; }
+   test "${ORCA_SINGLETON_CONTAINER:-}" = true || { printf "ORCA_SINGLETON_CONTAINER is unset or incorrect: %s\\n" "${ORCA_SINGLETON_CONTAINER:-<unset>}" >&2; exit 1; }
    cd "$project_root"
    printf "Project root: "; git rev-parse --show-toplevel
    test -w "$project_root"
