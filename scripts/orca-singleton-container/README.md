@@ -29,19 +29,26 @@ scripts/orca-singleton-container/build.sh
 scripts/orca-singleton-container/orca-up.sh
 ```
 
-`setup.sh` is idempotent, creates host-side SSH state, retains any already-authorized keys, and creates the worktree parent. `build.sh` builds the separate `node:24-bookworm` development image with Node 24, pnpm 11.17.0, Pi 0.87.1, Git/GitHub CLI, OpenSSH, Python 3, and native build tools.
+`setup.sh` is idempotent, creates host-side SSH state, retains any already-authorized keys, and creates the worktree parent. `build.sh` builds the separate `node:24-bookworm` development image with Node 24, pnpm 11.17.0, Pi 0.87.1, Git/GitHub CLI, OpenSSH, Python 3, and native build tools. pnpm's global bin directory is explicitly configured as `/home/node/.local/share/pnpm/bin`; that directory is included in both the image and non-login SSH `PATH`, and Pi is installed globally with pnpm. The startup SSH check verifies the configured global-bin-dir, `PATH` membership, and `pi` availability.
 
 `orca-up.sh` starts the existing container without rebuilding or recreating it. `orca-down.sh` runs Compose `stop` and preserves the container and named volumes. After an intentional image rebuild, apply it separately with:
 
 ```bash
 # After setup and build, explicitly replace the container while keeping its bind mounts,
-# persistent host keys, and named pnpm cache. Recreate after image/config changes,
-# including changes to the pnpm store environment:
+# persistent host keys, and named pnpm cache. Recreate after image/config changes:
 source scripts/orca-singleton-container/common.sh
 compose up -d --no-build --force-recreate ssh
 ```
 
-The main checkout and linked-worktree parent are bind-mounted at their **same absolute paths** on both sides, so Git's shared worktree metadata remains valid. Package downloads use the named `orca-mirror-table-pnpm-store` volume; the image sets pnpm's recognized `PNPM_CONFIG_STORE_DIR` setting to that mount, and `sshd_config` explicitly passes this safe non-secret setting into SSH sessions. Compose sets `ORCA_CLI_COMMAND=orca` (the SSH target's Orca relay command) and `ORCA_SINGLETON_CONTAINER=true` (the agent's environment marker), and `sshd_config` explicitly exports both into non-login SSH sessions with `SetEnv`. The remote startup check verifies both variables, changes into the checkout before querying pnpm, confirms the effective cache setting, verifies the cache volume mount, and performs a write probe under pnpm's reported store path. Worktree `node_modules` and generated state are not shared by that volume. No Docker socket, database, or other project service is mounted or published.
+To update Pi inside a running singleton, use the SSH/Orca terminal as `node` (no shell-local `PATH` export is needed):
+
+```bash
+pnpm update --global @earendil-works/pi-coding-agent
+```
+
+After changing the image or `sshd_config`, rebuild and explicitly recreate the singleton using the commands above; `orca-up.sh` deliberately will not silently rebuild or replace it.
+
+The main checkout and linked-worktree parent are bind-mounted at their **same absolute paths** on both sides, so Git's shared worktree metadata remains valid. Package downloads use the named `orca-mirror-table-pnpm-store` volume; the image sets pnpm's recognized `PNPM_CONFIG_STORE_DIR` setting to that mount, and `sshd_config` explicitly passes this safe non-secret setting into SSH sessions. The Pi installation baked into the image uses a separate image-local pnpm store, so the runtime cache mount cannot hide Pi's installed package files. Compose sets `ORCA_CLI_COMMAND=orca` (the SSH target's Orca relay command) and `ORCA_SINGLETON_CONTAINER=true` (the agent's environment marker), and `sshd_config` explicitly exports both into non-login SSH sessions with `SetEnv`. The remote startup check verifies both variables, changes into the checkout before querying pnpm, confirms the effective cache setting, verifies the cache volume mount, and performs a write probe under pnpm's reported store path. Worktree `node_modules` and generated state are not shared by that volume. No Docker socket, database, or other project service is mounted or published.
 
 The workspace config sets `minimumReleaseAge: 1440`, so pnpm rejects newly selected package versions published less than 24 hours ago. This is a delay, not a substitute for reviewing dependency updates.
 

@@ -102,3 +102,4 @@ sw.*
 
 .scratch/
 .pnpm-store/
+.orca/

@@ -69,6 +69,10 @@ remote_check="$(printf 'project_root=%q; export project_root; %s' "$PROJECT_ROOT
    test -w "$project_root"
    printf "Tools:"
    for tool in git node pnpm pi gh make g++ python3; do command -v "$tool"; done
+   global_bin_dir=/home/node/.local/share/pnpm/bin
+   case ":$PATH:" in *":$global_bin_dir:"*) ;; *) printf "pnpm global bin directory is not in PATH: %s\\n" "$global_bin_dir" >&2; exit 1 ;; esac
+   test "$(pnpm config get global-bin-dir)" = "$global_bin_dir" || { printf "pnpm global-bin-dir is incorrect: %s\\n" "$(pnpm config get global-bin-dir)" >&2; exit 1; }
+   command -v pi >/dev/null || { printf "Pi is not available in PATH\\n" >&2; exit 1; }
    printf "Node: "; node --version
    printf "pnpm: "; pnpm --version
    expected_store_dir=/home/node/.local/share/pnpm/store

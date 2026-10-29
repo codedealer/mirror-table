@@ -29,18 +29,28 @@ RUN mkdir -p /etc/apt/keyrings \
  && ln -sf /usr/bin/fdfind /usr/local/bin/fd
 
 ENV PNPM_HOME=/home/node/.local/share/pnpm \
+    PNPM_CONFIG_GLOBAL_BIN_DIR=/home/node/.local/share/pnpm/bin \
     PNPM_CONFIG_STORE_DIR=/home/node/.local/share/pnpm/store \
-    PATH=/home/node/.local/share/pnpm:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin \
+    PATH=/home/node/.local/share/pnpm/bin:/home/node/.local/share/pnpm:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin \
     NO_PROXY=localhost,127.0.0.1,llama-swap \
     no_proxy=localhost,127.0.0.1,llama-swap
 
-RUN npm install --global --allow-scripts=@google/genai,esbuild,protobufjs \
-      "pnpm@${PNPM_VERSION}" \
-      "@earendil-works/pi-coding-agent@${PI_VERSION}" \
- && mkdir -p /run/sshd /home/node/.ssh /home/node/.local/share/pnpm \
+RUN npm install --global "pnpm@${PNPM_VERSION}" \
+ && mkdir -p /run/sshd /home/node/.ssh /home/node/.local/share/pnpm/bin \
  && chmod 700 /home/node/.ssh \
- && chown -R node:node /home/node/.ssh /home/node/.local
+ && chown -R node:node /home/node/.ssh /home/node/.local \
+ && printf '%s\n' 'export PATH="/home/node/.local/share/pnpm/bin:/home/node/.local/share/pnpm:$PATH"' \
+      > /etc/profile.d/pnpm.sh \
+ && chmod 0644 /etc/profile.d/pnpm.sh
 
+USER node
+RUN pnpm add --global --ignore-scripts --store-dir=/home/node/.local/share/pnpm/image-store \
+      "@earendil-works/pi-coding-agent@${PI_VERSION}" \
+ && test "$(pnpm config get global-bin-dir)" = "$PNPM_CONFIG_GLOBAL_BIN_DIR" \
+ && command -v pi \
+ && pi --version
+
+USER root
 # OpenSSH refuses public-key authentication for accounts with a locked ('!')
 # shadow entry when PAM is disabled. '*' remains unusable as a password while
 # allowing key authentication; password and keyboard-interactive auth are
