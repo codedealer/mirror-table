@@ -6,6 +6,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        PNPM_MINIMUM_RELEASE_AGE: ${PNPM_MINIMUM_RELEASE_AGE:-1440}
     container_name: orca-mirror-table-dev
     restart: unless-stopped
     init: true
@@ -13,11 +15,14 @@ services:
     stop_grace_period: 20s
     ports:
       - "${ORCA_SSH_BIND_IP:?Set ORCA_SSH_BIND_IP in your environment or local config}:${ORCA_SSH_PORT:-6223}:22/tcp"
+      - "${ORCA_PREVIEW_BIND_IP:-127.0.0.1}:${ORCA_PREVIEW_PORT:-3000}:3000/tcp"
     extra_hosts:
       - "llama-swap:host-gateway"
     environment:
       ORCA_CLI_COMMAND: orca
       ORCA_SINGLETON_CONTAINER: "true"
+      NUXT_HOST: 0.0.0.0
+      NUXT_PORT: "3000"
       NO_PROXY: localhost,127.0.0.1,llama-swap
       no_proxy: localhost,127.0.0.1,llama-swap
     volumes:

@@ -1,7 +1,6 @@
 FROM node:24-bookworm
 
-ARG PNPM_VERSION=11.17.0
-ARG PI_VERSION=0.87.1
+ARG PNPM_MINIMUM_RELEASE_AGE=1440
 
 RUN mkdir -p /etc/apt/keyrings \
  && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
@@ -31,11 +30,12 @@ RUN mkdir -p /etc/apt/keyrings \
 ENV PNPM_HOME=/home/node/.local/share/pnpm \
     PNPM_CONFIG_GLOBAL_BIN_DIR=/home/node/.local/share/pnpm/bin \
     PNPM_CONFIG_STORE_DIR=/home/node/.local/share/pnpm/store \
+    PNPM_CONFIG_MINIMUM_RELEASE_AGE=${PNPM_MINIMUM_RELEASE_AGE} \
     PATH=/home/node/.local/share/pnpm/bin:/home/node/.local/share/pnpm:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin \
     NO_PROXY=localhost,127.0.0.1,llama-swap \
     no_proxy=localhost,127.0.0.1,llama-swap
 
-RUN npm install --global "pnpm@${PNPM_VERSION}" \
+RUN npm install --global --before="$(date -u -d "${PNPM_MINIMUM_RELEASE_AGE} minutes ago" '+%Y-%m-%dT%H:%M:%SZ')" pnpm@latest \
  && mkdir -p /run/sshd /home/node/.ssh /home/node/.local/share/pnpm/bin \
  && chmod 700 /home/node/.ssh \
  && chown -R node:node /home/node/.ssh /home/node/.local \
@@ -44,8 +44,8 @@ RUN npm install --global "pnpm@${PNPM_VERSION}" \
  && chmod 0644 /etc/profile.d/pnpm.sh
 
 USER node
-RUN pnpm add --global --ignore-scripts --store-dir=/home/node/.local/share/pnpm/image-store \
-      "@earendil-works/pi-coding-agent@${PI_VERSION}" \
+RUN PNPM_CONFIG_STORE_DIR=/home/node/.local/share/pnpm/image-store \
+    pnpm add -g --ignore-scripts @earendil-works/pi-coding-agent \
  && test "$(pnpm config get global-bin-dir)" = "$PNPM_CONFIG_GLOBAL_BIN_DIR" \
  && command -v pi \
  && pi --version

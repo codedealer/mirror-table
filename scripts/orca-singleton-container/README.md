@@ -1,6 +1,6 @@
 # Orca singleton container
 
-This is a single persistent Docker development container reached **directly** from the paired Orca client over LAN SSH. It replaces the former per-workspace `scripts/orca-vm` recipe. It does not start `orca serve`, create one container per worktree, or publish application ports.
+This is a single persistent Docker development container reached **directly** from the paired Orca client over LAN SSH. It replaces the former per-workspace `scripts/orca-vm` recipe. It does not start `orca serve` or create one container per worktree. The Nuxt dev server is published on the Docker host's loopback interface so it can be opened in a regular browser without using Orca's embedded webview.
 
 ## Host-local configuration
 
@@ -17,6 +17,8 @@ Replace `<HOST_LAN_IP>` with the address reachable from the paired Orca client. 
 
 The default SSH port is `6223/TCP` and can be overridden with `ORCA_SSH_PORT` (allowed range: 6000–9999). The listener binds only to the configured address, not loopback or every interface. SSH uses TCP only. Reserve the address in DHCP or update the local config if it changes.
 
+The Nuxt preview is available at `http://localhost:3000` on the Docker host. It binds to `127.0.0.1` by default (override the host-side port with `ORCA_PREVIEW_PORT`, or the bind address with `ORCA_PREVIEW_BIND_IP`). The container's Nuxt server listens on `0.0.0.0:3000`. This preview mapping is intentionally not exposed to the LAN. If you change its mapping or Compose configuration, recreate the container using the command below. Start the app from the selected checkout with `pnpm dev` before opening the URL.
+
 Other defaults are derived from the checkout or the current user's home: the primary project root is the checkout path, linked worktrees go under a sibling `mirror-table-worktrees` directory, the client identity is `~/.ssh/orca-mirror-table`, and persistent server host-key state is `~/.local/share/orca/mirror-table/ssh-host-keys`. These can be customized through the corresponding environment variables in `common.sh`. `setup.sh` expects the dedicated Ed25519 client identity to already exist; its public half is added to the host-side `authorized_keys` file. The separate Ed25519 **server host key** is generated once in persistent state. Never copy either private key into the image or repository; do not replace a host key on mismatch.
 
 ## Lifecycle
@@ -29,7 +31,7 @@ scripts/orca-singleton-container/build.sh
 scripts/orca-singleton-container/orca-up.sh
 ```
 
-`setup.sh` is idempotent, creates host-side SSH state, retains any already-authorized keys, and creates the worktree parent. `build.sh` builds the separate `node:24-bookworm` development image with Node 24, pnpm 11.17.0, Pi 0.87.1, Git/GitHub CLI, OpenSSH, Python 3, and native build tools. pnpm's global bin directory is explicitly configured as `/home/node/.local/share/pnpm/bin`; that directory is included in both the image and non-login SSH `PATH`, and Pi is installed globally with pnpm. The startup SSH check verifies the configured global-bin-dir, `PATH` membership, and `pi` availability.
+`setup.sh` is idempotent, creates host-side SSH state, retains any already-authorized keys, and creates the worktree parent. `build.sh` builds the separate `node:24-bookworm` development image with Node 24, the latest pnpm and Pi releases that satisfy this repo's configured minimum release age, Git/GitHub CLI, OpenSSH, Python 3, and native build tools. It reads `minimumReleaseAge` from `pnpm-workspace.yaml`, aborts if it is missing or invalid, and passes the value into the image build: npm uses the equivalent cutoff to bootstrap pnpm, and pnpm applies the same age policy when installing Pi. Pi is installed globally using `pnpm add -g --ignore-scripts @earendil-works/pi-coding-agent`. pnpm's global bin directory is explicitly configured as `/home/node/.local/share/pnpm/bin`; that directory is included in both the image and non-login SSH `PATH`. The startup SSH check verifies the configured global-bin-dir, `PATH` membership, and `pi` availability.
 
 `orca-up.sh` starts the existing container without rebuilding or recreating it. `orca-down.sh` runs Compose `stop` and preserves the container and named volumes. After an intentional image rebuild, apply it separately with:
 
@@ -48,9 +50,9 @@ pnpm update --global @earendil-works/pi-coding-agent
 
 After changing the image or `sshd_config`, rebuild and explicitly recreate the singleton using the commands above; `orca-up.sh` deliberately will not silently rebuild or replace it.
 
-The main checkout and linked-worktree parent are bind-mounted at their **same absolute paths** on both sides, so Git's shared worktree metadata remains valid. Package downloads use the named `orca-mirror-table-pnpm-store` volume; the image sets pnpm's recognized `PNPM_CONFIG_STORE_DIR` setting to that mount, and `sshd_config` explicitly passes this safe non-secret setting into SSH sessions. The Pi installation baked into the image uses a separate image-local pnpm store, so the runtime cache mount cannot hide Pi's installed package files. Compose sets `ORCA_CLI_COMMAND=orca` (the SSH target's Orca relay command) and `ORCA_SINGLETON_CONTAINER=true` (the agent's environment marker), and `sshd_config` explicitly exports both into non-login SSH sessions with `SetEnv`. The remote startup check verifies both variables, changes into the checkout before querying pnpm, confirms the effective cache setting, verifies the cache volume mount, and performs a write probe under pnpm's reported store path. Worktree `node_modules` and generated state are not shared by that volume. No Docker socket, database, or other project service is mounted or published.
+The main checkout and linked-worktree parent are bind-mounted at their **same absolute paths** on both sides, so Git's shared worktree metadata remains valid. Package downloads use the named `orca-mirror-table-pnpm-store` volume; the image sets pnpm's recognized `PNPM_CONFIG_STORE_DIR` setting to that mount, and `sshd_config` explicitly passes this safe non-secret setting into SSH sessions. The Pi installation baked into the image uses a separate image-local pnpm store, so the runtime cache mount cannot hide Pi's installed package files. Compose sets `ORCA_CLI_COMMAND=orca` (the SSH target's Orca relay command) and `ORCA_SINGLETON_CONTAINER=true` (the agent's environment marker), and `sshd_config` explicitly exports both into non-login SSH sessions with `SetEnv`. The remote startup check verifies both variables, changes into the checkout before querying pnpm, confirms the effective cache setting, verifies the cache volume mount, and performs a write probe under pnpm's reported store path. Worktree `node_modules` and generated state are not shared by that volume. No Docker socket or database is mounted or published.
 
-The workspace config sets `minimumReleaseAge: 1440`, so pnpm rejects newly selected package versions published less than 24 hours ago. This is a delay, not a substitute for reviewing dependency updates.
+The workspace config sets `minimumReleaseAge: 1440`, so pnpm rejects newly selected package versions published less than 24 hours ago. The container build reads and applies that same setting to both pnpm and Pi; a missing or invalid setting stops `build.sh` rather than silently dropping the age gate. This is a delay, not a substitute for reviewing dependency updates.
 
 ### Install dependencies before starting the app
 
@@ -86,4 +88,4 @@ After the container is running, add a **direct remote SSH target** in the paired
 
 Target creation is intentionally a client-UI step. These scripts do not register a target or create an Orca project-host setup. After adding and confirming the SSH target, import/set up the project once on this SSH target and reuse that setup for worktrees.
 
-Only TCP on the configured SSH address and port is published. Configure the host/Windows/Hyper-V firewall to permit it only from the trusted LAN; these scripts do not create firewall rules. Verify SSH from another LAN device and confirm the UI target before treating LAN/Orca connectivity as established. Orca-relayed previews can be tested later; app ports are not directly published.
+Only TCP on the configured SSH address and port is published to the LAN. The app preview port is published separately on host loopback only. Configure the host/Windows/Hyper-V firewall to permit SSH only from the trusted LAN; these scripts do not create firewall rules. Verify SSH from another LAN device and confirm the UI target before treating LAN/Orca connectivity as established. Open `http://localhost:3000` in a regular browser on the Docker host to inspect the running app.
