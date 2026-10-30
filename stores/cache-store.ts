@@ -146,16 +146,16 @@ const createReadScheduler = <T>(
     return promise;
   };
 
-  // Writes drain a fixed snapshot of requests already queued for this store.
-  // New requests remain pending for a later window and cannot extend the drain.
-  const flushPending = async () => {
-    if (timer) {
-      clearTimeout(timer);
-      timer = undefined;
+  // Writes drain only queued reads for the ids being written, so they observe
+  // the pre-write value. Unrelated reads stay queued and keep batching.
+  const flushPending = async (ids: string[]) => {
+    const snapshot = ids
+      .map(id => pending.get(id))
+      .filter((entry): entry is PendingRead<T> => !!entry);
+    if (!snapshot.length) {
+      return;
     }
-
-    const snapshot = [...pending.values()];
-    pending.clear();
+    snapshot.forEach(({ id }) => pending.delete(id));
     isDraining = true;
     try {
       if (activeFlush) {
@@ -239,7 +239,7 @@ export const useCacheStore = defineStore('cache', () => {
       throw new Error('Cannot cache file without ID');
     }
 
-    await fileReads.flushPending();
+    await fileReads.flushPending(files.map(file => file.id));
     files.forEach((file) => {
       _files.value[file.id] = file;
     });
@@ -254,7 +254,7 @@ export const useCacheStore = defineStore('cache', () => {
   };
 
   const deleteFiles = async (ids: string[]) => {
-    await fileReads.flushPending();
+    await fileReads.flushPending(ids);
     ids.forEach((id) => {
       delete _files.value[id];
     });
@@ -299,7 +299,7 @@ export const useCacheStore = defineStore('cache', () => {
       throw new Error('Cannot cache file without ID');
     }
 
-    await mediaReads.flushPending();
+    await mediaReads.flushPending(media.map(file => file.id));
     if (db.value) {
       // save the media to the cache
       const tx = db.value.transaction('media', 'readwrite');
@@ -314,7 +314,7 @@ export const useCacheStore = defineStore('cache', () => {
   };
 
   const deleteMedia = async (ids: string[]) => {
-    await mediaReads.flushPending();
+    await mediaReads.flushPending(ids);
     ids.forEach((id) => {
       delete _media.value[id];
     });

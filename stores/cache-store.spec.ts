@@ -238,6 +238,20 @@ describe('cache store batched reads', () => {
     expect(database.readTransactions.media).toBe(3);
   });
 
+  it('keeps reads for unrelated ids batched when a write occurs', async () => {
+    database.records.set('a', media('a'));
+    database.records.set('b', media('b'));
+    database.records.set('c', media('c'));
+
+    const reads = [store.getMedia('a'), store.getMedia('b'), store.getMedia('c')];
+    await store.setMedia([media('other')]);
+    // only the write transaction so far; unrelated reads are still queued
+    expect(database.readTransactions.media).toBe(1);
+
+    expect(await Promise.all(reads)).toEqual([media('a'), media('b'), media('c')]);
+    expect(database.readTransactions.media).toBe(2); // one write transaction + one batched read
+  });
+
   it('uses the in-memory media fallback without scheduling when IndexedDB is unavailable', async () => {
     store.db.value = undefined;
     await store.setMedia([media('memory-media')]);
