@@ -63,6 +63,9 @@ export const useUserStore = defineStore('user', () => {
         // Use merge to avoid wiping future fields if schema grows.
         void setDoc(profileRef, newProfile, { merge: true });
       },
+      (error) => {
+        console.error(`Firestore profile listener failed (${error.code}):`, error.message);
+      },
     );
   };
 
@@ -77,18 +80,23 @@ export const useUserStore = defineStore('user', () => {
     if (identityChanged) {
       profile.value = null;
       idToken.value = null;
+      unsubFromProfileUpdates();
     }
     user.value = authUser;
     if (user.value) {
-      const authUid = user.value.uid;
-      subscribeToProfileUpdates(user.value, generation);
+      const authUser = user.value;
+      const authUid = authUser.uid;
 
       try {
-        const token = await user.value.getIdToken();
+        const token = await authUser.getIdToken();
         // Avoid an older, slower token request overwriting the current user,
         // including when the original UID signs back in later.
-        if (generation === authGeneration && user.value?.uid === authUid)
+        if (generation === authGeneration && user.value?.uid === authUid) {
           idToken.value = token;
+          // Start the Firestore listener only after Firebase Auth has supplied
+          // the current user's ID token, so the first Listen request is signed in.
+          subscribeToProfileUpdates(authUser, generation);
+        }
       } catch (e) {
         console.error(e);
       }

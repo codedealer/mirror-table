@@ -90,6 +90,7 @@ describe('user profile auth transition isolation', () => {
     // A's queued callback cannot repopulate the now-B session.
     snapshots[0]({ exists: () => true, data: () => profile('user-a'), metadata: { fromCache: false } });
     expect(store.profile.value).toBeNull();
+    await Promise.resolve();
 
     snapshots[1]({ exists: () => true, data: () => profile('user-b'), metadata: { fromCache: false } });
     expect(store.profile.value?.settings.diceRoller?.savedMacros).toEqual([{ id: 'user-b-macro', expression: 'user-b-macro' }]);
@@ -123,17 +124,17 @@ describe('user profile auth transition isolation', () => {
     expect(store.profile.value).toBeNull();
     expect(store.isLoggedIn.value).toBe(false);
 
-    // The first A subscription and token request are stale even though UID A
-    // matches the current user again.
-    snapshots[0]({ exists: () => true, data: () => profile('user-a-old'), metadata: { fromCache: false } });
+    // Stale token requests must not start listeners even when UID A matches the
+    // current user again.
     resolveFirstToken('stale-token-a');
     await Promise.resolve();
+    expect(firestoreMocks.onSnapshot).not.toHaveBeenCalled();
     expect(store.profile.value).toBeNull();
     expect(store.isLoggedIn.value).toBe(false);
 
-    snapshots[2]({ exists: () => true, data: () => profile('user-a-current'), metadata: { fromCache: false } });
     resolveCurrentToken('token-a-current');
     await Promise.resolve();
+    snapshots[0]({ exists: () => true, data: () => profile('user-a-current'), metadata: { fromCache: false } });
     expect(store.profile.value?.settings.diceRoller?.savedMacros).toEqual([{ id: 'user-a-current-macro', expression: 'user-a-current-macro' }]);
     expect(store.isLoggedIn.value).toBe(true);
   });
