@@ -12,6 +12,7 @@ export const useUserStore = defineStore('user', () => {
 
   const user = ref<User | null>(null);
   const profile = ref<Profile | null>(null);
+  const isAuthResolved = ref(false);
   const idToken = useCookie('idToken', {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
@@ -72,6 +73,7 @@ export const useUserStore = defineStore('user', () => {
   // watch only on the client side
 
   $auth && $auth.onAuthStateChanged(async (authUser) => {
+    isAuthResolved.value = true;
     const generation = ++authGeneration;
     const identityChanged = user.value?.uid !== authUser?.uid;
     // In a direct A → B transition Firebase changes auth identity before the B
@@ -203,6 +205,7 @@ export const useUserStore = defineStore('user', () => {
   return {
     user,
     profile,
+    isAuthResolved,
     authorizationInfo: skipHydrate(authorizationInfo),
     isLoggedIn,
     isAuthenticated,

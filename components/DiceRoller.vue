@@ -50,7 +50,7 @@ if (userStore) {
   // array itself: updateDoc produces a new profile snapshot after a successful
   // write, and reloading from that snapshot can race the optimistic queue and
   // replace the just-saved state with the previous snapshot.
-  watch(() => [userStore.user?.uid, userStore.profile != null], () => {
+  watch(() => [userStore.isAuthResolved, userStore.user?.uid, userStore.profile != null], () => {
     void reloadMacros();
   });
 }

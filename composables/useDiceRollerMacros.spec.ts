@@ -13,6 +13,7 @@ describe('dice roller macros', () => {
     const userStore = {
       user: { uid: 'user-1' },
       profile: { settings: { driveFolderId: '', searchFolderId: '' } } as Profile,
+      isAuthResolved: true,
       updateDiceRollerSavedMacros: (macros: DiceRollerMacro[]) => {
         saved.push(macros);
       },
@@ -25,6 +26,55 @@ describe('dice roller macros', () => {
     await adapter!.save(macros);
     expect(await adapter!.load!()).toEqual([]);
     expect(saved).toEqual([macros]);
+  });
+
+  it('keeps auth-pending saves in loading state before eventual macro hydration', async () => {
+    const userStore: {
+      user: { uid: string } | null;
+      profile: Profile | null;
+      isAuthResolved: boolean;
+      updateDiceRollerSavedMacros: (macros: DiceRollerMacro[]) => void;
+    } = {
+      user: null,
+      profile: null,
+      isAuthResolved: false,
+      updateDiceRollerSavedMacros: vi.fn(),
+    };
+    const adapter = createDiceRollerMacroAdapter(undefined, userStore)!;
+    const roller = useDiceRollerMacros(adapter);
+
+    await roller.reload();
+    expect(roller.macros.value).toEqual([]);
+    expect(roller.error.value).toBeUndefined();
+    expect(await roller.save('1d6', 'none')).toBeUndefined();
+    expect(roller.error.value).toContain('still loading');
+    expect(roller.error.value).not.toContain('sign in');
+    expect(userStore.updateDiceRollerSavedMacros).not.toHaveBeenCalled();
+
+    userStore.isAuthResolved = true;
+    userStore.user = { uid: 'user-1' };
+    userStore.profile = { settings: { driveFolderId: '', searchFolderId: '', diceRoller: { savedMacros: [{ id: 'macro-1', expression: '1d6', profileId: 'none', createdAt: 1 }] } } } as Profile;
+    await roller.reload();
+    expect(roller.macros.value).toMatchObject([{ id: 'macro-1', expression: '1d6' }]);
+    expect(roller.error.value).toBeUndefined();
+  });
+
+  it('reports unavailable after auth resolves without a signed-in user', async () => {
+    const userStore = {
+      user: null,
+      profile: null,
+      isAuthResolved: false,
+      updateDiceRollerSavedMacros: vi.fn(),
+    };
+    const adapter = createDiceRollerMacroAdapter(undefined, userStore)!;
+    const roller = useDiceRollerMacros(adapter);
+
+    await roller.reload();
+    expect(roller.error.value).toBeUndefined();
+
+    userStore.isAuthResolved = true;
+    await roller.reload();
+    expect(roller.error.value).toContain('Please sign in');
   });
 
   it('validates profile-specific intent without rolling', () => {

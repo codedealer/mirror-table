@@ -64,6 +64,19 @@ describe('user profile auth transition isolation', () => {
     firestoreMocks.onSnapshot.mockClear();
   });
 
+  it('exposes Firebase auth resolution when the initial signed-out state is confirmed', async () => {
+    const { useUserStore } = await import('./user-store');
+    const store = useUserStore() as unknown as {
+      isAuthResolved: { value: boolean };
+      user: { value: { uid: string } | null };
+    };
+
+    expect(store.isAuthResolved.value).toBe(false);
+    authCallback(null);
+    expect(store.isAuthResolved.value).toBe(true);
+    expect(store.user.value).toBeNull();
+  });
+
   it('clears A profile and token immediately while loading B without a page reload', async () => {
     const { useUserStore } = await import('./user-store');
     const store = useUserStore() as unknown as {

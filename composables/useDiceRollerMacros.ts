@@ -14,7 +14,11 @@ export interface DiceRollerMacroLoadUnavailable {
   message?: string;
 }
 
-export type DiceRollerMacroLoadResult = DiceRollerMacro[] | DiceRollerMacroLoadUnavailable;
+export interface DiceRollerMacroLoadPending {
+  status: 'loading';
+}
+
+export type DiceRollerMacroLoadResult = DiceRollerMacro[] | DiceRollerMacroLoadUnavailable | DiceRollerMacroLoadPending;
 
 export interface DiceRollerMacroAdapter {
   // Loading is explicitly allowed to report that auth/profile state is not ready.
@@ -26,6 +30,7 @@ export interface DiceRollerMacroAdapter {
 export interface DiceRollerMacroUserStore {
   user: { uid: string } | null;
   profile: Profile | null;
+  isAuthResolved: boolean;
   updateDiceRollerSavedMacros: (macros: DiceRollerMacro[]) => void | Promise<void>;
 }
 
@@ -37,12 +42,16 @@ export const createDiceRollerMacroAdapter = (
   userStore
     ? {
         load: () => {
-          if (!userStore.user || !userStore.profile) {
+          if (!userStore.isAuthResolved)
+            return { status: 'loading' as const };
+          if (!userStore.user) {
             return {
               status: 'unavailable' as const,
               message: 'Saved macros are unavailable until your profile is ready. Please sign in and try again.',
             };
           }
+          if (!userStore.profile)
+            return { status: 'loading' as const };
           return userStore.profile.settings.diceRoller?.savedMacros ?? [];
         },
         save: (macros: DiceRollerMacro[]) => userStore.updateDiceRollerSavedMacros(macros),
@@ -146,6 +155,7 @@ export const useDiceRollerMacros = (adapter?: DiceRollerMacroAdapter, initial: D
   let processing = false;
   let generation = 0;
   let loading = false;
+  let readinessPending = false;
   let unavailable = false;
 
   const optimisticState = () => pending.reduce((state, operation) => operation.apply(state), committed);
@@ -211,6 +221,10 @@ export const useDiceRollerMacros = (adapter?: DiceRollerMacroAdapter, initial: D
       error.value = 'Saved macros are still loading. Please try again when your profile is ready.';
       return undefined;
     }
+    if (readinessPending) {
+      error.value = 'Saved macros are still loading. Please try again when your profile is ready.';
+      return undefined;
+    }
     if (unavailable) {
       error.value = 'Saved macros are unavailable until your profile is ready. Please sign in and try again.';
       return undefined;
@@ -258,6 +272,7 @@ export const useDiceRollerMacros = (adapter?: DiceRollerMacroAdapter, initial: D
     committed.splice(0, committed.length);
     macros.value = [];
     if (!adapter?.load) {
+      readinessPending = false;
       unavailable = false;
       saving.value = false;
       return;
@@ -269,12 +284,20 @@ export const useDiceRollerMacros = (adapter?: DiceRollerMacroAdapter, initial: D
       if (thisGeneration !== generation)
         return;
       if (!Array.isArray(loadResult)) {
-        unavailable = true;
         committed.splice(0, committed.length);
         macros.value = [];
-        error.value = loadResult.message ?? 'Saved macros are unavailable until your profile is ready. Please try again.';
+        if (loadResult.status === 'loading') {
+          readinessPending = true;
+          unavailable = false;
+          error.value = undefined;
+        } else {
+          readinessPending = false;
+          unavailable = true;
+          error.value = loadResult.message ?? 'Saved macros are unavailable until your profile is ready. Please try again.';
+        }
         return;
       }
+      readinessPending = false;
       unavailable = false;
       const loaded = sanitizeDiceRollerMacros(loadResult);
       committed.push(...loaded);
@@ -282,6 +305,7 @@ export const useDiceRollerMacros = (adapter?: DiceRollerMacroAdapter, initial: D
       error.value = undefined;
     } catch (cause) {
       if (thisGeneration === generation) {
+        readinessPending = false;
         unavailable = false;
         committed.splice(0, committed.length);
         macros.value = [];
