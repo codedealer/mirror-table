@@ -6,6 +6,11 @@ const prototypes = [
     description: 'Input and notation experiments.',
   },
   {
+    id: 'image-framing',
+    label: 'Image framing',
+    description: 'Explore local image crops and a mock parent save flow.',
+  },
+  {
     id: 'nimble-group',
     label: 'Nimble group',
     description: 'Exercise the Nimble group widget with local mock actors.',
@@ -81,6 +86,14 @@ const localDiceMacroAdapter = {
         <VaCardContent>
           <DiceRoller :macro-adapter="localDiceMacroAdapter" />
         </VaCardContent>
+      </VaCard>
+
+      <VaCard
+        v-else-if="activePrototype === 'image-framing'"
+        class="prototype-view__content"
+      >
+        <VaCardTitle>Image framing lab</VaCardTitle>
+        <VaCardContent><DevImageFramingLab /></VaCardContent>
       </VaCard>
 
       <VaCard
