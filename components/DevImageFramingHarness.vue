@@ -1,23 +1,50 @@
 <script setup lang="ts">
 import type { Frame, MockImage, MockImageRepository } from '~/utils/image-framing/mock';
+import { targetSize } from '~/utils/image-framing/geometry';
+import { CropInteraction } from '~/utils/image-framing/interaction';
 import { isAnimated } from '~/utils/image-framing/mock';
+import { CropSession } from '~/utils/image-framing/session';
 
-const props = defineProps<{ repository: MockImageRepository; fixtures: string[]; committedId: string }>();
+const props = defineProps<{ repository: MockImageRepository; fixtures: string[]; committedId: string; persist: (id: string) => Promise<void> }>();
 const emit = defineEmits<{ save: [id: string]; remount: [] }>();
 // Unmarked Originals have no stored shape; use the same square default on
 // selection, cancellation and a fresh mount.
 const imageRatio = (id: string) => props.repository.get(id)?.ratio ?? 1;
-const stagedId = ref(props.committedId);
+const session = reactive(new CropSession<MockImage>({
+  resolve: async (id) => {
+    const result = props.repository.resolve(id);
+    return { source: { ...result.original }, frame: result.frame };
+  },
+  upload: async (source, blob, frame, ratio) => {
+    if (props.repository.get(source.id)?.revision !== source.revision)
+      throw new Error('The Original has changed.');
+    return props.repository.add('Cropped image', blob, { originalId: source.id, originalRevision: source.revision, frame, ratio }).id;
+  },
+  validate: async (id, source, frame, ratio) => {
+    const crop = props.repository.get(id);
+    const original = props.repository.get(source.id);
+    if (!crop || !original || crop.originalId !== source.id || crop.originalRevision !== original.revision
+      || JSON.stringify(crop.frame) !== JSON.stringify(frame) || crop.ratio !== ratio) {
+      throw new Error('The uploaded crop metadata is invalid.');
+    }
+    const bitmap = await createImageBitmap(crop.blob);
+    const target = targetSize(ratio);
+    const valid = bitmap.width === target.width && bitmap.height === target.height;
+    bitmap.close();
+    if (!valid)
+      throw new Error('The uploaded crop dimensions are invalid.');
+  },
+  trash: async id => props.repository.remove(id),
+}, props.committedId));
+const interaction = shallowReactive(new CropInteraction(session));
+const stagedId = computed(() => session.stagedId);
 const ratio = ref(imageRatio(props.committedId));
 const editing = ref(false);
-const original = shallowRef<MockImage>();
-const initialFrame = shallowRef<Frame>();
 const error = ref('');
 const notice = ref('');
 const imageUrl = ref('');
 const selectionPending = ref(false);
 const selected = computed(() => props.repository.get(stagedId.value));
-const draftIds = new Set<string>();
 let selectionEpoch = 0;
 
 watch(selected, (image) => {
@@ -25,35 +52,40 @@ watch(selected, (image) => {
     URL.revokeObjectURL(imageUrl.value);
   imageUrl.value = image ? URL.createObjectURL(image.blob) : '';
 }, { immediate: true });
+// The lab only changes `committedId` via its own save emit or remount, but a
+// future lab feature could mutate the parent record in place; synchronize the
+// session with external parent updates so the two cannot diverge.
+watch(() => props.committedId, (id) => {
+  if (id !== session.committedId) {
+    session.syncCommitted(id);
+    ratio.value = imageRatio(id);
+  }
+});
 onBeforeUnmount(() => {
   selectionEpoch++;
   if (imageUrl.value)
     URL.revokeObjectURL(imageUrl.value);
+  session.dispose();
 });
-
-function cleanupDrafts(except?: string) {
-  for (const id of draftIds) {
-    if (id !== except) {
-      props.repository.remove(id);
-      draftIds.delete(id);
-    }
-  }
-}
 function select(id: string) {
+  if (session.saving)
+    return false;
   selectionEpoch++;
   selectionPending.value = false;
   editing.value = false;
-  stagedId.value = id;
+  interaction.cancel();
+  if (!session.select(id))
+    return false;
   ratio.value = imageRatio(id);
-  cleanupDrafts(id);
   error.value = '';
   notice.value = 'Selection staged. Save to commit it.';
+  return true;
 }
 async function fileSelected(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   input.value = '';
-  if (!file)
+  if (!file || session.saving)
     return;
   const epoch = ++selectionEpoch;
   selectionPending.value = true;
@@ -78,38 +110,50 @@ async function fileSelected(event: Event) {
       selectionPending.value = false;
   }
 }
-function edit() {
-  try {
-    const resolved = props.repository.resolve(stagedId.value);
-    original.value = resolved.original;
-    initialFrame.value = selected.value?.ratio === ratio.value ? resolved.frame : undefined;
-    error.value = '';
-    editing.value = true;
-  } catch (e) { error.value = e instanceof Error ? e.message : 'Could not open this image.'; }
-}
-function apply(blob: Blob, frame: Frame) {
-  if (!original.value)
+async function edit() {
+  const resolved = await interaction.begin();
+  if (!resolved) {
+    // The session surfaces resolve failures itself and shows work-in-progress
+    // status while pending; report anything else instead of failing silently.
+    if (!session.error && !session.pending && !session.saving)
+      error.value = 'Could not open the image editor. Please try again.';
     return;
-  const crop = props.repository.add('Cropped image', blob, { originalId: original.value.id, originalRevision: original.value.revision, frame, ratio: ratio.value });
-  draftIds.add(crop.id);
-  select(crop.id);
-  notice.value = 'Crop applied to the parent draft. Save to commit, or cancel the parent.';
+  }
+  interaction.initialFrame = selected.value?.ratio === ratio.value ? resolved.frame : undefined;
+  error.value = '';
+  editing.value = true;
 }
-function save() {
+async function apply(blob: Blob, frame: Frame) {
+  editing.value = false;
+  const applied = await interaction.apply(blob, frame, ratio.value);
+  if (applied)
+    notice.value = 'Crop applied to the parent draft. Save to commit, or cancel the parent.';
+}
+function cancelEdit() {
+  editing.value = false;
+  interaction.cancel();
+}
+async function save() {
   if (selectionPending.value)
     return;
-  cleanupDrafts(stagedId.value);
-  draftIds.delete(stagedId.value);
-  ratio.value = imageRatio(stagedId.value);
-  emit('save', stagedId.value);
-  notice.value = 'Parent saved. Use “Fresh mount” to reopen the committed crop.';
+  const saved = await session.save(async (id) => {
+    await props.persist(id);
+    // Publish the committed value only after the parent persistence succeeds.
+    emit('save', id);
+  });
+  if (saved) {
+    ratio.value = imageRatio(stagedId.value);
+    notice.value = 'Parent saved. Use “Fresh mount” to reopen the committed crop.';
+  }
 }
 function cancel() {
+  if (session.saving)
+    return;
   selectionEpoch++;
   selectionPending.value = false;
   editing.value = false;
-  cleanupDrafts();
-  stagedId.value = props.committedId;
+  interaction.cancel();
+  session.cancel();
   ratio.value = imageRatio(props.committedId);
   error.value = '';
   notice.value = 'Parent cancelled; the committed selection was restored.';
@@ -134,10 +178,10 @@ function simulate(kind: 'missing' | 'changed') {
     </h2>
     <p>Select a fixture or local file to simulate a selected Drive image. Only static JPEG, PNG and WebP are supported.</p>
     <div class="controls">
-      <VaButton v-for="id in fixtures" :key="id" preset="secondary" type="button" :disabled="!repository.get(id)" @click="select(id)">
+      <VaButton v-for="id in fixtures" :key="id" preset="secondary" type="button" :disabled="!repository.get(id) || session.saving" @click="select(id)">
         {{ repository.get(id)?.name || 'Missing fixture' }}
       </VaButton>
-      <label class="file-input">Choose local file <input type="file" accept="image/jpeg,image/png,image/webp" @change="fileSelected"></label>
+      <label class="file-input">Choose local file <input type="file" accept="image/jpeg,image/png,image/webp" :disabled="selectionPending || session.saving" @change="fileSelected"></label>
     </div>
     <div class="selection">
       <img v-if="imageUrl" :src="imageUrl" alt="Current staged image">
@@ -149,29 +193,35 @@ function simulate(kind: 'missing' | 'changed') {
         </p>
         <label>Frame shape <select v-model.number="ratio"><option :value="1">Square 1:1</option><option :value="2">Landscape 2:1</option></select></label>
         <div class="controls">
-          <VaButton type="button" :disabled="!selected" @click="edit">
+          <VaButton type="button" :disabled="!selected || session.pending || session.saving" @click="edit">
             Edit image
           </VaButton><a v-if="imageUrl" :href="imageUrl" download="lab-image.png">Download staged image</a>
         </div>
       </div>
     </div>
-    <p v-if="selectionPending" role="status">
-      Loading selected image…
+    <p v-if="selectionPending || session.pending || session.saving" role="status">
+      Working on image…
     </p>
-    <p v-if="error" role="alert" class="error">
-      {{ error }}
+    <p v-if="error || session.error" role="alert" class="error">
+      {{ error || session.error }}
+    </p>
+    <p v-if="session.cleanupFailed" role="alert">
+      A draft crop could not be removed. It has been retained.
+      <VaButton preset="secondary" type="button" @click="session.cleanup()">
+        Retry cleanup
+      </VaButton>
     </p>
     <p v-if="notice" role="status">
       {{ notice }}
     </p>
     <div class="controls">
-      <VaButton type="button" :disabled="selectionPending || stagedId === committedId" @click="save">
+      <VaButton type="button" :disabled="selectionPending || session.pending || session.saving || stagedId === committedId" @click="save">
         Parent Save
       </VaButton>
-      <VaButton preset="secondary" type="button" :disabled="!selectionPending && stagedId === committedId && ratio === imageRatio(committedId)" @click="cancel">
+      <VaButton preset="secondary" type="button" :disabled="session.saving || (!selectionPending && !session.pending && stagedId === committedId && ratio === imageRatio(committedId))" @click="cancel">
         Parent Cancel
       </VaButton>
-      <VaButton preset="secondary" type="button" @click="cancel(); emit('remount')">
+      <VaButton preset="secondary" type="button" :disabled="session.saving" @click="cancel(); emit('remount')">
         Fresh mount from saved selection
       </VaButton>
     </div>
@@ -186,7 +236,7 @@ function simulate(kind: 'missing' | 'changed') {
         Change Original revision
       </VaButton>
     </div>
-    <DevImageFramingEditor v-if="editing && original" :original="original" :initial-frame="initialFrame" :ratio="ratio" @cancel="editing = false" @apply="apply" />
+    <ImageFramingEditor v-if="editing && interaction.source" :source="interaction.source.blob" :initial-frame="interaction.initialFrame" :ratio="ratio" @cancel="cancelEdit" @apply="apply" />
   </section>
 </template>
 

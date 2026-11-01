@@ -2,8 +2,10 @@
 import type { PreviewProperties, WidgetNimbleGroup, WidgetNimbleGroupActor } from '~/models/types';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 import { collection, doc } from 'firebase/firestore';
+import EditableDriveThumbnail from '~/components/EditableDriveThumbnail.vue';
 import { WidgetNimbleGroupActorNpcFactory, WidgetNimbleGroupActorPlayerFactory } from '~/models/NimbleGroup';
 import { PreviewPropertiesFactory } from '~/models/PreviewProprerties';
+import { buildNimbleActorAvatar, saveNimbleActorForm } from '~/utils/image-framing/nimbleActorForm';
 
 const props = defineProps<{
   widgetId: string;
@@ -11,7 +13,7 @@ const props = defineProps<{
   uploadParentId?: string;
   canEdit?: boolean;
 }>();
-const emit = defineEmits<{ close: [] }>();
+const emit = defineEmits<{ close: []; busy: [busy: boolean] }>();
 
 const widgetStore = useWidgetStore();
 const userStore = useUserStore();
@@ -62,25 +64,52 @@ const removeNpcHitPool = (index: number) => {
     npc.value.hitPool.splice(index, 1);
 };
 
-const saveAvatar = (fileId?: string) => {
+const stageAvatar = (fileId: string) => {
   if (props.canEdit === false)
     return;
-  imageFileId.value = fileId ?? '';
-  avatar.value = fileId && imageFile.value
-    ? PreviewPropertiesFactory({ id: fileId, nativeWidth: imageFile.value.imageMediaMetadata?.width, nativeHeight: imageFile.value.imageMediaMetadata?.height })
-    : null;
+  imageFileId.value = fileId;
 };
+
+const removeAvatar = () => {
+  if (props.canEdit === false)
+    return;
+  imageFileId.value = '';
+  avatar.value = null;
+};
+
 watch(imageFile, (value) => {
-  if (value && imageFileId.value)
-    saveAvatar(imageFileId.value);
+  if (props.canEdit === false)
+    return;
+  // Stage the loaded image's actual dimensions, but only while it is still the
+  // current selection: a late load must never overwrite the staged selection
+  // or attach a previous image's dimensions to it.
+  if (value && imageFileId.value && value.id === imageFileId.value && !imageLoading.value)
+    avatar.value = PreviewPropertiesFactory({ id: imageFileId.value, nativeWidth: value.imageMediaMetadata?.width, nativeHeight: value.imageMediaMetadata?.height });
 });
 
-const buildActor = (): WidgetNimbleGroupActor => {
+// The avatar carries the staged image's dimensions; block saving only while the
+// currently selected image metadata is still loading. A failed load keeps the
+// previous behaviour instead of wedging the form.
+const avatarReady = computed(() => !imageFileId.value || !!imageFile.value || !!imageError.value);
+const editableThumbnail = ref<InstanceType<typeof EditableDriveThumbnail>>();
+const thumbnailPending = computed(() => !!editableThumbnail.value?.pending);
+const thumbnailError = ref('');
+const onThumbnailError = (message: string) => {
+  thumbnailError.value = message;
+  console.error(message);
+};
+
+const buildActor = (imageId: string): WidgetNimbleGroupActor => {
+  const matchingFile = imageFile.value?.id === imageId ? imageFile.value : undefined;
+  // Keep matching staged dimensions if selection changes during a save; a reset
+  // can instead fall back to the persisted actor's matching image dimensions.
+  const fallbackAvatar = avatar.value?.id === imageId ? avatar.value : actor.value?.avatar ?? null;
+  const savedAvatar = buildNimbleActorAvatar(imageId, matchingFile, fallbackAvatar);
   const shared = {
     id: props.actorId ?? crypto.randomUUID(),
     name: name.value.trim(),
     role: role.value.trim(),
-    avatar: avatar.value,
+    avatar: savedAvatar,
     conditions: actor.value?.conditions ?? [],
     content: content.value,
     privateContent: privateContent.value,
@@ -92,14 +121,48 @@ const buildActor = (): WidgetNimbleGroupActor => {
     : { ...shared, type: 'npc', npc: toRaw(npc.value) };
 };
 
-const save = async () => {
-  if (props.canEdit === false || !widget.value || !name.value.trim())
+const saveInProgress = ref(false);
+const closeBlocked = computed(() => saveInProgress.value || thumbnailPending.value);
+watch(closeBlocked, busy => emit('busy', busy), { immediate: true, flush: 'sync' });
+
+const cancel = () => {
+  if (closeBlocked.value)
     return;
-  const next = buildActor();
-  if (props.actorId)
-    await widgetStore.updateNimbleActor(widget.value.id, props.actorId, next);
-  else await widgetStore.addNimbleActor(widget.value.id, next);
+  // Restore the previously committed image and let the session clean its drafts.
+  editableThumbnail.value?.cancelParent();
   emit('close');
+};
+
+const save = async () => {
+  if (saveInProgress.value || props.canEdit === false || !widget.value || !name.value.trim() || !avatarReady.value || thumbnailPending.value)
+    return;
+  thumbnailError.value = '';
+  const thumbnail = editableThumbnail.value;
+  if (!thumbnail)
+    return;
+
+  saveInProgress.value = true;
+  try {
+    const saved = await saveNimbleActorForm({
+      saveParent: persist => thumbnail.saveParent(persist),
+      buildActor,
+      getWidgetId: () => widget.value?.id,
+      actorId: props.actorId,
+      store: widgetStore,
+      close: () => {
+        // Clear the parent dismissal guard before closing after confirmed persistence.
+        saveInProgress.value = false;
+        emit('busy', false);
+        emit('close');
+      },
+    });
+    if (!saved) {
+      const notificationStore = useNotificationStore();
+      notificationStore.error(thumbnailError.value || 'Failed to save the entry. The image selection was retained.');
+    }
+  } finally {
+    saveInProgress.value = false;
+  }
 };
 </script>
 
@@ -107,17 +170,20 @@ const save = async () => {
   <va-form class="vertical-form" @submit.prevent="save">
     <va-select v-model="type" label="Type" :options="['player', 'npc']" :disabled="!!actorId || canEdit === false" />
     <div class="nimble-actor-editor__avatar">
-      <DriveThumbnail
-        :file="imageFile"
-        :error="imageError"
-        :file-is-loading="imageLoading"
+      <EditableDriveThumbnail
+        ref="editableThumbnail"
+        :selected-id="imageFileId"
+        :committed-id="actor?.avatar?.id ?? ''"
+        :record-key="actorId ?? 'new'"
         :upload-parent-id="uploadParentId"
         width="96"
         height="96"
-        :allow-upload="canEdit !== false"
+        fit="auto"
+        :editable="canEdit !== false"
         :removable="canEdit !== false"
-        @upload="saveAvatar"
-        @remove="saveAvatar()"
+        @select="stageAvatar"
+        @remove="removeAvatar"
+        @error="onThumbnailError"
       />
     </div>
     <va-input v-model="name" label="Name" required :disabled="canEdit === false" />
@@ -198,10 +264,10 @@ const save = async () => {
       </div>
     </fieldset>
     <div class="vertical-form__actions">
-      <va-button preset="plain" type="button" @click="emit('close')">
+      <va-button preset="plain" type="button" :disabled="closeBlocked" @click="cancel">
         Cancel
       </va-button>
-      <va-button type="submit" :disabled="!name.trim() || canEdit === false">
+      <va-button type="submit" :loading="saveInProgress" :disabled="!name.trim() || canEdit === false || !avatarReady || thumbnailPending">
         {{ actorId ? 'Update entry' : 'Add entry' }}
       </va-button>
     </div>

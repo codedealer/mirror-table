@@ -161,6 +161,27 @@ export interface AppProperties {
   type: AppPropertiesType;
 }
 
+/** Coordinates in millionths of the orientation-corrected original. */
+export interface CropRectangle {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface CropProperties extends AppProperties {
+  type: 'dependency';
+  kind: 'c';
+  originalId: string;
+  checksum: string;
+  rectangle: CropRectangle;
+}
+
+export type CropProvenance =
+  | { status: 'original' }
+  | { status: 'usable'; properties: CropProperties }
+  | { status: 'unavailable' };
+
 export type DriveFileUpdateObject = Omit<DriveFileUpdateReturnType, 'appProperties'> & { appProperties?: AppProperties };
 
 export const AssetPropertiesKinds = {
@@ -229,6 +250,8 @@ export type DriveFileRaw = Required<Pick<OptionalDriveFile, 'id' | 'trashed' | '
 
 export interface DriveFile extends Omit<DriveFileRaw, 'appProperties'> {
   appProperties?: AppProperties;
+  /** Derived on Drive reads; unavailable provenance must not prevent image display. */
+  cropProvenance?: CropProvenance;
   loading: boolean;
   loadedAt: number;
 }

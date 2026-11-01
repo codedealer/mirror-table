@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { frameMatchesRatio, targetSize } from './geometry';
 import { isAnimated, makeFrame, maxZoom, MockImageRepository, outputSize, validFrame } from './mock';
 
 describe('local image framing', () => {
@@ -24,6 +25,31 @@ describe('local image framing', () => {
       expect(outputSize(511, 512, makeFrame(511, 512, ratio, 1, 0.5, 0.5), ratio)).toBeNull();
     }
     expect(maxZoom(9000, 9000, 1)).toBe(8);
+  });
+
+  it('supports portrait and wider fixed output ratios without upscaling', () => {
+    for (const [ratio, target] of [[0.5, { width: 256, height: 512 }], [4, { width: 512, height: 128 }]] as const) {
+      expect(targetSize(ratio)).toEqual(target);
+      expect(maxZoom(target.width - 1, target.height, ratio)).toBeNull();
+      const limit = maxZoom(target.width * 2, target.height * 2, ratio)!;
+      expect(limit).toBe(2);
+      const frame = makeFrame(target.width * 2, target.height * 2, ratio, limit, 0.5, 0.5);
+      expect(outputSize(target.width * 2, target.height * 2, frame, ratio)).toEqual(target);
+    }
+    expect(() => targetSize(0)).toThrow('Unsupported');
+  });
+
+  it('accepts generated frames throughout the supported ratio range on reopening', () => {
+    for (const ratio of [1 / 512, 1 / 300, 0.1, 0.5, 1, 2, 10, 300, 512]) {
+      for (const [width, height] of [[1000, 1000], [3000, 2000], [1200, 3600]]) {
+        for (const zoom of [1, 1.5, 2]) {
+          const frame = makeFrame(width, height, ratio, zoom, 0.37, 0.61);
+          expect(frameMatchesRatio(frame, width, height, ratio), `${ratio} ${width}x${height} zoom ${zoom}`).toBe(true);
+        }
+      }
+    }
+    expect(frameMatchesRatio({ x: 0, y: 0, w: 1_000_000, h: 500_000 }, 1000, 1000, 1)).toBe(false);
+    expect(frameMatchesRatio({ x: 0, y: 0, w: 1, h: 1 }, 1000, 1000, 513)).toBe(false);
   });
 
   it('recognises animated PNG and WebP chunks', async () => {

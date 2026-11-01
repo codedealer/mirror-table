@@ -3,6 +3,7 @@ import type { DriveWidget, ModalWindow, WidgetMarkdown, WidgetProperties } from 
 import { useDebounceFn } from '@vueuse/core';
 import { useFirestore } from '@vueuse/firebase/useFirestore';
 import { collection, doc } from 'firebase/firestore';
+import EditableDriveThumbnail from '~/components/EditableDriveThumbnail.vue';
 import { ModalWindowStatus } from '~/models/types';
 
 const props = defineProps<{
@@ -85,11 +86,14 @@ const checkDirty = () => {
     return;
   }
 
-  if (!isObjectEquals(
-    widgetModel.value,
-    widget.value,
-    (value, original, key) => key === 'avatar' ? !isImageDirty() : value === original,
-  )) {
+  if (
+    isImageDirty()
+    || !isObjectEquals(
+      widgetModel.value,
+      widget.value,
+      (value, original) => value === original,
+    )
+  ) {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.DIRTY);
   } else {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
@@ -100,31 +104,57 @@ watch(widgetModel, useDebounceFn(checkDirty, 1000), {
   deep: true,
   immediate: true,
 });
+watch([imageFileId, imageLoading], () => {
+  if (!imageLoading.value)
+    checkDirty();
+});
 
 const onImageUpdate = (fileId?: string) => {
-  if (isDisabled.value) {
-    return;
-  }
-
+  // EditableDriveThumbnail can publish an authoritative reconciliation while
+  // the parent form is loading. Keep its model in sync even though dirty-state
+  // evaluation and user edits are disabled until loading finishes.
   imageFileId.value = fileId ?? '';
   checkDirty();
 };
 
-const updateAvatar = (payload: Partial<WidgetMarkdown>) => {
-  if (imageFile.value) {
-    payload.avatar = PreviewPropertiesFactory({
-      id: imageFile.value.id,
-      nativeWidth: imageFile.value.imageMediaMetadata.width,
-      nativeHeight: imageFile.value.imageMediaMetadata.height,
-    });
-  } else {
-    payload.avatar = null;
-  }
+// Block saving only while the staged selection's metadata is still loading;
+// a failed load keeps the previous behaviour instead of wedging the form.
+const imageReady = computed(() => !imageFileId.value || !!imageFile.value || !!imageError.value);
+const editableThumbnail = ref<InstanceType<typeof EditableDriveThumbnail>>();
+const thumbnailPending = computed(() => !!editableThumbnail.value?.pending);
+const thumbnailError = ref('');
+const onThumbnailError = (message: string) => {
+  thumbnailError.value = message;
+  console.error(message);
 };
 
-const update = async () => {
+const updateAvatar = (payload: Partial<WidgetMarkdown>, imageId: string) => {
+  if (!imageId) {
+    payload.avatar = null;
+    return;
+  }
+  const metadata = imageFile.value?.imageMediaMetadata;
+  if (imageFile.value?.id === imageId && metadata?.width && metadata.height) {
+    payload.avatar = PreviewPropertiesFactory({
+      id: imageId,
+      nativeWidth: metadata.width,
+      nativeHeight: metadata.height,
+    });
+    return;
+  }
+
+  const existingAvatar = widget.value?.avatar;
+  if (existingAvatar?.id === imageId && existingAvatar.nativeWidth && existingAvatar.nativeHeight) {
+    payload.avatar = structuredClone(toRaw(existingAvatar));
+    return;
+  }
+
+  throw new Error('Image details are unavailable for the selected image.');
+};
+
+const update = async (imageId: string) => {
   const payload = structuredClone(toRaw(widgetModel.value));
-  updateAvatar(payload);
+  updateAvatar(payload, imageId);
 
   const updated = await widgetStore.updateWidget<WidgetMarkdown>(widget.value!.id, payload);
 
@@ -133,7 +163,7 @@ const update = async () => {
   }
 };
 
-const create = async (file: DriveWidget) => {
+const create = async (file: DriveWidget, imageId: string) => {
   const payload: WidgetMarkdown = {
     id: '', // will be filled on creation
     owner: '', // will be filled on creation
@@ -144,7 +174,7 @@ const create = async (file: DriveWidget) => {
     ...structuredClone(toRaw(widgetModel.value)),
   };
 
-  updateAvatar(payload);
+  updateAvatar(payload, imageId);
 
   const widget = await widgetStore.createWidget(payload);
 
@@ -166,11 +196,24 @@ const create = async (file: DriveWidget) => {
   );
 };
 
+const saveImageSelection = () => editableThumbnail.value?.saveParent(async (imageId) => {
+  if (!props.file)
+    throw new Error('The widget file is not available.');
+
+  if (!props.file.appProperties.firestoreId || !widget.value) {
+    await create(props.file, imageId);
+  } else {
+    await update(imageId);
+  }
+});
+
 const submit = async () => {
   if (
     !props.file
     || isDisabled.value
     || imageLoading.value
+    || !imageReady.value
+    || thumbnailPending.value
     || (!widgetModel.value.content && !widgetModel.value.privateContent)
   ) {
     return;
@@ -184,10 +227,9 @@ const submit = async () => {
   try {
     windowStore.setWindowStatus(props.window, ModalWindowStatus.LOADING);
 
-    if (!props.file.appProperties.firestoreId || !widget.value) {
-      await create(props.file);
-    } else {
-      await update();
+    const saved = await saveImageSelection();
+    if (!saved) {
+      throw new Error(thumbnailError.value || 'Failed to save the image selection.');
     }
 
     windowStore.setWindowStatus(props.window, ModalWindowStatus.SYNCED);
@@ -212,19 +254,19 @@ const submit = async () => {
         @submit.prevent="submit"
       >
         <div class="horizontal-control">
-          <DriveThumbnail
-            :file="imageFile"
-            :error="imageError"
-            :file-is-loading="imageLoading"
+          <EditableDriveThumbnail
+            ref="editableThumbnail"
+            :selected-id="imageFileId"
+            :committed-id="widget?.avatar?.id ?? ''"
+            :record-key="file?.id"
             :upload-parent-id="file?.parents?.[0]"
-            :allow-upload="!!file && !isDisabled"
             width="120"
             height="120"
             fit="cover"
-            :removable="!isDisabled"
-            @remove="onImageUpdate"
-            @upload="onImageUpdate"
-            @error="console.error"
+            :editable="!!file && !isDisabled"
+            :removable="!!file && !isDisabled"
+            @select="onImageUpdate"
+            @error="onThumbnailError"
           />
         </div>
 
@@ -252,6 +294,8 @@ const submit = async () => {
               window.status === ModalWindowStatus.SYNCED
                 || isDisabled
                 || imageLoading
+                || !imageReady
+                || thumbnailPending
                 || (!widgetModel.content && !widgetModel.privateContent)"
           >
             Save

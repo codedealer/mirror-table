@@ -19,6 +19,7 @@ const widget = useFirestore(widgetRef);
 const actors = computed(() => sortNimbleActors(widget.value?.actors ?? []));
 const editorActorId = ref<string | undefined>();
 const isEditorOpen = ref(false);
+const actorEditorBusy = ref(false);
 const canEdit = computed(() => tableStore.mode === TableModes.OWN && !props.file?.trashed);
 
 const isLoading = computed(() => props.window.status === ModalWindowStatus.LOADING || !!props.file?.loading || (!!props.file?.appProperties.firestoreId && widget.value === undefined));
@@ -31,9 +32,21 @@ const openActorEditor = (actorId?: string) => {
   isEditorOpen.value = true;
 };
 const closeActorEditor = () => {
+  if (actorEditorBusy.value)
+    return;
   isEditorOpen.value = false;
   editorActorId.value = undefined;
 };
+const editorModalOpen = computed({
+  get: () => isEditorOpen.value,
+  set: (open: boolean) => {
+    if (!open && actorEditorBusy.value)
+      return;
+    isEditorOpen.value = open;
+    if (!open)
+      closeActorEditor();
+  },
+});
 
 const createOrUpdateWidget = async () => {
   if (!props.file || isDisabled.value || !canEdit.value)
@@ -124,11 +137,11 @@ watch(() => props.window.content.data, (data) => {
       <p v-else class="text-secondary">
         Save empty group, then add entries.
       </p>
-      <va-modal v-model="isEditorOpen" hide-default-actions size="small" @update:model-value="!$event && closeActorEditor()">
+      <va-modal v-model="editorModalOpen" hide-default-actions size="small">
         <h2 class="va-h2">
           {{ editorActorId ? 'Edit entry' : 'Add entry' }}
         </h2>
-        <WindowContainerWidgetNimbleGroupActor v-if="widget" :widget-id="widget.id" :actor-id="editorActorId" :upload-parent-id="file?.parents?.[0]" :can-edit="canEdit" @close="closeActorEditor" />
+        <WindowContainerWidgetNimbleGroupActor v-if="widget" :widget-id="widget.id" :actor-id="editorActorId" :upload-parent-id="file?.parents?.[0]" :can-edit="canEdit" @busy="actorEditorBusy = $event" @close="closeActorEditor" />
       </va-modal>
       <va-divider />
       <va-button preset="outlined" :loading="props.window.status === ModalWindowStatus.LOADING" :disabled="isDisabled || !canEdit" @click="createOrUpdateWidget">

@@ -60,9 +60,12 @@
     "@types/node": "^22.10.2",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",
+    "@vitejs/plugin-vue": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.10",
+    "@vue/test-utils": "^2.5.1",
     "eslint": "^9.16.0",
     "eslint-plugin-format": "^1.0.2",
+    "jsdom": "^26.1.0",
     "lint-staged": "^15.2.11",
     "material-design-icons-iconfont": "^6.7.0",
     "nuxt": "^3.18.0",
@@ -72,6 +75,7 @@
     "simple-git-hooks": "^2.13.1",
     "typescript": "^5.7.2",
     "vitest": "^4.1.10",
+    "vue": "^3.5.22",
     "vue-tsc": "^3.3.9"
   },
   "simple-git-hooks": {

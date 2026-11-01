@@ -24,7 +24,11 @@ export const useDriveFile = <T extends DriveFile>
   const file = ref<T>();
   const error = shallowRef<unknown>(null);
 
-  watch([isReady, idRef, reloadRef], async ([isReadyValue, idRefValue]) => {
+  watch([isReady, idRef, reloadRef], async ([isReadyValue, idRefValue, reloadValue], previous, onCleanup) => {
+    // An error belongs to the ID that produced it, not to the next selection.
+    if (previous && previous[1] !== idRefValue)
+      error.value = null;
+
     if (!isReadyValue || options.strategy === DataRetrievalStrategies.PASSIVE) {
       return;
     }
@@ -35,9 +39,19 @@ export const useDriveFile = <T extends DriveFile>
       return;
     }
 
+    let active = true;
+    onCleanup(() => {
+      active = false;
+    });
+    // Ref checks also cover changes that occur before the watcher reruns.
+    const isCurrent = () => active && isReady.value === isReadyValue
+      && idRef.value === idRefValue && Object.is(reloadRef.value, reloadValue);
+
     try {
       // make sure the file is in the registry
       const { error: loadError } = await driveFileStore.getFile(idRefValue, options.strategy);
+      if (!isCurrent())
+        return;
       if (loadError) {
         error.value = loadError;
         file.value = undefined;
@@ -46,8 +60,10 @@ export const useDriveFile = <T extends DriveFile>
 
       error.value = null;
     } catch (e) {
-      error.value = e;
-      file.value = undefined;
+      if (isCurrent()) {
+        error.value = e;
+        file.value = undefined;
+      }
     }
   }, { immediate: true });
 

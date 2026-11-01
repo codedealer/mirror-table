@@ -27,6 +27,7 @@ export const usePreviewImage = (
 
   watchEffect(() => {
     if (!assetOrPreviewProps.value) {
+      imageFileId.value = '';
       return;
     }
 
@@ -37,6 +38,8 @@ export const usePreviewImage = (
         && asset.appProperties.preview
       ) {
         imageFileId.value = asset.appProperties.preview.id;
+      } else {
+        imageFileId.value = '';
       }
     } else if ('id' in assetOrPreviewProps.value) {
       imageFileId.value = assetOrPreviewProps.value.id;

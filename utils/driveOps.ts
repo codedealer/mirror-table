@@ -1,12 +1,14 @@
 import type {
   AppPropertiesType,
   AssetPropertiesKind,
+  CropProperties,
   DriveFile,
   DriveFileRaw,
   DriveFileUpdateReturnType,
   DriveInvalidPermissionsError,
   RawMediaObject,
 } from '~/models/types';
+import { cropMarker, serializeCropProperties } from '~/models/CropProperties';
 import { updateFieldMask } from '~/models/types';
 
 type FileResponse = gapi.client.Response<gapi.client.drive.File>;
@@ -350,12 +352,19 @@ const generateFileFormData = (
 const generateRawFileFormData = (
   file: File,
   parentId = '',
-  metadataPayload?: Pick<updateMetadataPayload, 'name' | 'contentHints'>,
+  metadataPayload?: Pick<updateMetadataPayload, 'name' | 'contentHints'> & {
+    appProperties?: Record<string, string>;
+    properties?: Record<string, string>;
+  },
 ) => {
   const metadata: Record<string, any> = {
     name: metadataPayload?.name ?? (file.name || 'Untitled'),
     mimeType: file.type,
   };
+  if (metadataPayload?.appProperties)
+    metadata.appProperties = metadataPayload.appProperties;
+  if (metadataPayload?.properties)
+    metadata.properties = metadataPayload.properties;
 
   if (typeof metadataPayload?.contentHints === 'object' && metadataPayload.contentHints.indexableText) {
     metadata.contentHints = metadataPayload.contentHints;
@@ -434,10 +443,13 @@ export const uploadMedia = async (
   return response as UploadMediaReturnType;
 };
 
-export const uploadRawMedia = async (
+const uploadRawMediaWithProperties = async (
   file: File,
   folderId: string,
-  metadata?: Pick<updateMetadataPayload, 'name' | 'contentHints'>,
+  metadata?: Pick<updateMetadataPayload, 'name' | 'contentHints'> & {
+    appProperties?: Record<string, string>;
+    properties?: Record<string, string>;
+  },
 ) => {
   if (!folderId) {
     throw new Error('Folder ID is empty when uploading a file');
@@ -458,3 +470,22 @@ export const uploadRawMedia = async (
 
   return response as UploadMediaReturnType;
 };
+
+/** Existing raw media uploads remain unmarked and compatible. */
+export const uploadRawMedia = async (
+  file: File,
+  folderId: string,
+  metadata?: Pick<updateMetadataPayload, 'name' | 'contentHints'>,
+) => uploadRawMediaWithProperties(file, folderId, metadata);
+
+/** Upload the derivative and both provenance property sets in one multipart request. */
+export const uploadCropMedia = async (
+  file: File,
+  folderId: string,
+  crop: CropProperties,
+  metadata?: Pick<updateMetadataPayload, 'name' | 'contentHints'>,
+) => uploadRawMediaWithProperties(file, folderId, {
+  ...metadata,
+  appProperties: serializeCropProperties(crop),
+  properties: { ...cropMarker },
+});

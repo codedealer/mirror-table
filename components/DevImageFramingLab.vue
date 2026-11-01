@@ -7,6 +7,14 @@ const ready = ref(false);
 const fixtureIds = ref<string[]>([]);
 const mountKey = ref(0);
 const committedId = ref('');
+const rejectPersistence = ref(false);
+
+async function persistParentSelection(_id: string) {
+  // Simulate an asynchronous parent write; failures never publish the new committed ID.
+  await new Promise(resolve => setTimeout(resolve, 300));
+  if (rejectPersistence.value)
+    throw new Error('Simulated parent persistence rejection.');
+}
 
 onMounted(async () => {
   const fixtures = [
@@ -40,12 +48,17 @@ onMounted(async () => {
 <template>
   <div class="lab">
     <p>This is a local simulation, not Drive. Files and saved state disappear when you leave or refresh this page. Review and approval are required before production integration.</p>
+    <label class="persistence-toggle">
+      <input v-model="rejectPersistence" type="checkbox">
+      Simulate rejected parent persistence (uncheck to retry successfully)
+    </label>
     <DevImageFramingHarness
       v-if="ready"
       :key="mountKey"
       :repository="repository"
       :fixtures="fixtureIds"
       :committed-id="committedId"
+      :persist="persistParentSelection"
       @save="committedId = $event"
       @remount="mountKey++"
     />
@@ -57,6 +70,12 @@ onMounted(async () => {
 
 <style scoped>
 .lab > p {
+  margin-bottom: 1rem;
+}
+.persistence-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-bottom: 1rem;
 }
 </style>

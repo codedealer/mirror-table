@@ -12,6 +12,7 @@ import type {
 } from '~/models/types';
 import type { updateMetadataPayload } from '~/utils/driveOps';
 import colors from 'ansi-colors';
+import { isReactive } from 'vue';
 
 import { convertToDriveFile } from '~/models/DriveFile';
 import { DataRetrievalStrategies, updateFieldMask } from '~/models/types';
@@ -571,6 +572,9 @@ export const useDriveFileStore = defineStore('drive-file', () => {
   };
 
   const mediaRequestRegistry: Map<string, Promise<FileResponse>> = new Map();
+  const mediaRequestConsumersByKey: Map<string, number> = new Map();
+  const activeMediaRequestsByFile: Map<string, number> = new Map();
+  const loadingFileReferencesById: Map<string, Set<DriveFile>> = new Map();
 
   /**
    * This method is not supported by the Drive API
@@ -670,8 +674,10 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       const res = await getFile(fileId, fileStrategy);
       file = res.file;
     } else {
-      // Prefer the canonical cached reference if available.
-      file = files.value[fileOrId.id] ?? fileOrId;
+      // The supplied object may be the fresh result of a preflight read. Keep all
+      // of its metadata authoritative, even if the registry has the same checksum
+      // with stale permissions or size information.
+      file = fileOrId;
 
       // If the caller's file object is incomplete, refresh metadata.
       if (!file.md5Checksum || !file.capabilities) {
@@ -692,8 +698,10 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       throw new Error(`File ${fileId} has no checksum`);
     }
 
-    if (!file.size || Number(file.size) === 0) {
-      // cut short and return a faux media object
+    const reportedSize = file.size?.trim();
+    if (reportedSize && Number.isFinite(Number(reportedSize)) && Number(reportedSize) === 0) {
+      // A reported zero is the only known-empty size. Missing or invalid size
+      // metadata is unknown and must proceed through cache lookup and retrieval.
       mediaLog(`File ${fileId} appears to be empty. Making a stub.`);
       const media: RawMediaObject = {
         id: file.id,
@@ -723,34 +731,91 @@ export const useDriveFileStore = defineStore('drive-file', () => {
       }
     }
 
-    // check the request registry
-    let request: Promise<FileResponse>;
+    // Coalesce only requests for the same file version. A fresh metadata read
+    // can observe a new checksum while an older version's media is still in flight.
+    const requestKey = `download:${fileId}:${file.md5Checksum}`;
+    let request: Promise<FileResponse> | undefined;
     let response: FileResponse;
+    const setLoading = (loading: boolean) => {
+      const activeRequests = activeMediaRequestsByFile.get(fileId) ?? 0;
+      const nextCount = activeRequests + (loading ? 1 : -1);
+      if (nextCount > 0)
+        activeMediaRequestsByFile.set(fileId, nextCount);
+      else
+        activeMediaRequestsByFile.delete(fileId);
+
+      let references = loadingFileReferencesById.get(fileId);
+      if (loading) {
+        if (!references) {
+          references = new Set();
+          loadingFileReferencesById.set(fileId, references);
+        }
+        references.add(file!);
+        const canonicalFile = files.value[fileId];
+        if (canonicalFile)
+          references.add(canonicalFile);
+      }
+
+      // A newer metadata read may replace the canonical cache object while one
+      // or more version-specific media requests are pending. Keep every object
+      // involved, plus the current canonical object, in the same loading state.
+      const canonicalFile = files.value[fileId];
+      if (canonicalFile)
+        references?.add(canonicalFile);
+      const isLoading = nextCount > 0;
+      // Drive responses are raw objects while cache reads expose Vue proxies for
+      // those same objects. Notify proxy-backed consumers before mutating aliases;
+      // otherwise the raw write makes the proxy write appear unchanged to Vue.
+      const orderedReferences = [...(references ?? [])].sort((a, b) => Number(isReactive(b)) - Number(isReactive(a)));
+      orderedReferences.forEach(reference => reference.loading = isLoading);
+      if (canonicalFile)
+        canonicalFile.loading = isLoading;
+
+      if (!isLoading)
+        loadingFileReferencesById.delete(fileId);
+    };
     try {
-      file.loading = true;
+      setLoading(true);
 
-      if (mediaRequestRegistry.has(fileId)) {
-        console.warn(`Blocked duplicate media request for file ${fileId}`);
-
-        request = mediaRequestRegistry.get(fileId)!;
+      if (mediaRequestRegistry.has(requestKey)) {
+        console.warn(`Blocked duplicate media request for file ${fileId} (${file.md5Checksum})`);
+        request = mediaRequestRegistry.get(requestKey)!;
+        mediaRequestConsumersByKey.set(requestKey, (mediaRequestConsumersByKey.get(requestKey) ?? 0) + 1);
       } else {
         mediaLog(`${bgWhite.blue('GOOGLE DRIVE API')}\n${fileId}`);
         request = loadMedia(fileId);
-        mediaRequestRegistry.set(fileId, request);
+        mediaRequestRegistry.set(requestKey, request);
+        mediaRequestConsumersByKey.set(requestKey, 1);
       }
 
       response = await request;
+      const media = parseMediaResponse(file, response);
+      if (media) {
+        try {
+          await cacheStore.setMedia([media]);
+        } catch (cacheError) {
+          // Cache persistence is an optimization: the fetched bytes remain valid
+          // for this caller even if durable storage is unavailable or full.
+          console.warn(`Could not cache media for file ${fileId}; using fetched media.`, cacheError);
+        }
+      }
+      return media;
     } finally {
-      file.loading = false;
+      // Publish the completed response before notifying loading consumers. Their
+      // watcher may immediately request media again and must hit this cache entry.
+      setLoading(false);
 
-      mediaRequestRegistry.delete(fileId);
+      if (request && mediaRequestRegistry.get(requestKey) === request) {
+        const consumers = mediaRequestConsumersByKey.get(requestKey) ?? 1;
+        if (consumers <= 1) {
+          mediaRequestConsumersByKey.delete(requestKey);
+          mediaRequestRegistry.delete(requestKey);
+        } else {
+          mediaRequestConsumersByKey.set(requestKey, consumers - 1);
+        }
+      }
       mediaLog(`${bgGreen.black('FINISHED')}\n${fileId}`);
     }
-
-    const media = parseMediaResponse(file, response);
-    void (media && cacheStore.setMedia([media]));
-
-    return media;
   };
 
   const search = async (name: string, type?: AppPropertiesType, kind?: AssetPropertiesKind) => {
