@@ -24,6 +24,13 @@ export default defineNuxtConfig({
     },
   },
   compatibilityDate: '2025-10-11',
+  nitro: {
+    vercel: {
+      functions: {
+        runtime: 'nodejs26.x',
+      },
+    },
+  },
   imports: {
     dirs: [
       resolve('./stores'),
