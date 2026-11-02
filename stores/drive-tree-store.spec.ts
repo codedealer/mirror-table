@@ -210,6 +210,23 @@ describe('drive tree visible-root persistence', () => {
     expect(boundary.updateProfileSettings).not.toHaveBeenCalled();
   });
 
+  it('loads the parent folder contents when navigating up from the visible root', async () => {
+    const parent = folder('drive-root', 'Drive');
+    const current = { ...folder('workspace-a', 'Workspace'), parents: ['drive-root'] };
+    await installStore(profile('workspace-a'), [parent, current]);
+    boundary.listFilesInFolder.mockImplementation(async (id: string) => (
+      id === 'drive-root' ? [{ id: 'parent-child', name: 'Parent child', mimeType: 'text/plain' }] : []
+    ));
+    await settle();
+
+    const result = await treeStore.setVisibleRootToParent();
+
+    expect(result).toBe(true);
+    expect(treeStore.visibleRootNode.id).toBe('drive-root');
+    expect(treeStore.visibleRootNode.children.map((child: any) => child.id)).toEqual(['parent-child']);
+    expect(boundary.listFilesInFolder).toHaveBeenCalledWith('drive-root');
+  });
+
   it('switches profiles to the new user root and does not show the prior user root', async () => {
     boundary.listFilesInFolder.mockResolvedValue([]);
     await installStore(profile('workspace-a', 'user-a-root'), [folder('user-a-root')]);

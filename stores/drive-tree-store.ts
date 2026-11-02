@@ -340,7 +340,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
       return false;
     }
 
-    return await setVisibleRootFolder(parentNode, { isCurrent: isCurrentRoot });
+    return await setVisibleRootFolder(parentNode, { isCurrent });
   };
 
   const createChild = async (
