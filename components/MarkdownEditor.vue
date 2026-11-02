@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useEventListener, useResizeObserver } from '@vueuse/core';
+
 const props = withDefaults(defineProps<{
   modelValue: string;
   placeholder?: string;
@@ -13,6 +15,7 @@ const emit = defineEmits<{
   'dirty': [];
 }>();
 
+const editorRef = ref<HTMLDivElement | null>(null);
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 
 const resize = () => {
@@ -20,8 +23,13 @@ const resize = () => {
   if (!el) {
     return;
   }
+  const scrollContainer = el.closest<HTMLElement>('.markdown-editor__scroll');
+  const scrollTop = scrollContainer?.scrollTop ?? 0;
   el.style.height = '0';
   el.style.height = `${el.scrollHeight}px`;
+  if (scrollContainer) {
+    scrollContainer.scrollTop = scrollTop;
+  }
 };
 
 const onInput = (e: Event) => {
@@ -33,6 +41,10 @@ const onInput = (e: Event) => {
 
 watch(() => props.modelValue, () => nextTick(resize));
 onMounted(() => nextTick(resize));
+
+const resizeAfterLayout = () => nextTick(resize);
+useResizeObserver(editorRef, resizeAfterLayout);
+useEventListener('resize', resizeAfterLayout);
 
 const wrapSelection = (before: string, after: string) => {
   const el = textareaRef.value;
@@ -102,7 +114,7 @@ defineExpose({ textareaRef });
 </script>
 
 <template>
-  <div class="markdown-editor">
+  <div ref="editorRef" class="markdown-editor">
     <label v-if="label" class="markdown-editor__label">{{ label }}</label>
     <div class="markdown-editor__toolbar">
       <button type="button" title="Bold (Ctrl+B)" :disabled="disabled" @click="wrapSelection('**', '**')">
