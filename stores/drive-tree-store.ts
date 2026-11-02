@@ -6,6 +6,8 @@ import type {
 } from '~/models/types';
 import type { DriveFileDragPayload } from '~/utils/heTree';
 import { acceptHMRUpdate, defineStore } from 'pinia';
+import { DriveTreeNodeFactory } from '~/models/DriveTreeNode';
+import { DataRetrievalStrategies, DriveMimeTypes } from '~/models/types';
 
 import { buildNodes, convertToBlob, moveFile } from '~/utils/driveOps';
 import driveWorkspaceSentinel from '~/utils/driveWorkspaceSentinel';
@@ -62,7 +64,7 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
   const driveSearchStore = useDriveSearchStore();
 
   const { isReady } = storeToRefs(driveStore);
-  const { profile } = storeToRefs(userStore);
+  const { profile, user } = storeToRefs(userStore);
 
   const canonicalRootId = computed(() => {
     return profile.value?.settings.driveFolderId ?? '';
@@ -76,6 +78,19 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
     return visibleRootNode.value.id === canonicalRootId.value;
   });
+
+  let activeProfileUid: string | null = null;
+  let initializedProfileUid: string | null = null;
+  let initializationGeneration = 0;
+
+  const captureProfileGuard = () => {
+    const uid = user.value?.uid ?? null;
+    const generation = initializationGeneration;
+
+    return () => generation === initializationGeneration
+      && (user.value?.uid ?? null) === uid
+      && !!profile.value;
+  };
 
   const setNodeLoading = (node: DriveTreeNode, loading: boolean) => {
     node.loading = loading;
@@ -96,7 +111,10 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     openFolderIds.value = nextOpenFolderIds;
   };
 
-  const loadChildren = async (node: DriveTreeNode) => {
+  const loadChildren = async (
+    node: DriveTreeNode,
+    options?: { silentErrors?: boolean; isCurrent?: () => boolean },
+  ) => {
     let success = false;
 
     try {
@@ -110,8 +128,10 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
       node.loaded = true;
       success = true;
     } catch (e) {
-      const notificationStore = useNotificationStore();
-      notificationStore.error(extractErrorMessage(e));
+      if (!options?.silentErrors && (!options?.isCurrent || options.isCurrent())) {
+        const notificationStore = useNotificationStore();
+        notificationStore.error(extractErrorMessage(e));
+      }
     } finally {
       if (node) {
         setNodeLoading(node, false);
@@ -121,14 +141,22 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     return success;
   };
 
-  const setVisibleRootFolder = async (newVisibleRootNode?: DriveTreeNode) => {
+  const setVisibleRootFolder = async (
+    newVisibleRootNode?: DriveTreeNode,
+    options: { persist?: boolean; silentErrors?: boolean; isCurrent?: () => boolean } = {},
+  ) => {
     let success = false;
 
     if (!profile.value) {
       throw new Error('Setting visible Drive root when profile is not loaded');
     }
 
+    const isCurrent = options.isCurrent ?? captureProfileGuard();
+    let selectedRoot: DriveTreeNode | undefined;
     try {
+      if (!isCurrent()) {
+        return false;
+      }
       visibleRootNode.value = newVisibleRootNode === undefined
         ? createVisibleRootNode(canonicalRootId.value)
         : {
@@ -140,17 +168,37 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
             disabled: newVisibleRootNode.disabled,
             ...(newVisibleRootNode.icon !== undefined && { icon: newVisibleRootNode.icon }),
           };
-
-      visibleRootNode.value.loading = true;
+      selectedRoot = visibleRootNode.value;
+      selectedRoot.loading = true;
 
       await driveWorkspaceSentinel();
+      if (!isCurrent()) {
+        return false;
+      }
 
-      success = await loadChildren(visibleRootNode.value);
+      success = await loadChildren(selectedRoot, {
+        silentErrors: options.silentErrors,
+        isCurrent,
+      });
+      if (success && options.persist !== false && isCurrent() && visibleRootNode.value === selectedRoot) {
+        try {
+          await userStore.updateProfileSettings({ lastVisibleRootFolderId: selectedRoot.id });
+        } catch (e) {
+          if (isCurrent()) {
+            const notificationStore = useNotificationStore();
+            notificationStore.error(extractErrorMessage(e));
+          }
+        }
+      }
     } catch (e) {
-      const notificationStore = useNotificationStore();
-      notificationStore.error(extractErrorMessage(e));
+      if (!options.silentErrors && isCurrent()) {
+        const notificationStore = useNotificationStore();
+        notificationStore.error(extractErrorMessage(e));
+      }
     } finally {
-      visibleRootNode.value.loading = false;
+      if (selectedRoot) {
+        selectedRoot.loading = false;
+      }
     }
 
     return success;
@@ -174,28 +222,83 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
     return await loadChildren(visibleRootNode.value);
   };
 
-  watch([profile, isReady], async ([profile, isReady]) => {
-    if (visibleRootNode.value.loading || visibleRootNode.value.loaded || !isReady || !profile) {
-      return;
-    }
+  watch(
+    [() => user.value?.uid ?? null, profile, isReady],
+    async ([uid, currentProfile, driveReady]) => {
+      if (uid !== activeProfileUid) {
+        activeProfileUid = uid;
+        initializationGeneration++;
+        initializedProfileUid = null;
+        visibleRootNode.value = createVisibleRootNode();
+        openFolderIds.value = new Set();
+      }
 
-    await resetVisibleRootFolder();
-  }, { immediate: true });
+      if (!uid || !currentProfile || !driveReady || initializedProfileUid === uid) {
+        return;
+      }
+
+      initializedProfileUid = uid;
+      const generation = initializationGeneration;
+      const isCurrent = () => generation === initializationGeneration
+        && user.value?.uid === uid
+        && !!profile.value;
+      const savedRootId = currentProfile.settings.lastVisibleRootFolderId;
+
+      if (savedRootId) {
+        try {
+          const driveFileStore = useDriveFileStore();
+          const { file } = await driveFileStore.getFile(savedRootId, DataRetrievalStrategies.SOURCE);
+          if (!isCurrent()) {
+            return;
+          }
+
+          if (file && !file.trashed && file.mimeType === DriveMimeTypes.FOLDER) {
+            const restored = await setVisibleRootFolder(DriveTreeNodeFactory(file), {
+              persist: false,
+              silentErrors: true,
+              isCurrent,
+            });
+            if (restored || !isCurrent()) {
+              return;
+            }
+          }
+        } catch {
+          // A stale or inaccessible preference is not an initialization error.
+        }
+      }
+
+      if (isCurrent()) {
+        await setVisibleRootFolder(undefined, { persist: false, isCurrent });
+      }
+    },
+    { immediate: true, flush: 'sync' },
+  );
 
   const setVisibleRootToParent = async () => {
+    if (!profile.value) {
+      return false;
+    }
+
+    const isCurrent = captureProfileGuard();
+    const rootNode = visibleRootNode.value;
+    const isCurrentRoot = () => isCurrent() && visibleRootNode.value === rootNode;
     const driveFileStore = useDriveFileStore();
-    if (!visibleRootNode.value.id) {
+    if (!rootNode.id) {
       return false;
     }
 
     let rootFile: DriveFile | undefined;
     try {
       ({ file: rootFile } = await driveFileStore.getFile(
-        visibleRootNode.value.id,
+        rootNode.id,
         DataRetrievalStrategies.CACHE_ONLY,
       ));
     } catch {
       // If cache is missing, we cannot resolve parent without fetching.
+      return false;
+    }
+
+    if (!isCurrentRoot()) {
       return false;
     }
 
@@ -211,9 +314,12 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
     let parentNode: DriveTreeNode;
     try {
-      visibleRootNode.value.loading = true;
+      rootNode.loading = true;
 
       const { file: parentFile } = await driveFileStore.getFile(parentId);
+      if (!isCurrentRoot()) {
+        return false;
+      }
 
       if (!parentFile) {
         throw new Error('Parent file not found');
@@ -221,14 +327,20 @@ export const useDriveTreeStore = defineStore('drive-tree', () => {
 
       parentNode = DriveTreeNodeFactory(parentFile);
     } catch (e) {
-      const notificationStore = useNotificationStore();
-      notificationStore.error(extractErrorMessage(e));
+      if (isCurrentRoot()) {
+        const notificationStore = useNotificationStore();
+        notificationStore.error(extractErrorMessage(e));
+      }
       return false;
     } finally {
-      visibleRootNode.value.loading = false;
+      rootNode.loading = false;
     }
 
-    return await setVisibleRootFolder(parentNode);
+    if (!isCurrentRoot()) {
+      return false;
+    }
+
+    return await setVisibleRootFolder(parentNode, { isCurrent: isCurrentRoot });
   };
 
   const createChild = async (

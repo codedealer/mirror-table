@@ -60,6 +60,7 @@ export interface Profile {
   settings: {
     driveFolderId: string;
     searchFolderId: string;
+    lastVisibleRootFolderId?: string;
     diceRoller?: {
       savedMacros?: DiceRollerMacro[];
     };

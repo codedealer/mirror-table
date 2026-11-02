@@ -151,6 +151,9 @@ export const useUserStore = defineStore('user', () => {
     if (typeof settings.searchFolderId === 'string') {
       update['settings.searchFolderId'] = settings.searchFolderId;
     }
+    if (typeof settings.lastVisibleRootFolderId === 'string') {
+      update['settings.lastVisibleRootFolderId'] = settings.lastVisibleRootFolderId;
+    }
 
     if (!Object.keys(update).length) {
       return;

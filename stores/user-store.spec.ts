@@ -26,6 +26,7 @@ interface TestProfile {
   settings: {
     driveFolderId: string;
     searchFolderId: string;
+    lastVisibleRootFolderId?: string;
     diceRoller?: { savedMacros?: Array<{ id: string; expression: string }> };
   };
 }
@@ -109,6 +110,23 @@ describe('user profile auth transition isolation', () => {
     expect(store.profile.value?.settings.diceRoller?.savedMacros).toEqual([{ id: 'user-b-macro', expression: 'user-b-macro' }]);
     await Promise.resolve();
     expect(store.isLoggedIn.value).toBe(true);
+  });
+
+  it('writes the visible-root preference through the nested profile settings field', async () => {
+    const { useUserStore } = await import('./user-store');
+    const store = useUserStore() as unknown as {
+      updateProfileSettings: (settings: Partial<TestProfile['settings']>) => Promise<void>;
+    };
+    authCallback({ uid: 'user-a', getIdToken: async () => 'token-a' });
+    await Promise.resolve();
+
+    await store.updateProfileSettings({ lastVisibleRootFolderId: 'folder-a' });
+
+    expect(firestoreMocks.doc).toHaveBeenCalledWith({}, 'users', 'user-a');
+    expect(firestoreMocks.updateDoc).toHaveBeenCalledWith(
+      expect.anything(),
+      { 'settings.lastVisibleRootFolderId': 'folder-a' },
+    );
   });
 
   it('rejects delayed callbacks from an earlier generation after A to B to A', async () => {
