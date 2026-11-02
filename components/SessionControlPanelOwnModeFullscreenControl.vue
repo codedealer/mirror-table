@@ -1,26 +1,48 @@
 <script setup lang="ts">
 import { onKeyStroke, useFullscreen } from '@vueuse/core';
+import { TableModes } from '~/models/types';
 
 const { isFullscreen, toggle, isSupported } = useFullscreen();
+const tableStore = useTableStore();
+const hotkeyStore = useHotkeyStore();
+
+const fullscreenHotkey = computed(() => {
+  if (tableStore.mode === TableModes.PRESENTATION) {
+    return { code: 'KeyF', key: 'F' };
+  }
+  if (tableStore.mode === TableModes.OWN) {
+    return { code: 'F11', key: 'F11' };
+  }
+  return undefined;
+});
+
+watch(fullscreenHotkey, (hotkey, previousHotkey) => {
+  if (previousHotkey) {
+    hotkeyStore.unregisterHotkey('toggle-fullscreen');
+  }
+  if (hotkey) {
+    hotkeyStore.registerHotkey({
+      id: 'toggle-fullscreen',
+      description: 'Toggle Fullscreen mode',
+      key: hotkey.key,
+      modifiers: {},
+      namespace: 'General',
+    });
+  }
+}, { immediate: true });
+
+onUnmounted(() => {
+  hotkeyStore.unregisterHotkey('toggle-fullscreen');
+});
 
 onKeyStroke(true, (e) => {
   if (!e.target || isEditableElement(e.target) || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || !isSupported.value) {
     return;
   }
 
-  if (e.code === 'F11') {
+  if (fullscreenHotkey.value?.code === e.code) {
     toggle();
   }
-});
-
-const hotkeyStore = useHotkeyStore();
-
-hotkeyStore.registerHotkey({
-  id: 'toggle-fullscreen',
-  description: 'Toggle Fullscreen mode',
-  key: 'F11',
-  modifiers: { },
-  namespace: 'General',
 });
 </script>
 

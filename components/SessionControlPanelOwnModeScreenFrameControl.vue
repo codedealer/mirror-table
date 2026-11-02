@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { TableSessionPresence } from '~/models/types';
 import { onKeyStroke } from '@vueuse/core';
+import { TableModes } from '~/models/types';
 
 const sessionStore = useSessionStore();
 const tableStore = useTableStore();
@@ -36,16 +37,22 @@ const toggleScreenFrames = async () => {
   }
 };
 
-hotkeyStore.registerHotkey({
-  id: 'toggle-screen-frames',
-  key: 'F',
-  modifiers: {},
-  description: 'Toggle screen frames',
-  namespace: 'Canvas',
+onMounted(() => {
+  hotkeyStore.registerHotkey({
+    id: 'toggle-screen-frames',
+    key: 'F',
+    modifiers: {},
+    description: 'Toggle screen frames',
+    namespace: 'Canvas',
+  });
+});
+onUnmounted(() => {
+  hotkeyStore.unregisterHotkey('toggle-screen-frames');
 });
 onKeyStroke(true, (e) => {
   if (
-    e.code !== 'KeyF'
+    tableStore.mode !== TableModes.OWN
+    || e.code !== 'KeyF'
     || e.shiftKey
     || e.ctrlKey
     || e.altKey
