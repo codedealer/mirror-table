@@ -170,6 +170,15 @@ export const normalizeNimbleConditions = (conditions: string[]): string[] => {
 
 export const isNimbleValueSet = (value: unknown): boolean => value !== '' && value !== null && value !== undefined;
 
+export const nimbleNpcQuantityBadge = (npc: WidgetNimbleGroupActorNpc['npc']): string | undefined => {
+  if (npc.subtype === 'minion') {
+    const minionCount = npc.hitPool[0]?.current;
+    return isNimbleValueSet(minionCount) ? String(minionCount) : undefined;
+  }
+
+  return npc.hitPool.length > 1 ? String(npc.hitPool.length) : undefined;
+};
+
 export const hasCompleteNimbleResource = (current: unknown, max: unknown): boolean => {
   return isNimbleValueSet(current) || isNimbleValueSet(max);
 };

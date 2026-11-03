@@ -8,6 +8,7 @@ import {
   isWidgetNimbleGroup,
   isWidgetNimbleGroupActorNpc,
   isWidgetNimbleGroupActorPlayer,
+  nimbleNpcQuantityBadge,
   nimbleNpcSubtypeIcon,
   normalizeNimbleActorRanks,
   normalizeNimbleConditions,
@@ -33,6 +34,35 @@ describe('nimble group helpers', () => {
     expect(nimbleNpcSubtypeIcon('minion')).toBe('grass');
     expect(nimbleNpcSubtypeIcon('flunky')).toBe('keyboard_double_arrow_down');
     expect(nimbleNpcSubtypeIcon('regular')).toBeUndefined();
+  });
+
+  it('uses the first hit pool current value as the minion badge without limiting pools', () => {
+    const minion = WidgetNimbleGroupActorNpcFactory('minion');
+    minion.npc.subtype = 'minion';
+    minion.npc.hitPool = [
+      { current: 4, max: 5, temp: '' },
+      { current: 8, max: 10, temp: '' },
+    ];
+
+    expect(isWidgetNimbleGroupActorNpc(minion)).toBe(true);
+    expect(nimbleNpcQuantityBadge(minion.npc)).toBe('4');
+
+    minion.npc.hitPool[0].current = 0;
+    expect(nimbleNpcQuantityBadge(minion.npc)).toBe('0');
+    minion.npc.hitPool[0].current = '';
+    expect(nimbleNpcQuantityBadge(minion.npc)).toBeUndefined();
+  });
+
+  it('continues to show the pool count badge for non-minion NPCs with multiple pools', () => {
+    const npc = WidgetNimbleGroupActorNpcFactory('npc');
+    npc.npc.hitPool = [
+      { current: 4, max: 5, temp: '' },
+      { current: 8, max: 10, temp: '' },
+    ];
+
+    expect(nimbleNpcQuantityBadge(npc.npc)).toBe('2');
+    npc.npc.hitPool.pop();
+    expect(nimbleNpcQuantityBadge(npc.npc)).toBeUndefined();
   });
 
   it('requires ordered string conditions for both actor types', () => {

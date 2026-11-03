@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { NimbleHitPoints, NimbleNumber, WidgetNimbleGroupActor, WidgetNimbleGroupActorNpc, WidgetNimbleGroupActorPlayer } from '~/models/types';
-import { applyNimbleDamage, hasCompleteNimbleResource, isNimbleValueSet, isWidgetNimbleGroupActorNpc, isWidgetNimbleGroupActorPlayer } from '~/models/NimbleGroup';
+import { applyNimbleDamage, hasCompleteNimbleResource, isNimbleValueSet, isWidgetNimbleGroupActorNpc, isWidgetNimbleGroupActorPlayer, nimbleNpcQuantityBadge } from '~/models/NimbleGroup';
 
 const props = defineProps<{
   actors: WidgetNimbleGroupActor[];
@@ -103,7 +103,7 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
       </div>
       <article v-for="actor in props.actors" :key="actor.id" class="nimble-row" :class="{ 'nimble-row--hidden': !actor.enabled }">
         <div class="nimble-row__heading">
-          <va-badge v-if="isWidgetNimbleGroupActorNpc(actor) && actor.npc.hitPool.length > 1" :text="String(actor.npc.hitPool.length)" class="nimble-row__qty-badge" color="primary-dark" overlap>
+          <va-badge v-if="isWidgetNimbleGroupActorNpc(actor) && nimbleNpcQuantityBadge(actor.npc) !== undefined" :text="nimbleNpcQuantityBadge(actor.npc) ?? ''" class="nimble-row__qty-badge" color="primary-dark" overlap>
             <TableWidgetsNimbleGroupAvatar :preview="actor.avatar" :title="actor.name" :subtype="isWidgetNimbleGroupActorNpc(actor) ? actor.npc.subtype : undefined" :fallback-icon="isWidgetNimbleGroupActorNpc(actor) ? 'smart_toy' : 'person'" :src="props.avatarSrcs?.[actor.id]" />
           </va-badge>
           <TableWidgetsNimbleGroupAvatar v-else :preview="actor.avatar" :title="actor.name" :subtype="isWidgetNimbleGroupActorNpc(actor) ? actor.npc.subtype : undefined" :fallback-icon="isWidgetNimbleGroupActorNpc(actor) ? 'smart_toy' : 'person'" :src="props.avatarSrcs?.[actor.id]" />

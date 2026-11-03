@@ -3,6 +3,13 @@ import { describe, expect, it } from 'vitest';
 
 const componentSource = readFileSync(new URL('./TableWidgetsNimbleGroupContent.vue', import.meta.url), 'utf8');
 
+describe('nimble quantity badge presentation', () => {
+  it('uses the subtype-aware NPC quantity badge value', () => {
+    expect(componentSource).toContain('nimbleNpcQuantityBadge(actor.npc) !== undefined');
+    expect(componentSource).toContain(':text="nimbleNpcQuantityBadge(actor.npc) ?? \'\'"');
+  });
+});
+
 describe('nimble hitpoint popover wiring', () => {
   it('uses the shared update path for player and NPC hitpoint popovers', () => {
     expect(componentSource).toContain(String.raw`@keydown.enter.prevent.stop="updateHitPoints(actor, 0)"`);
