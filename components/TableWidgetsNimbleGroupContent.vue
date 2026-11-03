@@ -5,6 +5,7 @@ import { applyNimbleDamage, hasCompleteNimbleResource, isNimbleValueSet, isWidge
 const props = defineProps<{
   actors: WidgetNimbleGroupActor[];
   isOwner: boolean;
+  avatarSrcs?: Record<string, string>;
 }>();
 
 const emit = defineEmits<{
@@ -103,13 +104,11 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
       <article v-for="actor in props.actors" :key="actor.id" class="nimble-row" :class="{ 'nimble-row--hidden': !actor.enabled }">
         <div class="nimble-row__heading">
           <va-badge v-if="isWidgetNimbleGroupActorNpc(actor) && actor.npc.hitPool.length > 1" :text="String(actor.npc.hitPool.length)" class="nimble-row__qty-badge" color="primary-dark" overlap>
-            <TableWidgetsNimbleGroupAvatar v-if="actor.avatar" :preview="actor.avatar" :title="actor.name" />
-            <va-icon v-else :name="isWidgetNimbleGroupActorNpc(actor) ? 'smart_toy' : 'person'" :aria-label="`No avatar for ${actor.name}`" />
+            <TableWidgetsNimbleGroupAvatar :preview="actor.avatar" :title="actor.name" :subtype="isWidgetNimbleGroupActorNpc(actor) ? actor.npc.subtype : undefined" :fallback-icon="isWidgetNimbleGroupActorNpc(actor) ? 'smart_toy' : 'person'" :src="props.avatarSrcs?.[actor.id]" />
           </va-badge>
-          <TableWidgetsNimbleGroupAvatar v-else-if="actor.avatar" :preview="actor.avatar" :title="actor.name" />
-          <va-icon v-else :name="isWidgetNimbleGroupActorNpc(actor) ? 'smart_toy' : 'person'" :aria-label="`No avatar for ${actor.name}`" />
+          <TableWidgetsNimbleGroupAvatar v-else :preview="actor.avatar" :title="actor.name" :subtype="isWidgetNimbleGroupActorNpc(actor) ? actor.npc.subtype : undefined" :fallback-icon="isWidgetNimbleGroupActorNpc(actor) ? 'smart_toy' : 'person'" :src="props.avatarSrcs?.[actor.id]" />
           <div class="nimble-row__heading-text">
-            <strong v-if="isWidgetNimbleGroupActorNpc(actor)" class="nimble-row__npc-name" :class="props.isOwner ? `nimble-row__npc-name--${actor.npc.subtype}` : undefined" :title="props.isOwner ? actor.npc.subtype : undefined">{{ actor.name }}</strong>
+            <strong v-if="isWidgetNimbleGroupActorNpc(actor)" class="nimble-row__npc-name" :class="`nimble-row__npc-name--${actor.npc.subtype}`" :title="actor.npc.subtype">{{ actor.name }}</strong>
             <strong v-else>{{ actor.name }}</strong>
             <small v-if="actor.role">{{ actor.role }}</small>
             <div v-if="isWidgetNimbleGroupActorNpc(actor)" class="nimble-row__player-stats">
@@ -257,9 +256,6 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
 }
 .nimble-row__heading > .va-badge {
   flex: 0 0 auto;
-}
-.nimble-row__heading > .va-badge > .va-icon {
-  font-size: 2rem;
 }
 .nimble-row__content {
   border-left: 3px solid var(--va-background-border);

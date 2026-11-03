@@ -4,6 +4,7 @@ import { WidgetNimbleGroupActorNpcFactory, WidgetNimbleGroupActorPlayerFactory, 
 
 const isOwner = ref(true);
 const group = ref<WidgetNimbleGroup>(createMockGroup());
+const avatarSrcs = { warden: '/logo.png' };
 
 function createMockGroup(): WidgetNimbleGroup {
   const player = WidgetNimbleGroupActorPlayerFactory('aria', 0);
@@ -31,9 +32,24 @@ function createMockGroup(): WidgetNimbleGroup {
   hidden.name = 'Cinder Scout';
   hidden.role = 'Minion';
   hidden.npc.subtype = 'minion';
+  hidden.enabled = true;
   hidden.npc.hitPool = [{ current: 3, max: '', temp: '' }];
 
-  return { ...WidgetNimbleGroupFactory('dev-nimble-group'), id: 'dev-nimble-group', enabled: true, actors: [player, npc, hidden] };
+  const flunky = WidgetNimbleGroupActorNpcFactory('henchman', 3);
+  flunky.name = 'Morrow';
+  flunky.role = 'Hired hand';
+  flunky.enabled = true;
+  flunky.npc.subtype = 'flunky';
+  flunky.npc.hitPool = [{ current: 7, max: '', temp: '' }];
+
+  const regular = WidgetNimbleGroupActorNpcFactory('guard', 4);
+  regular.name = 'Gate Guard';
+  regular.role = 'Regular';
+  regular.enabled = true;
+  regular.npc.subtype = 'regular';
+  regular.npc.hitPool = [{ current: 12, max: '', temp: '' }];
+
+  return { ...WidgetNimbleGroupFactory('dev-nimble-group'), id: 'dev-nimble-group', enabled: true, actors: [player, npc, hidden, flunky, regular] };
 }
 
 const toggleActor = (actor: WidgetNimbleGroupActor) => {
@@ -97,6 +113,7 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer, current: Nimble
       <TableWidgetsNimbleGroupContent
         :actors="group.actors.filter(actor => isOwner || actor.enabled)"
         :is-owner="isOwner"
+        :avatar-srcs="avatarSrcs"
         @add-condition="(actorId, condition) => addCondition(group.actors.find(actor => actor.id === actorId)!, condition)"
         @add-npc-hit-point="actorId => addHitPool(group.actors.find(actor => actor.id === actorId)!)"
         @edit-actor="editActor"

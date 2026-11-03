@@ -8,6 +8,7 @@ import {
   isWidgetNimbleGroup,
   isWidgetNimbleGroupActorNpc,
   isWidgetNimbleGroupActorPlayer,
+  nimbleNpcSubtypeIcon,
   normalizeNimbleActorRanks,
   normalizeNimbleConditions,
   WidgetNimbleGroupActorNpcFactory,
@@ -25,6 +26,13 @@ describe('nimble group helpers', () => {
   it('validates NPC discriminants', () => {
     expect(isWidgetNimbleGroupActorNpc(WidgetNimbleGroupActorNpcFactory())).toBe(true);
     expect(isWidgetNimbleGroupActorNpc({ ...WidgetNimbleGroupActorNpcFactory(), npc: { ...WidgetNimbleGroupActorNpcFactory().npc, armor: 'invalid' } })).toBe(false);
+  });
+
+  it('maps visible NPC subtypes to distinctive icons while leaving regulars unmarked', () => {
+    expect(nimbleNpcSubtypeIcon('legendary')).toBe('keyboard_double_arrow_down');
+    expect(nimbleNpcSubtypeIcon('minion')).toBe('grass');
+    expect(nimbleNpcSubtypeIcon('flunky')).toBe('keyboard_double_arrow_down');
+    expect(nimbleNpcSubtypeIcon('regular')).toBeUndefined();
   });
 
   it('requires ordered string conditions for both actor types', () => {

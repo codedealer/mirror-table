@@ -53,6 +53,15 @@ export const WidgetNimbleGroupActorNpcFactory = (id = '', rank = 0): WidgetNimbl
   },
 });
 
+export const nimbleNpcSubtypeIcon = (subtype: WidgetNimbleGroupActorNpc['npc']['subtype']): string | undefined => {
+  switch (subtype) {
+    case 'legendary': return 'keyboard_double_arrow_down';
+    case 'minion': return 'grass';
+    case 'flunky': return 'keyboard_double_arrow_down';
+    case 'regular': return undefined;
+  }
+};
+
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 };
