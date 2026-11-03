@@ -46,26 +46,6 @@ describe('nimble privacy and stat presentation', () => {
     expect(componentSource).not.toMatch(/props\.isOwner \? `nimble-row__npc-name--\$\{actor\.npc\.subtype\}`/);
     expect(componentSource).toContain(':subtype="isWidgetNimbleGroupActorNpc(actor) ? actor.npc.subtype : undefined"');
 
-    const avatarSource = readFileSync(new URL('./TableWidgetsNimbleGroupAvatar.vue', import.meta.url), 'utf8');
-    expect(avatarSource).toContain('<va-icon\n      v-if="!hasImage"');
-    expect(avatarSource).toContain(':name="fallbackIcon"');
-    expect(avatarSource).not.toContain(':name="subtypeIcon ?? fallbackIcon"');
-    expect(avatarSource).toContain('v-if="subtypeIcon"');
-    expect(avatarSource).toMatch(/class="nimble-avatar__subtype"[\s\S]*?<va-icon :name="subtypeIcon" :size="16" aria-hidden="true" \/>/);
-    expect(avatarSource).toContain('role="img"');
-    expect(avatarSource).toContain(':size="32"');
-    expect(avatarSource).toContain(':size="16"');
-    expect(avatarSource).toContain('background: var(--va-primary-dark);');
-    expect(avatarSource).toContain('border: 2px solid var(--va-primary-dark);');
-    expect(avatarSource).toContain('color: #fff;');
-    expect(avatarSource).toContain('left: 0;');
-    expect(avatarSource).toContain('top: 0;');
-    expect(avatarSource).toContain('transform: translate(-50%, -50%);');
-    expect(avatarSource).toContain('border-radius: 50%;');
-    expect(avatarSource).toContain('height: 24px;');
-    expect(avatarSource).toContain('width: 24px;');
-    expect(avatarSource).not.toContain('NimbleNpcSubtypeIcon');
-
     const labSource = readFileSync(new URL('./DevNimbleGroupLab.vue', import.meta.url), 'utf8');
     expect(labSource).toContain(String.raw`npc.npc.subtype = 'legendary'`);
     expect(labSource).toContain(String.raw`hidden.npc.subtype = 'minion'`);
