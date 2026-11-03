@@ -82,6 +82,14 @@ const updateHitPoints = (actor: WidgetNimbleGroupActorNpc | WidgetNimbleGroupAct
   hitPointPopoverOpen.value[key] = false;
 };
 
+const removeHitPointPool = (actor: WidgetNimbleGroupActorNpc, index: number) => {
+  if (!props.isOwner)
+    return;
+  const key = `${actor.id}-${index}`;
+  emit('updateHitPoints', actor, index, { current: '', max: '', temp: '' });
+  hitPointPopoverOpen.value[key] = false;
+};
+
 const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
   if (!props.isOwner)
     return;
@@ -152,7 +160,8 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
             <va-popover v-model="conditionPopoverOpen[actor.id]" trigger="click" placement="bottom-end" content-class="nimble-row__condition-popover">
               <va-button size="small" preset="plain" icon="add" :aria-label="`Add condition to ${actor.name}`" title="Add condition" />
               <template #body>
-                <va-input v-model="conditionDraft[actor.id]" placeholder="Condition" hide-details autofocus @keyup.enter="addCondition(actor.id)" /><va-button size="small" round icon="check" aria-label="Add condition" @click="addCondition(actor.id)" />
+                <va-input v-model="conditionDraft[actor.id]" class="nimble-row__condition-input" placeholder="Condition" hide-details autofocus @keyup.enter="addCondition(actor.id)" />
+                <va-button class="nimble-row__condition-submit" preset="plain" size="small" icon="check" aria-label="Add condition" title="Add condition" @click="addCondition(actor.id)" />
               </template>
             </va-popover>
             <va-button preset="plain" icon="edit" :aria-label="`Edit ${actor.name}`" title="Edit actor" @click="emit('editActor', actor.id)" />
@@ -179,6 +188,7 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
                   <va-icon name="favorite" color="primary-dark" aria-hidden="true" />{{ hitPoints.current }}<template v-if="isNimbleValueSet(hitPoints.max)">/{{ hitPoints.max }}</template><template v-if="hitPoints.temp"><span class="nimble-row__hitpoint-temp">+{{ hitPoints.temp }}</span></template>
                 </button><template #body>
                   <va-input v-model="hitPointDraft[`${actor.id}-${index}`].current" class="nimble-row__hitpoint-input" type="number" label="Current" hide-details @keydown.enter.prevent.stop="updateHitPoints(actor, index)" /><va-input v-model="hitPointDraft[`${actor.id}-${index}`].max" class="nimble-row__hitpoint-input" type="number" label="Max" hide-details @keydown.enter.prevent.stop="updateHitPoints(actor, index)" /><va-input v-model="hitPointDraft[`${actor.id}-${index}`].temp" class="nimble-row__hitpoint-input" type="number" label="Temp" hide-details @keydown.enter.prevent.stop="updateHitPoints(actor, index)" /><va-input v-model="hitPointDraft[`${actor.id}-${index}`].damage" class="nimble-row__hitpoint-input nimble-row__hitpoint-damage-input" type="number" label="Damage" hide-details @keydown.enter.prevent.stop="updateHitPoints(actor, index)" />
+                  <va-button v-if="actor.npc.hitPool.length > 1" class="nimble-row__hitpoint-remove" preset="plain" size="small" icon="close" type="button" :aria-label="`Remove hit point pool ${index + 1}`" title="Remove hit point pool" @click="removeHitPointPool(actor, index)" />
                 </template>
               </va-popover>
             </template>
@@ -404,10 +414,18 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
   width: 4.5rem;
 }
 .nimble-row__hitpoint-popover {
-  align-items: flex-end;
+  padding: 0.5rem;
+}
+.nimble-row__hitpoint-popover .va-popover__body {
+  align-items: center;
   display: flex;
   gap: 0.35rem;
-  padding: 0.5rem;
+}
+.nimble-row__hitpoint-remove {
+  align-self: center;
+  flex: 0 0 auto;
+  /* Offset Vuestic's label so the icon centers on the editable input control. */
+  transform: translateY(9px);
 }
 .nimble-row__conditions {
   display: flex;
@@ -426,10 +444,20 @@ const updatePlayerWounds = (actor: WidgetNimbleGroupActorPlayer) => {
   opacity: 1;
 }
 .nimble-row__condition-popover {
+  padding: 0.5rem;
+}
+.nimble-row__condition-popover .va-popover__body {
   align-items: center;
   display: flex;
-  gap: 0.35rem;
-  padding: 0.5rem;
+  gap: 0.5rem;
+}
+.nimble-row__condition-input {
+  flex: 1 1 auto;
+  min-width: 9rem;
+}
+.nimble-row__condition-submit {
+  align-self: center;
+  flex: 0 0 auto;
 }
 .nimble-row__private-content {
   background: color-mix(in srgb, var(--va-background-element) 75%, var(--va-background-primary));
