@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import type { DiceProfileId, DiceRollerMacro, DieResult } from '~/models/Dice';
+import type { DiceProfileId, DiceRollerMacro, EvaluationTraceNode, RandomGenerator } from '~/models/Dice';
 import { diceProfileOptions, useDiceRoller } from '~/composables/useDiceRoller';
 import { canonicalDiceExpression, createDiceRollerMacroAdapter, type DiceRollerMacroAdapter, useDiceRollerMacros } from '~/composables/useDiceRollerMacros';
 import { MAX_SAVED_DICE_MACROS } from '~/models/Dice';
+import { evaluateDiceExpression } from '~/utils/dice-evaluator';
+import { Dnd5eProfile, NimbleProfile } from '~/utils/dice-lowering';
+import { parseDiceExpression } from '~/utils/dice-parser';
 
 const props = defineProps<{ macroAdapter?: DiceRollerMacroAdapter }>();
 
@@ -58,12 +61,25 @@ if (userStore) {
 const inputRef = ref<{ $el?: HTMLElement } | null>(null);
 const historyOpen = ref(false);
 const syntaxHelpOpen = ref(false);
+const expressionHasSyntaxError = computed(() => {
+  if (!expression.value.trim())
+    return false;
+
+  try {
+    parseDiceExpression(expression.value);
+    return false;
+  } catch {
+    return true;
+  }
+});
 
 const syntaxGroups = [
   {
     title: 'General',
     entries: [
       { syntax: 'NdX', description: 'Roll N dice with X sides.', example: '3d6 + 5' },
+      { syntax: '+ - * / %', description: 'Add, subtract, multiply, divide, or take the remainder; multiplication, division, and remainder bind before addition and subtraction.', example: '2d6 + 3 * 4' },
+      { syntax: '(expr)~N', description: 'Roll the parenthesized expression N independent times and add the totals (N is 1–10,000).', example: '(nd 1d6 + 2)~8' },
       { syntax: 'khN / kN', description: 'Keep the highest N dice.', example: '4d6kh3' },
       { syntax: 'klN', description: 'Keep the lowest N dice.', example: '2d20kl1' },
       { syntax: 'dlN / dhN', description: 'Drop the lowest or highest N dice.', example: '4d6dl1' },
@@ -83,6 +99,7 @@ const syntaxGroups = [
     entries: [
       { syntax: 'NdXaM', description: 'Advantage: roll M extra dice and drop the lowest M.', example: '1d20a' },
       { syntax: 'NdXdM', description: 'Disadvantage: roll M extra dice and drop the highest M.', example: '1d20d' },
+      { syntax: 'Nat 1 / 20', description: 'With this profile, hint the natural face only when exactly one d20 survives Keep/Drop.', example: '2d20kl1' },
     ],
   },
   {
@@ -92,7 +109,7 @@ const syntaxGroups = [
       { syntax: 'nd NdXaM', description: 'Nimble damage with advantage on the primary die.', example: 'nd 2d6a' },
       { syntax: 'nd NdXdM', description: 'Nimble damage with disadvantage on the primary die.', example: 'nd 2d6d' },
       { syntax: 'nd NdX + M', description: 'Nimble damage with a flat modifier.', example: 'nd 2d6 + 3' },
-      { syntax: '+^N / bN', description: 'Bump each face value, capped at the die maximum.', example: '1d6+^1' },
+      { syntax: '+^N / bN', description: 'Add to each face value without a maximum cap.', example: '1d6+^1' },
     ],
   },
 ];
@@ -234,20 +251,275 @@ const remapBeforeInput = (event: InputEvent) => {
   }));
 };
 
-const dieFlagLabels = (die: DieResult): string[] => {
-  const labels: string[] = [];
-  if (die.flags.dropped)
-    labels.push('dropped');
-  if (die.flags.exploded)
-    labels.push('exploded');
-  if (die.flags.rerolled)
-    labels.push('rerolled');
-  if (die.flags.bumped)
-    labels.push('bumped');
-  if (die.flags.capped)
-    labels.push('capped');
-  return labels;
+const tracePools = (trace: EvaluationTraceNode): Extract<EvaluationTraceNode, { type: 'POOL' }>[] => {
+  if (trace.type === 'POOL')
+    return [trace];
+  if (trace.type === 'GROUPED_POOL')
+    return trace.pools.flatMap(tracePools);
+  if (trace.type === 'REPETITION')
+    return trace.repetitions.flatMap(tracePools);
+  if (trace.type === 'ARITHMETIC')
+    return [...tracePools(trace.left), ...tracePools(trace.right)];
+  return [];
 };
+
+type ResultTraceUnit =
+  | { type: 'pool'; key: string; pools: Extract<EvaluationTraceNode, { type: 'POOL' }>[] }
+  | { type: 'nimble-group'; key: string; pools: Extract<EvaluationTraceNode, { type: 'POOL' }>[]; value: number; voided: boolean };
+
+// Keep Nimble's semantic group boundary in the ordinary result rundown too.
+const traceResultUnits = (trace: EvaluationTraceNode): ResultTraceUnit[] => {
+  if (trace.type === 'POOL')
+    return [{ type: 'pool', key: `pool-${trace.poolId}`, pools: [trace] }];
+  if (trace.type === 'GROUPED_POOL') {
+    if (trace.intent === 'nimble-damage') {
+      const pools = trace.pools.flatMap(tracePools);
+      if (pools.length > 0) {
+        return [{
+          type: 'nimble-group',
+          key: `nimble-${pools.map(pool => pool.poolId).join('-')}`,
+          pools,
+          value: trace.voided ? 0 : trace.value,
+          voided: Boolean(trace.voided),
+        }];
+      }
+      return [];
+    }
+    return trace.pools.flatMap(traceResultUnits);
+  }
+  if (trace.type === 'REPETITION')
+    return trace.repetitions.flatMap(traceResultUnits);
+  if (trace.type === 'ARITHMETIC')
+    return [...traceResultUnits(trace.left), ...traceResultUnits(trace.right)];
+  return [];
+};
+
+type RepetitionTraceUnit =
+  | { type: 'pool'; key: string; pools: Extract<EvaluationTraceNode, { type: 'POOL' }>[] }
+  | { type: 'nimble-group'; key: string; pools: Extract<EvaluationTraceNode, { type: 'POOL' }>[]; value: number; voided: boolean };
+
+// Preserve each Nimble intent boundary in repetition details so sibling `nd`
+// groups remain distinct instead of flattening into indistinguishable Primary rows.
+const traceSectionUnits = (trace: EvaluationTraceNode): RepetitionTraceUnit[] => {
+  if (trace.type === 'POOL')
+    return [{ type: 'pool', key: `pool-${trace.poolId}`, pools: [trace] }];
+  if (trace.type === 'GROUPED_POOL') {
+    if (trace.intent === 'nimble-damage') {
+      const pools = trace.pools.flatMap(tracePools);
+      return [{
+        type: 'nimble-group',
+        key: `nimble-${pools.map(pool => pool.poolId).join('-') || 'empty'}`,
+        pools,
+        value: trace.voided ? 0 : trace.value,
+        voided: Boolean(trace.voided),
+      }];
+    }
+    return trace.pools.flatMap(traceSectionUnits);
+  }
+  if (trace.type === 'ARITHMETIC')
+    return [...traceSectionUnits(trace.left), ...traceSectionUnits(trace.right)];
+  return [];
+};
+
+const genericPoolNumbers = (trace: EvaluationTraceNode): Map<number, number> => {
+  const numbers = new Map<number, number>();
+  const visit = (node: EvaluationTraceNode, nextNumber: number): number => {
+    if (node.type === 'POOL') {
+      if (!node.provenance)
+        numbers.set(node.poolId, nextNumber++);
+      return nextNumber;
+    }
+    if (node.type === 'REPETITION') {
+      // Generic pool numbering starts over for each independently evaluated repetition.
+      node.repetitions.forEach(repetition => visit(repetition, 1));
+      return nextNumber;
+    }
+    if (node.type === 'GROUPED_POOL')
+      return node.pools.reduce((next, pool) => visit(pool, next), nextNumber);
+    if (node.type === 'ARITHMETIC')
+      return visit(node.right, visit(node.left, nextNumber));
+    return nextNumber;
+  };
+  visit(trace, 1);
+  return numbers;
+};
+
+const poolLabel = (pool: Extract<EvaluationTraceNode, { type: 'POOL' }>, index: number, compact = false): string => {
+  if (pool.provenance?.intent === 'nimble-damage') {
+    if (pool.provenance.role === 'primary')
+      return compact ? 'Primary' : 'Nimble damage · primary die';
+    if (pool.provenance.role === 'extra')
+      return compact ? 'Extra' : 'Nimble damage · extra dice';
+  }
+  if (pool.provenance?.intent === 'dnd5e-advantage')
+    return 'Advantage';
+  return `Pool ${index + 1}`;
+};
+
+const resultPoolLabel = (trace: EvaluationTraceNode, pool: Extract<EvaluationTraceNode, { type: 'POOL' }>, index: number): string => {
+  const genericIndex = genericPoolNumbers(trace).get(pool.poolId);
+  return poolLabel(pool, (genericIndex ?? index + 1) - 1, true);
+};
+
+const traceRepetitions = (trace: EvaluationTraceNode): Extract<EvaluationTraceNode, { type: 'REPETITION' }>[] => {
+  if (trace.type === 'REPETITION')
+    return [trace];
+  if (trace.type === 'GROUPED_POOL')
+    return trace.pools.flatMap(traceRepetitions);
+  if (trace.type === 'ARITHMETIC')
+    return [...traceRepetitions(trace.left), ...traceRepetitions(trace.right)];
+  return [];
+};
+
+const nestedTraceRepetitions = (trace: EvaluationTraceNode): Extract<EvaluationTraceNode, { type: 'REPETITION' }>[] => {
+  if (trace.type === 'REPETITION')
+    return [trace];
+  if (trace.type === 'GROUPED_POOL')
+    return trace.pools.flatMap(nestedTraceRepetitions);
+  if (trace.type === 'ARITHMETIC')
+    return [...nestedTraceRepetitions(trace.left), ...nestedTraceRepetitions(trace.right)];
+  return [];
+};
+
+const traceRepetitionSections = (repetition: Extract<EvaluationTraceNode, { type: 'REPETITION' }>) => {
+  const sections: { outcome: EvaluationTraceNode; label: string; depth: number }[] = [];
+  const append = (node: Extract<EvaluationTraceNode, { type: 'REPETITION' }>, prefix = '', depth = 0) => {
+    node.repetitions.forEach((outcome, index) => {
+      const path = prefix ? `${prefix}.${index + 1}` : String(index + 1);
+      sections.push({ outcome, label: `Repetition ${path}`, depth });
+      const nested = nestedTraceRepetitions(outcome);
+      nested.forEach((child, childIndex) => {
+        append(child, nested.length > 1 ? `${path}.${childIndex + 1}` : path, depth + 1);
+      });
+    });
+  };
+  append(repetition);
+  return sections;
+};
+
+const traceDieResult = (die: Extract<EvaluationTraceNode, { type: 'POOL' }>['dice'][number]): string => {
+  const rolls = [die.initialRoll, ...die.rerolls];
+  const rollText = rolls.length > 1 ? `${rolls[0]} ↻ ${rolls.slice(1).join(' ↻ ')}` : String(rolls[0]);
+  const settled = die.finalValue !== rolls.at(-1) ? ` → ${die.finalValue}` : '';
+  return `${rollText}${settled}`;
+};
+
+const traceDieText = (die: Extract<EvaluationTraceNode, { type: 'POOL' }>['dice'][number]): string =>
+  `${die.generatedBy ? '+ ' : ''}d${die.sides}: ${traceDieResult(die)}`;
+
+const traceDieHint = (die: Extract<EvaluationTraceNode, { type: 'POOL' }>['dice'][number]): string => {
+  const facts: string[] = [];
+  for (const event of die.events ?? []) {
+    switch (event.type) {
+      case 'ROLLED':
+        facts.push(`rolled ${event.value}`);
+        break;
+      case 'KEPT':
+        facts.push('kept after filtering');
+        break;
+      case 'DROPPED':
+        facts.push('dropped by Keep/Drop');
+        break;
+      case 'BUMPED':
+        facts.push(`bumped ${event.from} by ${event.amount} to ${event.to}`);
+        break;
+      case 'REROLLED':
+        facts.push(`rerolled ${event.from} to ${event.to}`);
+        break;
+      case 'EXPLODED':
+        facts.push('Explosion');
+        break;
+      case 'ADDED_BY_EXPLOSION':
+        facts.push(`added by an Explosion from die ${event.sourceDieId}`);
+        break;
+    }
+  }
+  return facts.join('; ') || (die.dropped ? 'dropped' : 'kept as rolled');
+};
+
+const traceValue = (trace: EvaluationTraceNode): number => {
+  if (trace.type === 'LITERAL')
+    return trace.value;
+  if (trace.type === 'POOL')
+    return trace.subtotal;
+  if (trace.type === 'GROUPED_POOL' || trace.type === 'REPETITION')
+    return trace.value;
+  return trace.value;
+};
+
+const traceOperand = (trace: EvaluationTraceNode): string => {
+  if (trace.type === 'LITERAL')
+    return String(trace.value);
+  if (trace.type === 'POOL')
+    return String(trace.subtotal);
+  if (trace.type === 'GROUPED_POOL') {
+    if (trace.voided)
+      return '0';
+    const terms = trace.pools.map(traceOperand);
+    if (trace.flatModifier !== undefined)
+      terms.push(String(trace.flatModifier));
+    if (terms.length === 0)
+      return String(trace.value);
+    if (terms.length === 1)
+      return terms[0]!;
+    return `(${terms.join(' + ')})`;
+  }
+  if (trace.type === 'REPETITION')
+    return `(${trace.repetitions.map(traceOperand).join(' + ')})`;
+  return `(${traceOperand(trace.left)} ${trace.operator} ${traceOperand(trace.right)})`;
+};
+
+const naturalHintText = (hint: NonNullable<typeof result.value>['naturalHints'][number]) => `Nat ${hint.face}`;
+const naturalHintDescription = (hint: NonNullable<typeof result.value>['naturalHints'][number]) =>
+  `${naturalHintText(hint)} on d${hint.sides}, die ${hint.dieId} in ${hint.context}`;
+const poolNaturalHints = (pool: Extract<EvaluationTraceNode, { type: 'POOL' }>) =>
+  (result.value?.naturalHints ?? []).filter(hint => hint.poolId === pool.poolId);
+const dieNaturalHint = (pool: Extract<EvaluationTraceNode, { type: 'POOL' }>, dieId: number) =>
+  poolNaturalHints(pool).find(hint => hint.dieId === dieId);
+const resultNaturalClass = computed(() => {
+  const kinds = new Set((result.value?.naturalHints ?? []).map(hint => hint.kind));
+  return {
+    'dice-roller__result-button--natural-minimum': kinds.has('minimum'),
+    'dice-roller__result-button--natural-maximum': kinds.has('maximum'),
+  };
+});
+const resultNaturalDescription = computed(() =>
+  (result.value?.naturalHints ?? []).map(naturalHintDescription).join('; '));
+
+// Development prototype hook: evaluate fixture draws through the public evaluator,
+// then feed its complete result into the same result presentation used by normal rolls.
+const loadDeterministicResult = async (fixture: {
+  expression: string;
+  profileId: DiceProfileId;
+  draws: number[];
+}): Promise<void> => {
+  const profile = fixture.profileId === 'dnd5e'
+    ? Dnd5eProfile
+    : fixture.profileId === 'nimble5e'
+      ? NimbleProfile
+      : undefined;
+  let drawIndex = 0;
+  const rng: RandomGenerator = async (min, max) => {
+    const draw = fixture.draws[drawIndex++];
+    if (draw === undefined || draw < min || draw > max)
+      throw new Error(`Fixture ran out of valid draws for d${max}`);
+    return draw;
+  };
+
+  expression.value = fixture.expression;
+  profileId.value = fixture.profileId;
+  error.value = undefined;
+  result.value = await evaluateDiceExpression(fixture.expression, rng, profile);
+};
+
+const clearDeterministicResult = () => {
+  expression.value = '';
+  profileId.value = 'none';
+  result.value = undefined;
+  error.value = undefined;
+};
+
+defineExpose({ loadDeterministicResult, clearDeterministicResult });
 </script>
 
 <template>
@@ -263,6 +535,7 @@ const dieFlagLabels = (die: DieResult): string[] => {
             :color="profileId === 'none' ? 'tertiary' : 'primary-dark'"
             icon="settings"
             :aria-label="`Dice profile: ${diceProfileOptions.find(option => option.id === profileId)?.label}`"
+            :title="`System Profile: ${diceProfileOptions.find(option => option.id === profileId)?.label}; natural hints follow the selected profile`"
           />
         </template>
       </VaMenu>
@@ -276,9 +549,7 @@ const dieFlagLabels = (die: DieResult): string[] => {
             <section class="dice-roller__section" aria-label="Saved macros">
               <div class="dice-roller__section-header">
                 <span class="dice-roller__section-title">Saved macros <span class="dice-roller__section-count">{{ macros.length }}/{{ MAX_SAVED_DICE_MACROS }}</span></span>
-                <VaButton size="small" preset="secondary" :disabled="saveDisabled" :title="saveHint" aria-label="Save current expression" @click="saveCurrentMacro">
-                  Save current expression
-                </VaButton>
+                <VaButton size="small" preset="secondary" icon="bookmark_add" :disabled="saveDisabled" :title="saveHint" aria-label="Save current expression" @click.stop="saveCurrentMacro" />
               </div>
               <span v-if="saveValidationError && expression.trim()" class="dice-roller__save-hint" role="status">{{ saveValidationError }}</span>
               <span v-if="macros.length === 0" class="dice-roller__empty">No saved macros yet</span>
@@ -289,8 +560,8 @@ const dieFlagLabels = (die: DieResult): string[] => {
                     <code v-if="macro.label">{{ macro.expression }}</code>
                     <small v-if="macro.profileId !== 'none'">{{ diceProfileOptions.find(option => option.id === macro.profileId)?.label }}</small>
                   </button>
-                  <VaButton preset="plain" icon="edit" aria-label="Rename macro" @click="renameMacroPrompt(macro)" />
-                  <VaButton preset="plain" icon="delete" aria-label="Delete macro" @click="deleteMacro(macro.id)" />
+                  <VaButton preset="plain" icon="edit" aria-label="Rename macro" @click.stop="renameMacroPrompt(macro)" />
+                  <VaButton preset="plain" icon="delete" aria-label="Delete macro" @click.stop="deleteMacro(macro.id)" />
                 </div>
               </div>
             </section>
@@ -337,8 +608,10 @@ const dieFlagLabels = (die: DieResult): string[] => {
         ref="inputRef"
         v-model="expression"
         class="dice-roller__input"
+        :class="{ 'dice-roller__input--invalid': expressionHasSyntaxError }"
         placeholder="4d6kh3 + 2"
         aria-label="Dice expression"
+        input-aria-label="Dice expression"
         @keydown="rememberPhysicalKey"
         @beforeinput="remapBeforeInput"
         @keyup.enter="rollAndSelectExpression"
@@ -346,44 +619,158 @@ const dieFlagLabels = (die: DieResult): string[] => {
         @keyup.down="showNextOrClearExpression"
       />
 
-      <VaButton
-        class="dice-roller__roll-button"
-        icon="casino"
-        :loading="rolling"
-        :disabled="!expression.trim()"
-        aria-label="Roll dice"
-        @click="rollAndSelectExpression"
-      />
-
       <VaDivider vertical style="align-self:normal; margin-block:5px" />
 
-      <VaDropdown class="dice-roller__result-menu" placement="bottom-end">
+      <VaDropdown class="dice-roller__result-menu" placement="bottom-end" :close-on-content-click="false" stick-to-edges>
         <template #anchor>
-          <VaButton class="dice-roller__result-button" preset="primary" :aria-label="result ? `Show details for ${result.expression}` : 'No roll yet'">
-            <strong class="dice-roller__total">{{ result?.total ?? 0 }}</strong>
-          </VaButton>
+          <div class="dice-roller__result-anchor">
+            <VaButton
+              class="dice-roller__result-button"
+              :class="resultNaturalClass"
+              preset="primary"
+              :loading="rolling"
+              :aria-busy="rolling"
+              :title="resultNaturalDescription || undefined"
+              :aria-label="rolling ? 'Rolling dice' : result ? `Show details for ${result.expression}, total ${result.total}${resultNaturalDescription ? `; ${resultNaturalDescription}` : ''}` : 'No roll yet'"
+            >
+              <strong class="dice-roller__total">{{ result?.total ?? 0 }}</strong>
+            </VaButton>
+          </div>
         </template>
         <VaDropdownContent class="dice-roller__detail">
           <template v-if="result">
             <div class="dice-roller__detail-title">
               Roll details
             </div>
-            <div v-for="(pool, poolIndex) in result.breakdown" :key="poolIndex" class="dice-roller__pool">
-              <span class="dice-roller__pool-subtotal">Pool {{ poolIndex + 1 }} <strong>{{ pool.subtotal }}</strong></span>
-              <div class="dice-roller__dice">
-                <VaChip
-                  v-for="(die, dieIndex) in pool.dice"
-                  :key="dieIndex"
-                  size="small"
-                  :color="die.flags.dropped ? 'secondary' : die.flags.capped ? 'warning' : 'background-element'"
-                  :class="{ 'dice-roller__die--dropped': die.flags.dropped }"
-                  :title="dieFlagLabels(die).join(', ') || 'kept as-is'"
+            <section v-for="(repetition, repetitionIndex) in traceRepetitions(result.trace)" :key="`repetition-${repetitionIndex}`" class="dice-roller__repetition-results" aria-label="Repetition results">
+              <section v-for="section in traceRepetitionSections(repetition)" :key="section.label" class="dice-roller__repetition-result" :aria-label="section.label" :style="{ marginInlineStart: `${section.depth * 12}px` }">
+                <div class="dice-roller__repetition-heading">
+                  <div>
+                    <strong>{{ section.label }}</strong>
+                  </div>
+                  <strong class="dice-roller__repetition-value" :aria-label="`${section.label} total ${traceValue(section.outcome)}`">= {{ traceValue(section.outcome) }}</strong>
+                </div>
+                <section
+                  v-for="(unit, unitIndex) in traceSectionUnits(section.outcome)"
+                  :key="`${unit.key}-${unitIndex}`"
+                  class="dice-roller__repetition-unit"
+                  :class="{ 'dice-roller__repetition-unit--nimble': unit.type === 'nimble-group' }"
+                  :aria-label="unit.type === 'nimble-group' ? (unit.voided ? 'Nimble damage group, voided, total zero' : `Nimble damage group, total ${unit.value}`) : undefined"
                 >
-                  d{{ die.sides }}: {{ die.rawRoll }}<template v-if="die.finalValue !== die.rawRoll">
-                    &rarr; {{ die.finalValue }}
-                  </template>
-                </VaChip>
+                  <div v-if="unit.type === 'nimble-group'" class="dice-roller__repetition-group-heading">
+                    <span>Nimble damage</span>
+                    <strong :aria-label="unit.voided ? 'Group total zero, voided' : `Group total ${unit.value}`">
+                      = {{ unit.value }}
+                    </strong>
+                  </div>
+                  <div v-for="(pool, poolIndex) in unit.pools" :key="pool.poolId" class="dice-roller__pool">
+                    <div class="dice-roller__pool-heading">
+                      <span class="dice-roller__pool-label">{{ poolLabel(pool, (genericPoolNumbers(section.outcome).get(pool.poolId) ?? poolIndex + 1) - 1, true) }}</span>
+                      <span
+                        v-for="hint in poolNaturalHints(pool)"
+                        :key="`${hint.poolId}-${hint.dieId}-${hint.kind}`"
+                        class="dice-roller__pool-natural"
+                        :class="`dice-roller__pool-natural--${hint.kind}`"
+                        :title="naturalHintDescription(hint)"
+                        :aria-label="naturalHintDescription(hint)"
+                      >{{ naturalHintText(hint) }}</span>
+                      <span v-if="unit.type === 'pool'" class="dice-roller__pool-subtotal" :aria-label="`Pool value ${pool.subtotal}`">
+                        = <strong>{{ pool.subtotal }}</strong>
+                      </span>
+                    </div>
+                    <div class="dice-roller__dice" :aria-label="`${poolLabel(pool, (genericPoolNumbers(section.outcome).get(pool.poolId) ?? poolIndex + 1) - 1, true)} dice`">
+                      <VaChip
+                        v-for="die in pool.dice"
+                        :key="die.dieId"
+                        size="small"
+                        :color="die.dropped ? 'secondary' : 'background-element'"
+                        :class="{
+                          'dice-roller__die--dropped': die.dropped,
+                          'dice-roller__die--exploded': die.exploded,
+                          'dice-roller__die--natural-minimum': dieNaturalHint(pool, die.dieId)?.kind === 'minimum',
+                          'dice-roller__die--natural-maximum': dieNaturalHint(pool, die.dieId)?.kind === 'maximum',
+                        }"
+                        :title="[traceDieHint(die), dieNaturalHint(pool, die.dieId) ? naturalHintDescription(dieNaturalHint(pool, die.dieId)!) : ''].filter(Boolean).join('; ')"
+                        :aria-label="`${traceDieText(die)}; ${traceDieHint(die)}${dieNaturalHint(pool, die.dieId) ? `; ${naturalHintDescription(dieNaturalHint(pool, die.dieId)!)}` : ''}`"
+                      >
+                        <span class="dice-roller__die-metadata" aria-hidden="true">{{ die.generatedBy ? '+ ' : '' }}d{{ die.sides }}:</span>
+                        {{ traceDieResult(die) }}
+                        <span v-if="die.exploded" class="dice-roller__die-marker" title="Explosion" aria-hidden="true">✦</span>
+                        <span v-if="die.capped" class="dice-roller__die-marker">Safety cap</span>
+                        <span v-if="die.bumpAmount" class="dice-roller__die-marker">+{{ die.bumpAmount }} bump</span>
+                      </VaChip>
+                    </div>
+                  </div>
+                </section>
+                <div class="dice-roller__equation dice-roller__repetition-equation" :aria-label="`${section.label} calculation`">
+                  <strong>{{ traceOperand(section.outcome) }} = {{ traceValue(section.outcome) }}</strong>
+                </div>
+              </section>
+            </section>
+            <div v-if="result.capped" class="dice-roller__cap-warning" role="alert">
+              Safety cap reached — this is a partial result.
+            </div>
+            <template v-if="traceRepetitions(result.trace).length === 0">
+              <div
+                v-for="unit in traceResultUnits(result.trace)"
+                :key="unit.key"
+                class="dice-roller__pool-result-unit"
+                :class="{ 'dice-roller__pool-result-unit--pool': unit.type === 'pool', 'dice-roller__pool-result-unit--nimble': unit.type === 'nimble-group' }"
+                :aria-label="unit.type === 'nimble-group' ? (unit.voided ? 'Nimble damage group, voided, total zero' : `Nimble damage group, total ${unit.value}`) : undefined"
+              >
+                <div
+                  v-if="unit.type === 'nimble-group'"
+                  class="dice-roller__pool-result-unit-heading"
+                  :title="unit.voided ? 'Nimble damage group is voided' : undefined"
+                >
+                  <span>Nimble damage</span>
+                  <strong :aria-label="unit.voided ? 'Nimble damage total zero, voided' : `Nimble damage total ${unit.value}`">
+                    = {{ unit.value }}
+                  </strong>
+                </div>
+                <div v-for="(pool, poolIndex) in unit.pools" :key="pool.poolId" class="dice-roller__pool">
+                  <div class="dice-roller__pool-heading">
+                    <span class="dice-roller__pool-label">{{ resultPoolLabel(result.trace, pool, poolIndex) }}</span>
+                    <span
+                      v-for="hint in poolNaturalHints(pool)"
+                      :key="`${hint.poolId}-${hint.dieId}-${hint.kind}`"
+                      class="dice-roller__pool-natural"
+                      :class="`dice-roller__pool-natural--${hint.kind}`"
+                      :title="naturalHintDescription(hint)"
+                      :aria-label="naturalHintDescription(hint)"
+                    >{{ naturalHintText(hint) }}</span>
+                    <span class="dice-roller__pool-subtotal" :aria-label="`Pool value ${pool.subtotal}`">
+                      = <strong>{{ pool.subtotal }}</strong>
+                    </span>
+                  </div>
+                  <div class="dice-roller__dice" :aria-label="resultPoolLabel(result.trace, pool, poolIndex) ? `${resultPoolLabel(result.trace, pool, poolIndex)} dice` : 'Dice'">
+                    <VaChip
+                      v-for="die in pool.dice"
+                      :key="die.dieId"
+                      size="small"
+                      :color="die.dropped ? 'secondary' : 'background-element'"
+                      :class="{
+                        'dice-roller__die--dropped': die.dropped,
+                        'dice-roller__die--exploded': die.exploded,
+                        'dice-roller__die--natural-minimum': dieNaturalHint(pool, die.dieId)?.kind === 'minimum',
+                        'dice-roller__die--natural-maximum': dieNaturalHint(pool, die.dieId)?.kind === 'maximum',
+                      }"
+                      :title="[traceDieHint(die), dieNaturalHint(pool, die.dieId) ? naturalHintDescription(dieNaturalHint(pool, die.dieId)!) : ''].filter(Boolean).join('; ')"
+                      :aria-label="`${traceDieText(die)}; ${traceDieHint(die)}${dieNaturalHint(pool, die.dieId) ? `; ${naturalHintDescription(dieNaturalHint(pool, die.dieId)!)}` : ''}`"
+                    >
+                      <span class="dice-roller__die-metadata" aria-hidden="true">{{ die.generatedBy ? '+ ' : '' }}d{{ die.sides }}:</span>
+                      {{ traceDieResult(die) }}
+                      <span v-if="die.exploded" class="dice-roller__die-marker" title="Explosion" aria-hidden="true">✦</span>
+                      <span v-if="die.capped" class="dice-roller__die-marker">Safety cap</span>
+                      <span v-if="die.bumpAmount" class="dice-roller__die-marker">+{{ die.bumpAmount }} bump</span>
+                    </VaChip>
+                  </div>
+                </div>
               </div>
+            </template>
+            <div class="dice-roller__equation" aria-label="Final calculation">
+              <span>Final calculation</span>
+              <strong>{{ traceOperand(result.trace) }} = {{ result.total }}</strong>
             </div>
           </template>
           <span v-else class="dice-roller__detail-empty">Roll the dice to see details.</span>
@@ -436,7 +823,6 @@ const dieFlagLabels = (die: DieResult): string[] => {
 
 .dice-roller__profile-button,
 .dice-roller__save-button,
-.dice-roller__roll-button,
 .dice-roller__history-button,
 .dice-roller__help-button {
   width: 2.25rem;
@@ -608,11 +994,26 @@ const dieFlagLabels = (die: DieResult): string[] => {
   display: contents;
 }
 
+.dice-roller__result-anchor {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .dice-roller__result-button {
+  position: relative;
   width: 3.5rem;
   height: 2.25rem;
   flex-shrink: 0;
   justify-content: center;
+}
+
+.dice-roller__result-button--natural-minimum .dice-roller__total {
+  color: var(--va-warning);
+}
+
+.dice-roller__result-button--natural-maximum .dice-roller__total {
+  color: var(--va-success);
 }
 
 .dice-roller__input {
@@ -620,8 +1021,13 @@ const dieFlagLabels = (die: DieResult): string[] => {
   flex: 0 1 12rem;
 }
 
-.dice-roller__roll-button {
-  display: none;
+.dice-roller__input :deep(.va-input-wrapper__field) {
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.dice-roller__input--invalid :deep(.va-input-wrapper__field) {
+  border-color: var(--va-warning);
 }
 
 .dice-roller__total {
@@ -634,8 +1040,12 @@ const dieFlagLabels = (die: DieResult): string[] => {
 .dice-roller__detail {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.6rem;
+  box-sizing: border-box;
+  width: min(22rem, calc(100vw - 2rem));
   max-width: min(28rem, calc(100vw - 2rem));
+  max-height: min(32rem, calc(100vh - 2rem));
+  overflow-y: auto;
 }
 
 .dice-roller__detail-title {
@@ -653,14 +1063,165 @@ const dieFlagLabels = (die: DieResult): string[] => {
   gap: 0.25rem;
 }
 
+.dice-roller__repetition-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+}
+
+.dice-roller__repetition-result,
+.dice-roller__pool-result-unit--nimble {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--va-background-border);
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--va-background-element) 70%, transparent);
+}
+
+.dice-roller__pool-result-unit--pool {
+  display: contents;
+}
+
+.dice-roller__pool-result-unit--nimble {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dice-roller__pool-result-unit-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--va-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.dice-roller__pool-result-unit-heading strong {
+  color: var(--va-text-primary);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dice-roller__repetition-result {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25rem 0.75rem;
+}
+
+.dice-roller__repetition-result > .dice-roller__pool {
+  width: 100%;
+}
+
+.dice-roller__repetition-unit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dice-roller__repetition-unit--nimble {
+  padding: 0.25rem 0.4rem;
+  border-inline-start: 2px solid var(--va-primary);
+  border-radius: 0.2rem;
+  background: color-mix(in srgb, var(--va-primary) 7%, transparent);
+}
+
+.dice-roller__repetition-group-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--va-text-secondary);
+  font-size: 0.7rem;
+}
+
+.dice-roller__repetition-group-heading strong {
+  color: var(--va-primary);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dice-roller__repetition-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dice-roller__repetition-heading > div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.dice-roller__repetition-value {
+  color: var(--va-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dice-roller__cap-warning {
+  padding: 0.375rem 0.5rem;
+  border-inline-start: 3px solid var(--va-warning);
+  color: var(--va-warning);
+  font-weight: 600;
+}
+
+.dice-roller__pool-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.dice-roller__pool-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.dice-roller__pool-natural {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.dice-roller__pool-natural--minimum {
+  color: var(--va-warning);
+}
+
+.dice-roller__pool-natural--maximum {
+  color: var(--va-success);
+}
+
 .dice-roller__pool-subtotal {
-  font-size: 0.85rem;
-  opacity: 0.7;
+  color: var(--va-primary);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .dice-roller__pool-subtotal strong {
+  color: inherit;
+}
+
+.dice-roller__pool-result-unit--nimble .dice-roller__pool-subtotal {
   color: var(--va-text-primary);
-  margin-left: 0.25rem;
+}
+
+.dice-roller__die-metadata {
+  margin-inline-end: 0.25em;
+  opacity: 0.58;
 }
 
 .dice-roller__dice {
@@ -674,18 +1235,108 @@ const dieFlagLabels = (die: DieResult): string[] => {
   text-decoration: line-through;
 }
 
+.dice-roller__die--natural-minimum {
+  color: var(--va-warning);
+  outline: 1px solid var(--va-warning);
+  outline-offset: -2px;
+  font-weight: 800;
+}
+
+.dice-roller__die--natural-maximum {
+  color: var(--va-success);
+  outline: 1px solid var(--va-success);
+  outline-offset: -2px;
+  font-weight: 800;
+}
+
+.dice-roller__die--exploded {
+  animation: dice-roller-explosion 700ms ease-out;
+}
+
+.dice-roller__die-marker {
+  margin-left: 0.25rem;
+  color: var(--va-primary);
+  font-size: 0.8em;
+  font-weight: 700;
+}
+
+.dice-roller__equation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  border-top: 1px solid var(--va-background-border);
+  padding-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.dice-roller__equation strong {
+  color: var(--va-primary);
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.dice-roller__repetition-equation {
+  margin-top: 0.1rem;
+  padding-top: 0.3rem;
+  font-size: 0.75rem;
+}
+
+.dice-roller__repetition-equation strong {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+@keyframes dice-roller-explosion {
+  from {
+    box-shadow: 0 0 0 0 rgb(255 180 0 / 60%);
+  }
+  to {
+    box-shadow: 0 0 0 0.6rem rgb(255 180 0 / 0%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-roller__die--exploded {
+    animation: none;
+  }
+}
+
 @media (max-width: 520px) {
   .dice-roller__row {
+    display: grid;
+    grid-template-columns: repeat(4, 2.25rem) 1px minmax(0, 1fr) 3.5rem;
+    grid-template-rows: 2.25rem auto;
     gap: 0.1rem;
+    min-width: 0;
   }
 
   .dice-roller__input {
-    width: auto;
-    flex-basis: 0;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    min-width: 0;
+    flex: none;
   }
 
-  .dice-roller__roll-button {
-    display: inline-flex;
+  .dice-roller__row > :deep(.va-divider) {
+    grid-column: 5;
+    grid-row: 1;
+  }
+
+  .dice-roller__result-menu {
+    grid-column: 7;
+    grid-row: 1;
+  }
+
+  .dice-roller__input :deep(.va-input-wrapper__text),
+  .dice-roller__input :deep(.va-input__content__input) {
+    min-width: 0;
+  }
+
+  .dice-roller__detail {
+    width: min(22rem, calc(100vw - 4rem));
+    max-width: min(22rem, calc(100vw - 4rem));
+    translate: 0 -1.25rem;
   }
 
   .dice-roller__total {

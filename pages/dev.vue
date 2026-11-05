@@ -38,6 +38,18 @@ const activePrototype = computed<PrototypeId>(() => {
   return prototype?.id ?? 'dice-roller';
 });
 
+// Keep rendered destinations unique by their visible name as well as their route.
+// This prevents a stale/aliased lab entry from appearing as a second sidebar tab.
+const sidebarPrototypes = computed(() => {
+  const labels = new Set<string>();
+  return prototypes.filter((prototype) => {
+    if (labels.has(prototype.label))
+      return false;
+    labels.add(prototype.label);
+    return true;
+  });
+});
+
 const selectPrototype = (prototype: PrototypeId) => {
   navigateTo({ path: '/dev', query: { prototype } });
 };
@@ -56,15 +68,15 @@ const localDiceMacroAdapter = {
   <NuxtLayout name="dev">
     <template #navigation>
       <VaSidebarItem
-        v-for="prototype in prototypes"
+        v-for="prototype in sidebarPrototypes"
         :key="prototype.id"
         :active="activePrototype === prototype.id"
-        active-color="#fa45ab20"
+        active-color="primary"
         hover-color="primary"
         @click="selectPrototype(prototype.id)"
       >
         <VaSidebarItemContent>
-          <VaIcon :name="prototype.id === 'dice-roller' ? 'casino' : 'groups'" color="primary" />
+          <VaIcon :name="prototype.id.startsWith('dice-roller') ? 'casino' : 'groups'" />
           <VaSidebarItemTitle>{{ prototype.label }}</VaSidebarItemTitle>
         </VaSidebarItemContent>
       </VaSidebarItem>
@@ -82,9 +94,8 @@ const localDiceMacroAdapter = {
         v-if="activePrototype === 'dice-roller'"
         class="prototype-view__content"
       >
-        <VaCardTitle>Dice roller</VaCardTitle>
         <VaCardContent>
-          <DiceRoller :macro-adapter="localDiceMacroAdapter" />
+          <DevDiceRollerLab :macro-adapter="localDiceMacroAdapter" />
         </VaCardContent>
       </VaCard>
 

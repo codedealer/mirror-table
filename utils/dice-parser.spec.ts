@@ -89,6 +89,24 @@ describe('parseDiceExpression', () => {
     });
   });
 
+  it('parses repetition only as a positive bounded postfix on a parenthesized expression', () => {
+    expect(parseDiceExpression('(nd 1d6 + 2)~8')).toEqual({
+      type: 'REPETITION',
+      expression: {
+        type: 'NIMBLE_DAMAGE_INTENT',
+        baseDice: { count: 1, sides: 6 },
+        advantage: false,
+        disadvantage: false,
+        extraDice: 1,
+        flatModifier: 2,
+      },
+      count: 8,
+    });
+    expect(() => parseDiceExpression('1d6~2')).toThrow();
+    expect(() => parseDiceExpression('(1d6)~0')).toThrow();
+    expect(() => parseDiceExpression('(1d6)~10001')).toThrow();
+  });
+
   it('parses the Nimble damage shorthand with advantage and a flat modifier', () => {
     expect(parseDiceExpression('nd 2d6a + 2')).toEqual({
       type: 'NIMBLE_DAMAGE_INTENT',

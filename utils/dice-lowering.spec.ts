@@ -14,6 +14,7 @@ describe('nimbleProfile', () => {
 
     expect(lowerAST(intent, NimbleProfile)).toEqual({
       type: 'GROUPED_POOL',
+      intent: 'nimble-damage',
       pools: [
         {
           type: 'DICE_POOL',
@@ -21,10 +22,11 @@ describe('nimbleProfile', () => {
           sides: 6,
           modifiers: [
             { type: 'DROP', target: 'LOWEST', count: 1 },
-            { type: 'EXPLODE', condition: 'MAX', compounding: false },
+            { type: 'EXPLODE', condition: 'MAX', compounding: false, settledMaximum: true },
           ],
+          provenance: { intent: 'nimble-damage', role: 'primary' },
         },
-        { type: 'DICE_POOL', count: 2, sides: 6, modifiers: [] },
+        { type: 'DICE_POOL', count: 2, sides: 6, modifiers: [], provenance: { intent: 'nimble-damage', role: 'extra' } },
       ],
     });
   });
@@ -40,6 +42,7 @@ describe('nimbleProfile', () => {
 
     expect(lowerAST(intent, NimbleProfile)).toEqual({
       type: 'GROUPED_POOL',
+      intent: 'nimble-damage',
       pools: [
         {
           type: 'DICE_POOL',
@@ -47,10 +50,11 @@ describe('nimbleProfile', () => {
           sides: 6,
           modifiers: [
             { type: 'DROP', target: 'LOWEST', count: 2 },
-            { type: 'EXPLODE', condition: 'MAX', compounding: false },
+            { type: 'EXPLODE', condition: 'MAX', compounding: false, settledMaximum: true },
           ],
+          provenance: { intent: 'nimble-damage', role: 'primary' },
         },
-        { type: 'DICE_POOL', count: 2, sides: 6, modifiers: [] },
+        { type: 'DICE_POOL', count: 2, sides: 6, modifiers: [], provenance: { intent: 'nimble-damage', role: 'extra' } },
       ],
     });
   });
@@ -66,6 +70,7 @@ describe('nimbleProfile', () => {
 
     expect(lowerAST(intent, NimbleProfile)).toEqual({
       type: 'GROUPED_POOL',
+      intent: 'nimble-damage',
       pools: [
         {
           type: 'DICE_POOL',
@@ -73,14 +78,15 @@ describe('nimbleProfile', () => {
           sides: 8,
           modifiers: [
             { type: 'DROP', target: 'HIGHEST', count: 3 },
-            { type: 'EXPLODE', condition: 'MAX', compounding: false },
+            { type: 'EXPLODE', condition: 'MAX', compounding: false, settledMaximum: true },
           ],
+          provenance: { intent: 'nimble-damage', role: 'primary' },
         },
       ],
     });
   });
 
-  it('attaches a flat modifier as a binary addition', () => {
+  it('retains the trailing flat modifier on its Nimble group for local voiding', () => {
     const intent: NimbleDamageIntentNode = {
       type: 'NIMBLE_DAMAGE_INTENT',
       baseDice: { count: 1, sides: 6 },
@@ -91,20 +97,18 @@ describe('nimbleProfile', () => {
     };
 
     expect(lowerAST(intent, NimbleProfile)).toEqual({
-      type: 'BINARY_OP',
-      operator: '+',
-      left: {
-        type: 'GROUPED_POOL',
-        pools: [
-          {
-            type: 'DICE_POOL',
-            count: 1,
-            sides: 6,
-            modifiers: [{ type: 'EXPLODE', condition: 'MAX', compounding: false }],
-          },
-        ],
-      },
-      right: { type: 'LITERAL', value: 4 },
+      type: 'GROUPED_POOL',
+      intent: 'nimble-damage',
+      flatModifier: 4,
+      pools: [
+        {
+          type: 'DICE_POOL',
+          count: 1,
+          sides: 6,
+          modifiers: [{ type: 'EXPLODE', condition: 'MAX', compounding: false, settledMaximum: true }],
+          provenance: { intent: 'nimble-damage', role: 'primary' },
+        },
+      ],
     });
   });
 });
@@ -123,6 +127,7 @@ describe('dnd5eProfile', () => {
       count: 5,
       sides: 20,
       modifiers: [{ type: 'DROP', target: 'LOWEST', count: 3 }],
+      provenance: { intent: 'dnd5e-advantage' },
     });
   });
 
@@ -139,6 +144,7 @@ describe('dnd5eProfile', () => {
       count: 3,
       sides: 20,
       modifiers: [{ type: 'DROP', target: 'HIGHEST', count: 2 }],
+      provenance: { intent: 'dnd5e-advantage' },
     });
   });
 });
@@ -153,6 +159,30 @@ describe('lowerAST', () => {
     };
 
     expect(lowerAST(intent, NimbleProfile)).toEqual(intent);
+  });
+
+  it('lowers System Intents inside repetition as a pass-through node', () => {
+    const lowered = lowerAST({
+      type: 'REPETITION',
+      count: 3,
+      expression: {
+        type: 'NIMBLE_DAMAGE_INTENT',
+        baseDice: { count: 1, sides: 6 },
+        advantage: false,
+        disadvantage: false,
+        extraDice: 1,
+      },
+    }, NimbleProfile);
+
+    expect(lowered).toMatchObject({
+      type: 'REPETITION',
+      count: 3,
+      expression: {
+        type: 'GROUPED_POOL',
+        intent: 'nimble-damage',
+        pools: [{ type: 'DICE_POOL', provenance: { intent: 'nimble-damage', role: 'primary' } }],
+      },
+    });
   });
 
   it('recurses into BINARY_OP operands', () => {
@@ -176,12 +206,14 @@ describe('lowerAST', () => {
       operator: '+',
       left: {
         type: 'GROUPED_POOL',
+        intent: 'nimble-damage',
         pools: [
           {
             type: 'DICE_POOL',
             count: 1,
             sides: 6,
-            modifiers: [{ type: 'EXPLODE', condition: 'MAX', compounding: false }],
+            modifiers: [{ type: 'EXPLODE', condition: 'MAX', compounding: false, settledMaximum: true }],
+            provenance: { intent: 'nimble-damage', role: 'primary' },
           },
         ],
       },

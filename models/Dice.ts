@@ -8,6 +8,7 @@ export type ASTNode =
   | DicePoolNode
   | GroupedPoolNode
   | BinaryOpNode
+  | RepetitionNode
   | NimbleDamageIntentNode // High-level intent node (Nimble profile)
   | AdvantageDisadvantageIntentNode; // High-level intent node (dnd5e profile)
 
@@ -23,16 +24,35 @@ export interface BinaryOpNode {
   right: ASTNode;
 }
 
+/** Repeats one explicitly parenthesized expression as independent evaluations. */
+export interface RepetitionNode {
+  type: 'REPETITION';
+  expression: ASTNode;
+  count: number;
+}
+
+export const MAX_DICE_REPETITIONS = 10_000;
+
 export interface DicePoolNode {
   type: 'DICE_POOL';
   count: number;
   sides: number;
   modifiers: DiceModifier[];
+  /** Semantic origin retained when a System Intent lowers into primitive pools. */
+  provenance?: PoolProvenance;
+}
+
+export interface PoolProvenance {
+  intent: 'nimble-damage' | 'dnd5e-advantage';
+  role?: 'primary' | 'extra';
 }
 
 export interface GroupedPoolNode {
   type: 'GROUPED_POOL';
   pools: DicePoolNode[];
+  /** Metadata for a lowered Nimble System Intent, including its attached modifier. */
+  intent?: 'nimble-damage';
+  flatModifier?: number;
 }
 
 // --- Modifier Specifications ---
@@ -55,6 +75,8 @@ export interface ExplodeModifier {
   threshold?: number;
   compounding: boolean; // true for !!
   targetDieIndex?: number; // Optional positional targeting (e.g., 0 for Primary)
+  /** Compare settled values (including bumps) to the die maximum. */
+  settledMaximum?: boolean;
 }
 
 export interface RerollModifier {
@@ -92,10 +114,25 @@ export interface AdvantageDisadvantageIntentNode {
 
 // --- Output Schema ---
 
+export type DieEvaluationEvent =
+  | { type: 'ROLLED'; value: number }
+  | { type: 'KEPT' | 'DROPPED' }
+  | { type: 'BUMPED'; amount: number; from: number; to: number }
+  | { type: 'REROLLED'; from: number; to: number }
+  | { type: 'EXPLODED'; value: number; generatedDieId?: number }
+  | { type: 'ADDED_BY_EXPLOSION'; sourceDieId?: number };
+
 export interface DieResult {
   sides: number;
   rawRoll: number;
   finalValue: number;
+  /** Stable within one evaluation; generated dice retain their triggering die identity. */
+  id?: number;
+  initialRoll?: number;
+  rerollHistory?: number[];
+  bumpAmount?: number;
+  generatedBy?: number;
+  events?: DieEvaluationEvent[];
   flags: {
     dropped?: boolean;
     exploded?: boolean;
@@ -108,12 +145,69 @@ export interface DieResult {
 export interface PoolExecutionResult {
   dice: DieResult[];
   subtotal: number;
+  id?: number;
+  provenance?: PoolProvenance;
+  capped?: boolean;
+}
+
+export type EvaluationTraceNode =
+  | { type: 'LITERAL'; value: number }
+  | { type: 'REPETITION'; repetitions: EvaluationTraceNode[]; count: number; value: number }
+  | {
+    type: 'POOL';
+    poolId: number;
+    sides: number;
+    provenance?: PoolProvenance;
+    subtotal: number;
+    capped: boolean;
+    dice: Array<{
+      dieId: number;
+      sides: number;
+      initialRoll: number;
+      rerolls: number[];
+      finalValue: number;
+      dropped: boolean;
+      capped: boolean;
+      bumpAmount: number;
+      exploded: boolean;
+      generatedBy?: number;
+      events: DieEvaluationEvent[];
+    }>;
+  }
+  | {
+    type: 'GROUPED_POOL';
+    pools: EvaluationTraceNode[];
+    value: number;
+    intent?: 'nimble-damage';
+    flatModifier?: number;
+    voided?: boolean;
+    preVoidValue?: number;
+  }
+  | {
+    type: 'ARITHMETIC';
+    operator: BinaryOpNode['operator'];
+    left: EvaluationTraceNode;
+    right: EvaluationTraceNode;
+    leftValue: number;
+    rightValue: number;
+    value: number;
+  };
+
+export interface NaturalHint {
+  kind: 'minimum' | 'maximum';
+  face: number;
+  sides: number;
+  dieId: number;
+  poolId: number;
+  context: string;
 }
 
 export interface RollEvaluationResult {
   expression: string;
   total: number;
   breakdown: PoolExecutionResult[];
+  trace: EvaluationTraceNode;
+  naturalHints: NaturalHint[];
   ast: ASTNode; // Standard lowered AST
   capped: boolean; // true if any die anywhere in the roll hit a safety cap (see §4.6)
 }
@@ -145,6 +239,9 @@ export const MAX_DICE_MACRO_LABEL_LENGTH = 48;
 export interface SystemProfile {
   name: string;
   lowerAST: (node: ASTNode) => ASTNode;
+  detectNaturals?: (trace: EvaluationTraceNode) => NaturalHint[];
+  /** Profile-owned policy for voiding an eligible intent group. */
+  detectCriticalMiss?: (trace: EvaluationTraceNode) => boolean;
 }
 
 // --- Errors ---

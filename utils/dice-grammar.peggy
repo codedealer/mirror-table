@@ -45,10 +45,20 @@ PlainMultiplicative
     { return makeBinary(left, rest); }
 
 PlainPrimary
-  = GroupedPool
+  = RepetitionTerm
+  / GroupedPool
   / DicePool
   / Number
   / "(" _ e:Expression _ ")" { return e; }
+
+// The postfix is intentionally available only after an explicit parenthesized expression.
+RepetitionTerm
+  = "(" _ e:Expression _ ")" "~" n:Integer
+    {
+      if (n < 1 || n > 10000)
+        throw new Error('Repetition count must be between 1 and 10000');
+      return { type: 'REPETITION', expression: e, count: n };
+    }
 
 EscapeTerm
   = ("std:" / "raw:") _ e:PlainAdditive { return e; }
@@ -134,8 +144,8 @@ RerollCondition
   / n:Integer { return { condition: 'EXACT', threshold: n }; }
 
 ValueBumpModifier
-  = "+^" n:Integer { return { type: 'VALUE_BUMP', amount: n, clampAtMax: true }; }
-  / "b" n:Integer { return { type: 'VALUE_BUMP', amount: n, clampAtMax: true }; }
+  = "+^" n:Integer { return { type: 'VALUE_BUMP', amount: n, clampAtMax: false }; }
+  / "b" n:Integer { return { type: 'VALUE_BUMP', amount: n, clampAtMax: false }; }
 
 // ---- Lexical ----
 

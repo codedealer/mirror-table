@@ -6,6 +6,8 @@ const createResult = (expression: string): RollEvaluationResult => ({
   expression,
   total: 1,
   breakdown: [],
+  trace: { type: 'LITERAL', value: 1 },
+  naturalHints: [],
   ast: { type: 'LITERAL', value: 1 } satisfies LiteralNode,
   capped: false,
 });

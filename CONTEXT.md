@@ -90,7 +90,7 @@ Rolling and adding an extra die when a die meets its trigger condition.
 _Avoid_: Reroll bonus, bonus die
 
 **Value Bump**:
-A flat adjustment to a die's rolled face value, capped at the die's max face.
+An uncapped flat adjustment to a die's rolled face value; the settled value may exceed the die's maximum face.
 _Avoid_: Face boost, pip bump
 
 **Escape Hatch**:

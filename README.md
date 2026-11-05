@@ -60,11 +60,14 @@ pnpm run test
 | **`!!`** | **Explode** | Compounding explosion. | `1d6!!` | Extra roll adds directly to single die's face value. |
 | **`rN`** / **`r<=N`** | **Reroll** | Reroll die while condition is met. | `1d20r1` | Rerolls any 1 (unlimited times until not 1). |
 | **`roN`** | **Reroll** | Reroll die **once** on condition. | `1d20ro1` | Rerolls a 1 once; keeps second result regardless. |
-| **`+^N`** / **`bN`** | **Value Shift** | Clamped face value bump (Nimble). | `1d6+^1` | Adds 1 to rolled face value, capped at max sides (6). |
+| **`+^N`** / **`bN`** | **Value Bump** | Add N to each die's settled value without a maximum cap (Nimble). | `1d6+^1` | Adds 1 to a d6; a rolled 6 settles at 7. |
 | **`{ ... }`** | **Grouping** | Compound pool with individual rules. | `{1d6!, 2d6} + 2` | Combines a single exploding d6 and 2 standard d6s. |
-| **`( ... )`** | **Grouping** | Arithmetic grouping, standard PEMDAS precedence. Distinct from `{ }` pool grouping - never contains dice pools directly, only math. | `(1d6+2)*3` | Adds 2 to the 1d6 roll, then multiplies the sum by 3. |
+| **`( ... )`** | **Grouping** | Group arithmetic using standard precedence. Distinct from `{ }` pool grouping. | `(1d6+2)*3` | Adds 2 to the 1d6 roll, then multiplies the sum by 3. |
+| **`(expr)~N`** | **Repetition** | Roll the explicitly parenthesized expression N times independently and sum the outcomes. N must be an integer from 1 to 10,000. | `(nd 1d6 + 2)~8` | Evaluates eight separate rolls of the Nimble expression and adds their totals. |
 
 ---
+
+Expressions support integer literals, dice pools, grouped pools, parentheses, and the binary operators `+`, `-`, `*`, `/`, and `%`; multiplication, division, and remainder take precedence over addition and subtraction. Dice modifier and System Intent syntax is listed above. `std:` and `raw:` force standard syntax within a profile. Repetition applies only to a parenthesized expression: `(expr)~N`; the parentheses are required, and `N` is a positive integer no greater than 10,000. `* N` is ordinary multiplication, not repeated rolling. Natural-result hints follow the active System Profile; the No profile setting intentionally shows no natural hints. With D&D 5e active, `2d20kl1` hints the natural face of its sole surviving d20.
 
 ### System Shorthands & Compiler Intent Nodes
 
