@@ -219,6 +219,17 @@ const deferred = <T>() => {
 };
 
 describe('diceRoller live roll feedback', () => {
+  it('preserves ordinary input on ArrowDown when history is not being navigated', async () => {
+    const view = await mountRoller();
+    const input = view.get('[aria-label="Dice expression"]');
+
+    await input.setValue('unsent draft');
+    await input.trigger('keyup.down');
+    await input.trigger('keyup.down');
+
+    expect((input.element as HTMLInputElement).value).toBe('unsent draft');
+  });
+
   it('exposes the active System Profile in the profile control tooltip', async () => {
     const view = await mountRoller();
     expect(view.get('[aria-label="Dice profile: No profile"]').attributes('title')).toContain('natural hints follow the selected profile');

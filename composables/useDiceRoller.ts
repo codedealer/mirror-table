@@ -26,6 +26,8 @@ export const useDiceRoller = () => {
   const rolling = ref(false);
 
   const { history, previous, next, add: addToHistory } = useDiceRollHistory();
+  let isNavigatingHistory = false;
+  let draftExpression = '';
 
   const activeProfile = computed<SystemProfile | undefined>(() => {
     return diceProfileOptions.find(option => option.id === profileId.value)?.profile;
@@ -42,6 +44,8 @@ export const useDiceRoller = () => {
       const evaluated = await evaluateDiceExpression(expression.value, diceRNG, activeProfile.value);
       result.value = evaluated;
       addToHistory(evaluated, profileId.value);
+      isNavigatingHistory = false;
+      draftExpression = '';
       return true;
     } catch (err) {
       if (isDiceParseError(err)) {
@@ -58,9 +62,16 @@ export const useDiceRoller = () => {
   };
 
   const showPrevious = (): boolean => {
+    if (!isNavigatingHistory) {
+      draftExpression = expression.value;
+      isNavigatingHistory = true;
+    }
+
     const previousResult = previous();
-    if (!previousResult)
+    if (!previousResult) {
+      isNavigatingHistory = false;
       return false;
+    }
     result.value = previousResult.result;
     expression.value = previousResult.result.expression;
     profileId.value = previousResult.profileId;
@@ -70,8 +81,14 @@ export const useDiceRoller = () => {
 
   const showNext = (): boolean => {
     const nextResult = next();
-    if (!nextResult)
+    if (!nextResult) {
+      if (isNavigatingHistory) {
+        expression.value = draftExpression;
+        isNavigatingHistory = false;
+        draftExpression = '';
+      }
       return false;
+    }
     result.value = nextResult.result;
     expression.value = nextResult.result.expression;
     profileId.value = nextResult.profileId;

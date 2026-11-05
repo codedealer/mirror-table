@@ -124,11 +124,6 @@ const rollAndSelectExpression = async () => {
     await selectExpression();
 };
 
-const showNextOrClearExpression = () => {
-  if (!showNext())
-    expression.value = '';
-};
-
 const profileMenuOptions = computed(() => diceProfileOptions.map(option => ({
   text: option.label,
   value: option.id,
@@ -635,7 +630,7 @@ defineExpose({ loadDeterministicResult, clearDeterministicResult });
         @beforeinput="remapBeforeInput"
         @keyup.enter="rollAndSelectExpression"
         @keyup.up="showPrevious"
-        @keyup.down="showNextOrClearExpression"
+        @keyup.down="showNext"
       />
 
       <VaDivider vertical style="align-self:normal; margin-block:5px" />
