@@ -265,7 +265,7 @@ const tracePools = (trace: EvaluationTraceNode): Extract<EvaluationTraceNode, { 
 
 type ResultTraceUnit =
   | { type: 'pool'; key: string; pools: Extract<EvaluationTraceNode, { type: 'POOL' }>[] }
-  | { type: 'nimble-group'; key: string; pools: Extract<EvaluationTraceNode, { type: 'POOL' }>[]; value: number; voided: boolean };
+  | { type: 'nimble-group'; key: string; pools: Extract<EvaluationTraceNode, { type: 'POOL' }>[]; value: number; voided: boolean; flatModifier?: number };
 
 // Keep Nimble's semantic group boundary in the ordinary result rundown too.
 const traceResultUnits = (trace: EvaluationTraceNode): ResultTraceUnit[] => {
@@ -281,6 +281,7 @@ const traceResultUnits = (trace: EvaluationTraceNode): ResultTraceUnit[] => {
           pools,
           value: trace.voided ? 0 : trace.value,
           voided: Boolean(trace.voided),
+          flatModifier: trace.flatModifier,
         }];
       }
       return [];
@@ -296,7 +297,7 @@ const traceResultUnits = (trace: EvaluationTraceNode): ResultTraceUnit[] => {
 
 type RepetitionTraceUnit =
   | { type: 'pool'; key: string; pools: Extract<EvaluationTraceNode, { type: 'POOL' }>[] }
-  | { type: 'nimble-group'; key: string; pools: Extract<EvaluationTraceNode, { type: 'POOL' }>[]; value: number; voided: boolean };
+  | { type: 'nimble-group'; key: string; pools: Extract<EvaluationTraceNode, { type: 'POOL' }>[]; value: number; voided: boolean; flatModifier?: number };
 
 // Preserve each Nimble intent boundary in repetition details so sibling `nd`
 // groups remain distinct instead of flattening into indistinguishable Primary rows.
@@ -312,6 +313,7 @@ const traceSectionUnits = (trace: EvaluationTraceNode): RepetitionTraceUnit[] =>
         pools,
         value: trace.voided ? 0 : trace.value,
         voided: Boolean(trace.voided),
+        flatModifier: trace.flatModifier,
       }];
     }
     return trace.pools.flatMap(traceSectionUnits);
@@ -438,6 +440,21 @@ const traceDieHint = (die: Extract<EvaluationTraceNode, { type: 'POOL' }>['dice'
   }
   return facts.join('; ') || (die.dropped ? 'dropped' : 'kept as rolled');
 };
+
+const nimbleBreakdownLabel = (
+  pools: Extract<EvaluationTraceNode, { type: 'POOL' }>[],
+  flatModifier: number,
+  value: number,
+): string => {
+  const poolTotals = pools
+    .map((pool, index) => `${poolLabel(pool, index, true)} ${pool.subtotal}`)
+    .join(' + ');
+  const modifierOperator = flatModifier < 0 ? '−' : '+';
+  return `${poolTotals} ${modifierOperator} Modifier ${Math.abs(flatModifier)} = Nimble damage ${value}`;
+};
+
+const nimbleBreakdownGridTemplate = (pools: Extract<EvaluationTraceNode, { type: 'POOL' }>[]): string =>
+  `repeat(${pools.length}, minmax(0, 1fr) auto) minmax(0, 1fr) auto minmax(0, 1fr)`;
 
 const traceValue = (trace: EvaluationTraceNode): number => {
   if (trace.type === 'LITERAL')
@@ -704,6 +721,31 @@ defineExpose({ loadDeterministicResult, clearDeterministicResult });
                         </VaChip>
                       </div>
                     </div>
+                    <div
+                      v-if="unit.type === 'nimble-group' && unit.flatModifier !== undefined && !unit.voided"
+                      class="dice-roller__nimble-breakdown"
+                      :style="{ gridTemplateColumns: nimbleBreakdownGridTemplate(unit.pools) }"
+                      role="group"
+                      :aria-label="nimbleBreakdownLabel(unit.pools, unit.flatModifier, unit.value)"
+                    >
+                      <template v-for="(pool, poolIndex) in unit.pools" :key="`breakdown-${pool.poolId}`">
+                        <span v-if="poolIndex > 0" class="dice-roller__nimble-breakdown-operator" aria-hidden="true">+</span>
+                        <div class="dice-roller__nimble-breakdown-term">
+                          <span>{{ poolLabel(pool, (genericPoolNumbers(section.outcome).get(pool.poolId) ?? poolIndex + 1) - 1, true) }}</span>
+                          <strong>{{ pool.subtotal }}</strong>
+                        </div>
+                      </template>
+                      <span class="dice-roller__nimble-breakdown-operator" aria-hidden="true">{{ unit.flatModifier < 0 ? '−' : '+' }}</span>
+                      <div class="dice-roller__nimble-breakdown-term dice-roller__nimble-breakdown-term--modifier">
+                        <span>Modifier</span>
+                        <strong>{{ Math.abs(unit.flatModifier) }}</strong>
+                      </div>
+                      <span class="dice-roller__nimble-breakdown-operator" aria-hidden="true">=</span>
+                      <div class="dice-roller__nimble-breakdown-term dice-roller__nimble-breakdown-term--total">
+                        <span>Total</span>
+                        <strong>{{ unit.value }}</strong>
+                      </div>
+                    </div>
                   </section>
                   <div class="dice-roller__equation dice-roller__repetition-equation" :aria-label="`${section.label} calculation`">
                     <strong>{{ traceOperand(section.outcome) }} = {{ traceValue(section.outcome) }}</strong>
@@ -767,6 +809,31 @@ defineExpose({ loadDeterministicResult, clearDeterministicResult });
                         <span v-if="die.capped" class="dice-roller__die-marker">Safety cap</span>
                         <span v-if="die.bumpAmount" class="dice-roller__die-marker">+{{ die.bumpAmount }} bump</span>
                       </VaChip>
+                    </div>
+                  </div>
+                  <div
+                    v-if="unit.type === 'nimble-group' && unit.flatModifier !== undefined && !unit.voided"
+                    class="dice-roller__nimble-breakdown"
+                    :style="{ gridTemplateColumns: nimbleBreakdownGridTemplate(unit.pools) }"
+                    role="group"
+                    :aria-label="nimbleBreakdownLabel(unit.pools, unit.flatModifier, unit.value)"
+                  >
+                    <template v-for="(pool, poolIndex) in unit.pools" :key="`breakdown-${pool.poolId}`">
+                      <span v-if="poolIndex > 0" class="dice-roller__nimble-breakdown-operator" aria-hidden="true">+</span>
+                      <div class="dice-roller__nimble-breakdown-term">
+                        <span>{{ resultPoolLabel(result.trace, pool, poolIndex) }}</span>
+                        <strong>{{ pool.subtotal }}</strong>
+                      </div>
+                    </template>
+                    <span class="dice-roller__nimble-breakdown-operator" aria-hidden="true">{{ unit.flatModifier < 0 ? '−' : '+' }}</span>
+                    <div class="dice-roller__nimble-breakdown-term dice-roller__nimble-breakdown-term--modifier">
+                      <span>Modifier</span>
+                      <strong>{{ Math.abs(unit.flatModifier) }}</strong>
+                    </div>
+                    <span class="dice-roller__nimble-breakdown-operator" aria-hidden="true">=</span>
+                    <div class="dice-roller__nimble-breakdown-term dice-roller__nimble-breakdown-term--total">
+                      <span>Total</span>
+                      <strong>{{ unit.value }}</strong>
                     </div>
                   </div>
                 </div>
@@ -1089,13 +1156,85 @@ defineExpose({ loadDeterministicResult, clearDeterministicResult });
 }
 
 .dice-roller__pool-result-unit--pool {
-  display: contents;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-block: 0.2rem;
 }
 
 .dice-roller__pool-result-unit--nimble {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+
+.dice-roller__nimble-breakdown {
+  display: grid;
+  align-items: stretch;
+  gap: 0.2rem;
+  padding: 0.25rem;
+  border: 1px solid color-mix(in srgb, var(--va-primary) 24%, transparent);
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--va-primary) 5%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+.dice-roller__nimble-breakdown-term {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.15rem;
+  border-radius: 0.2rem;
+  background: color-mix(in srgb, var(--va-background-element) 82%, transparent);
+  line-height: 1.1;
+}
+
+.dice-roller__nimble-breakdown-term > span {
+  color: var(--va-text-secondary);
+  font-size: 0.6rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dice-roller__nimble-breakdown-term strong {
+  color: var(--va-text-primary);
+  font-size: 0.85rem;
+}
+
+.dice-roller__nimble-breakdown-term--modifier {
+  background: color-mix(in srgb, var(--va-warning) 10%, var(--va-background-element));
+}
+
+.dice-roller__nimble-breakdown-term--modifier strong {
+  color: var(--va-warning);
+}
+
+.dice-roller__nimble-breakdown-term--total {
+  border: 1px solid color-mix(in srgb, var(--va-primary) 48%, transparent);
+  background: color-mix(in srgb, var(--va-primary) 14%, var(--va-background-element));
+}
+
+.dice-roller__nimble-breakdown-term--total > span,
+.dice-roller__nimble-breakdown-term--total strong {
+  color: var(--va-primary);
+}
+
+.dice-roller__nimble-breakdown-operator {
+  align-self: center;
+  color: var(--va-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.dice-roller__pool-result-unit--nimble .dice-roller__pool-result-unit-heading strong,
+.dice-roller__repetition-unit--nimble .dice-roller__repetition-group-heading strong {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--va-primary) 48%, transparent);
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--va-primary) 14%, transparent);
+  color: var(--va-primary);
 }
 
 .dice-roller__pool-result-unit-heading {

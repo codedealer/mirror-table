@@ -31,9 +31,9 @@ const fixtures: Fixture[] = [
   {
     id: 'grouped-arithmetic',
     label: 'Complex grouped arithmetic',
-    expression: 'nd 2d6 + (1d8 + 2) * 2',
+    expression: 'nd 2d6 + 2 + (1d8 + 2) * 2',
     profileId: 'nimble5e',
-    draws: [3, 5, 4],
+    draws: [5, 3, 8],
   },
   {
     id: 'explosion',
@@ -55,6 +55,13 @@ const fixtures: Fixture[] = [
     expression: '(nd 1d6 + nd 1d6 + 2)~2',
     profileId: 'nimble5e',
     draws: [1, 4, 3, 2],
+  },
+  {
+    id: 'repeated-nimble-modifier',
+    label: 'Repeated Nimble modifier',
+    expression: '(nd 1d6 + 2)~2',
+    profileId: 'nimble5e',
+    draws: [3, 4],
   },
 ];
 

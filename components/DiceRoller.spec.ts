@@ -391,36 +391,47 @@ describe('dice roller development result presets', () => {
     expect(wrapper.text()).toContain('Nat 20');
     expect(wrapper.get('[aria-label="Final calculation"]').text()).toContain('20 = 20');
 
-    await select('Complex grouped arithmetic', 'nd 2d6 + (1d8 + 2) * 2');
-    expect(wrapper.get('[aria-label="Final calculation"] strong').text()).toBe('((3 + 5) + ((4 + 2) * 2)) = 20');
+    await select('Complex grouped arithmetic', 'nd 2d6 + 2 + (1d8 + 2) * 2');
+    expect(wrapper.get('[aria-label="Final calculation"] strong').text()).toBe('((5 + 3 + 2) + ((8 + 2) * 2)) = 30');
     const complexDetail = wrapper.get('.dice-roller__detail');
     const groupedPools = complexDetail.findAll('.dice-roller__pool-result-unit--nimble');
     expect(groupedPools).toHaveLength(1);
-    expect(groupedPools[0]!.attributes('aria-label')).toBe('Nimble damage group, total 8');
+    expect(groupedPools[0]!.attributes('aria-label')).toBe('Nimble damage group, total 10');
     expect(groupedPools[0]!.findAll('.dice-roller__pool')).toHaveLength(2);
     const nimbleHeading = groupedPools[0]!.find('.dice-roller__pool-result-unit-heading');
     expect(nimbleHeading.text()).toContain('Nimble damage');
-    expect(nimbleHeading.find('strong').text()).toBe('= 8');
+    expect(nimbleHeading.find('strong').text()).toBe('= 10');
+    const breakdown = groupedPools[0]!.get('.dice-roller__nimble-breakdown');
+    expect(breakdown.attributes('aria-label')).toBe('Primary 5 + Extra 3 + Modifier 2 = Nimble damage 10');
+    expect(breakdown.findAll('.dice-roller__nimble-breakdown-term').map(term => [term.find('span').text(), term.get('strong').text()])).toEqual([
+      ['Primary', '5'],
+      ['Extra', '3'],
+      ['Modifier', '2'],
+      ['Total', '10'],
+    ]);
+    expect(breakdown.findAll('.dice-roller__nimble-breakdown-operator').map(operator => operator.text())).toEqual(['+', '+', '=']);
+    expect(breakdown.attributes('style')).toContain('repeat(2, minmax(0, 1fr) auto)');
     expect(groupedPools[0]!.text().match(/Nimble damage/g)).toHaveLength(1);
     expect(groupedPools[0]!.text()).toContain('Primary');
     expect(groupedPools[0]!.text()).toContain('Extra');
     expect(groupedPools[0]!.findAll('.dice-roller__pool').every(pool => !pool.text().includes('Nimble damage'))).toBe(true);
-    expect(groupedPools[0]!.text()).toContain('d6: 3');
     expect(groupedPools[0]!.text()).toContain('d6: 5');
-    expect(groupedPools[0]!.text()).toContain('= 8');
+    expect(groupedPools[0]!.text()).toContain('d6: 3');
+    expect(groupedPools[0]!.text()).toContain('= 10');
     const primaryPool = groupedPools[0]!.findAll('.dice-roller__pool')[0]!;
     const extraPool = groupedPools[0]!.findAll('.dice-roller__pool')[1]!;
-    expect(primaryPool.get('.dice-roller__pool-subtotal').text()).toBe('= 3');
-    expect(primaryPool.text()).not.toContain('= 8');
-    expect(extraPool.get('.dice-roller__pool-subtotal').text()).toBe('= 5');
-    expect(extraPool.text()).not.toContain('= 8');
-    expect(groupedPools[0]!.text()).not.toContain('d8: 4');
+    expect(primaryPool.get('.dice-roller__pool-subtotal').text()).toBe('= 5');
+    expect(primaryPool.text()).not.toContain('= 10');
+    expect(extraPool.get('.dice-roller__pool-subtotal').text()).toBe('= 3');
+    expect(extraPool.text()).not.toContain('= 10');
+    expect(groupedPools[0]!.text()).not.toContain('d8: 8');
     const ungroupedPools = complexDetail.findAll('.dice-roller__pool-result-unit--pool');
     expect(ungroupedPools).toHaveLength(1);
     expect(ungroupedPools[0]!.findAll('.dice-roller__pool')).toHaveLength(1);
     expect(ungroupedPools[0]!.text()).toContain('Pool 1');
     expect(ungroupedPools[0]!.find('.dice-roller__pool-label').text()).toBe('Pool 1');
     expect(ungroupedPools[0]!.get('.dice-roller__dice').attributes('aria-label')).toBe('Pool 1 dice');
+    expect(ungroupedPools[0]!.classes()).toContain('dice-roller__pool-result-unit--pool');
     const complexPools = complexDetail.findAll('.dice-roller__pool');
     expect(complexPools).toHaveLength(3);
     expect(complexPools.map(pool => pool.get('.dice-roller__pool-label').text())).toEqual(['Primary', 'Extra', 'Pool 1']);
@@ -436,6 +447,17 @@ describe('dice roller development result presets', () => {
     expect(groupedSurfaceStyle).not.toContain('--va-primary');
     const groupedSubtotalStyle = complexDetailSource.match(/\.dice-roller__pool-result-unit--nimble \.dice-roller__pool-subtotal \{([^}]*)\}/)?.[1] ?? '';
     expect(groupedSubtotalStyle).toContain('color: var(--va-text-primary)');
+    const breakdownStyle = complexDetailSource.match(/\.dice-roller__nimble-breakdown \{([^}]*)\}/)?.[1] ?? '';
+    expect(breakdownStyle).toContain('display: grid');
+    expect(breakdownStyle).toContain('align-items: stretch');
+    expect(breakdownStyle).toContain('background: color-mix(in srgb, var(--va-primary) 5%, transparent)');
+    const breakdownTotalStyle = complexDetailSource.match(/\.dice-roller__nimble-breakdown-term--total \{([^}]*)\}/)?.[1] ?? '';
+    expect(breakdownTotalStyle).toContain('border: 1px solid');
+    expect(breakdownTotalStyle).toContain('background: color-mix(in srgb, var(--va-primary) 14%, var(--va-background-element))');
+    const poolGroupStyle = complexDetailSource.match(/\.dice-roller__pool-result-unit--pool \{([^}]*)\}/)?.[1] ?? '';
+    expect(poolGroupStyle).toContain('display: flex');
+    expect(poolGroupStyle).toContain('gap: 0.25rem');
+    expect(poolGroupStyle).toContain('padding-block: 0.2rem');
 
     await select('Nimble primary explosion', 'nd 1d6');
     const singlePoolNimbleGroup = wrapper.get('.dice-roller__pool-result-unit--nimble');
@@ -514,6 +536,20 @@ describe('dice roller development result presets', () => {
     expect(wrapper.get('[aria-label^="d6: 1;"]').attributes('aria-label')).toContain('Nat 1');
     expect(wrapper.get('[aria-label^="d6: 4;"]').attributes('aria-label')).not.toContain('Nat');
     expect(wrapper.find('.dice-roller__detail-naturals').exists()).toBe(false);
+
+    await select('Repeated Nimble modifier', '(nd 1d6 + 2)~2');
+    const repeatedNimbleGroups = wrapper.findAll('.dice-roller__repetition-unit--nimble');
+    expect(repeatedNimbleGroups).toHaveLength(2);
+    expect(repeatedNimbleGroups.map(group => group.get('.dice-roller__nimble-breakdown').attributes('aria-label'))).toEqual([
+      'Primary 3 + Modifier 2 = Nimble damage 5',
+      'Primary 4 + Modifier 2 = Nimble damage 6',
+    ]);
+    expect(repeatedNimbleGroups.every(group => group.findAll('.dice-roller__nimble-breakdown-term').length === 3)).toBe(true);
+    expect(repeatedNimbleGroups.map(group => group.get('.dice-roller__nimble-breakdown').attributes('style'))).toEqual([
+      expect.stringContaining('repeat(1, minmax(0, 1fr) auto)'),
+      expect.stringContaining('repeat(1, minmax(0, 1fr) auto)'),
+    ]);
+    expect(wrapper.get('[aria-label="Final calculation"] strong').text()).toBe('((3 + 2) + (4 + 2)) = 11');
 
     const reset = wrapper.get('[aria-label="Reset selected fixture"]');
     expect(reset.attributes('disabled')).toBeUndefined();
