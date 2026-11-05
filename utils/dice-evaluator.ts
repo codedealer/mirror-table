@@ -186,20 +186,21 @@ const explodeChain = async (
 ): Promise<void> => {
   let iterations = 0;
   let valueToCheck = die.finalValue;
+  let chainDie = die;
 
   while (matchesExplodeCondition(mod, valueToCheck, sides) && iterations < MAX_ITERATIONS_PER_DIE) {
     if (!hasDiceBudget(ctx))
       break;
     const newRoll = await rollDie(ctx, sides);
     iterations += 1;
-    die.flags.exploded = true;
+    chainDie.flags.exploded = true;
 
     let generatedDieId: number | undefined;
     if (mod.compounding) {
       die.finalValue += newRoll;
     } else {
       generatedDieId = ctx.nextDieId++;
-      allDice.push({
+      const generatedDie: DieResult = {
         id: generatedDieId,
         sides,
         rawRoll: newRoll,
@@ -208,7 +209,9 @@ const explodeChain = async (
         generatedBy: die.id,
         events: [{ type: 'ROLLED', value: newRoll }, { type: 'ADDED_BY_EXPLOSION', sourceDieId: die.id }],
         flags: {},
-      });
+      };
+      allDice.push(generatedDie);
+      chainDie = generatedDie;
     }
     die.events ??= [];
     die.events.push({ type: 'EXPLODED', value: newRoll, generatedDieId });

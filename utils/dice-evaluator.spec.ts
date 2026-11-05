@@ -47,6 +47,7 @@ describe('evaluateAST', () => {
     expect(result.total).toBe(15);
     const [{ dice }] = result.breakdown;
     expect(dice).toHaveLength(3); // original die + 2 explosions
+    expect(dice.map(die => Boolean(die.flags.exploded))).toEqual([true, true, false]);
     expect(result.capped).toBe(false);
   });
 

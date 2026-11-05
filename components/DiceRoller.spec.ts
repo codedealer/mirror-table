@@ -446,7 +446,7 @@ describe('dice roller development result presets', () => {
     expect(wrapper.get('.dice-roller__die-marker').text()).toBe('✦');
     expect(wrapper.get('.dice-roller__die-marker').attributes('title')).toBe('Explosion');
     expect(wrapper.get('[aria-label^="d6: 6;"]').classes()).toContain('dice-roller__die--exploded');
-    expect(wrapper.get('[aria-label^="d6: 6;"]').attributes('aria-label')).toContain('Explosion');
+    expect(wrapper.get('[aria-label^="d6: 6;"]').attributes('aria-label')).toContain('Exploded');
     expect(wrapper.get('[aria-label^="d6: 6;"]').attributes('aria-label')).not.toContain('on 4');
     expect(wrapper.text()).toContain('d6: 4');
     const explosionDetail = wrapper.get('.dice-roller__detail');
@@ -553,6 +553,28 @@ describe('diceRoller evaluation rundown', () => {
     expect(poolNaturalStyle).toContain('border: 1px solid currentColor');
     expect(naturalDieStyle).toContain('outline: 1px solid');
     expect(explosionDieStyle).toContain('animation: dice-roller-explosion 700ms ease-out');
+  });
+
+  it('styles every exploding die in a cascade and keeps roll details scrollable', async () => {
+    const rolls = [6, 6, 2];
+    let rollIndex = 0;
+    const evaluated = await evaluateDiceExpression('1d6!', async () => rolls[rollIndex++]!);
+    const view = await mountRoller();
+    diceRollerMock.setResult(evaluated);
+    await nextTick();
+    await view.get('[aria-label^="Show details for 1d6!"]').trigger('click');
+
+    const explodedDice = view.findAll('.dice-roller__die--exploded');
+    expect(explodedDice).toHaveLength(2);
+    expect(explodedDice.map(die => die.attributes('title'))).toEqual(['Exploded', 'Exploded']);
+    expect(explodedDice.map(die => die.attributes('aria-label'))).toEqual([
+      expect.stringContaining('Exploded'),
+      expect.stringContaining('Exploded'),
+    ]);
+    expect(view.find('.dice-roller__detail-scroll').exists()).toBe(true);
+    const detailSource = readFileSync(resolve(process.cwd(), 'components/DiceRoller.vue'), 'utf8');
+    const scrollStyle = detailSource.match(/\.dice-roller__detail-scroll \{([^}]*)\}/)?.[1] ?? '';
+    expect(scrollStyle).toContain('max-height: min(32rem, calc(100vh - 2rem))');
   });
 
   it('keeps details open after a die-chip click and shows the compact rundown', async () => {
